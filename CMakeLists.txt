@@ -59,11 +59,15 @@ target_link_libraries(walnut PRIVATE third-party ${CONAN_LIBS})
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
                         # )
 
-add_custom_command(TARGET walnut POST_BUILD
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/post-build.sh
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Running post build script..."
-)
+
+ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
+                     COMMAND rm -f bin/libMoltenVK.dylib
+                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
+                     COMMENT "Removing symbolic link libMoltenVK!!!")
+ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
+                     COMMAND rm -f bin/libvulkan.1.dylib
+                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
+                     COMMENT "Removing symbolic link libvulkan.1!!!")
 
 ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
                      COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libMoltenVK.dylib
@@ -73,6 +77,6 @@ ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
 ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
                      COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libvulkan.1.dylib
                      WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
-                     COMMENT "Generating symbolic link for libMoltenVK!!!")
+                     COMMENT "Generating symbolic link for libvulkan.1!!!")
 
 add_subdirectory(WalnutApp)
