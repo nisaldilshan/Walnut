@@ -21,12 +21,12 @@ class Walnut(ConanFile):
         cmake.configure()
         cmake.build()
 
-    # def package(self):
-    #     self.copy(pattern="LICENSE.txt", dst="licenses", src=self._source_subfolder)
-    #     self.copy(pattern="backends/imgui_impl_*", dst="include", src=self._source_subfolder, keep_path=False)
-    #     self.copy(pattern="imconfig.h", dst="include", src=self._source_subfolder, keep_path=False)
-    #     self.copy(pattern="imgui.h", dst="include", src=self._source_subfolder, keep_path=False)
-    #     self.copy(pattern="imgui.cpp", dst="include", src=self._source_subfolder, keep_path=False)
-    #     self.copy(pattern="imgui_*", dst="include", src=self._source_subfolder, keep_path=False)
-    #     self.copy(pattern="imgui_*", dst="include", src=self._source_subfolder, keep_path=False)
-    #     self.copy(pattern="imstb_*", dst="include", src=self._source_subfolder, keep_path=False)
+    def package_info(self):
+        self.cpp_info.libs = ["walnut", "walnut-imgui"]
+
+    def package(self):
+        self.copy(pattern="Walnut/src/Walnut/EntryPoint.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/Application.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/Image.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/Layer.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="*.a", dst="lib", keep_path=False)
