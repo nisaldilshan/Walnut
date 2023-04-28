@@ -31,6 +31,7 @@ namespace Walnut {
 			{
 				case ImageFormat::RGBA:    return 4;
 				case ImageFormat::RGBA32F: return 16;
+				case ImageFormat::None:	assert(false);
 			}
 			return 0;
 		}
@@ -41,6 +42,7 @@ namespace Walnut {
 			{
 				case ImageFormat::RGBA:    return VK_FORMAT_R8G8B8A8_UNORM;
 				case ImageFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;
+				case ImageFormat::None:	assert(false);
 			}
 			return (VkFormat)0;
 		}
