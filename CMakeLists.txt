@@ -37,14 +37,17 @@ message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+conan_basic_setup(KEEP_RPATHS)
+
+set(CMAKE_INSTALL_RPATH "@executable_path")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 #### Third Party Libs which are not already built ####
-add_library(third-party 
+add_library(walnut-imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp)
 
 #### ENGINE ###
-add_library (walnut
+add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
@@ -52,13 +55,13 @@ add_library (walnut
 
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 #target_compile_definitions(walnut PUBLIC VK_USE_PLATFORM_MACOS_MVK)
-target_link_libraries(walnut PRIVATE third-party ${CONAN_LIBS})
+target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # MoltenVK 
                         # glfw3 
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/Cocoa.framework
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
                         # )
-
+target_link_libraries(walnut INTERFACE walnut-imgui)
 
 ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
                      COMMAND rm -f bin/libMoltenVK.dylib
