@@ -51,6 +51,7 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
+                Walnut/src/Walnut/Input/Input.cpp
             )
 
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
