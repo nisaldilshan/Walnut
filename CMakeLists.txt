@@ -54,6 +54,7 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/Input/Input.cpp
             )
 
+target_include_directories(walnut PRIVATE "Walnut/src")
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 #target_compile_definitions(walnut PUBLIC VK_USE_PLATFORM_MACOS_MVK)
 target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
