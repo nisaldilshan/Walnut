@@ -84,4 +84,4 @@ ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
                      WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
                      COMMENT "Generating symbolic link for libvulkan.1!!!")
 
-#add_subdirectory(WalnutApp)
+add_subdirectory(WalnutApp)
