@@ -34,8 +34,6 @@ namespace Walnut {
 	private:
 		uint32_t m_Width = 0, m_Height = 0;
 
-		VkImage m_Image;
-		VkImageView m_ImageView;
 		VkDeviceMemory m_Memory;
 		VkSampler m_Sampler;
 
@@ -43,8 +41,6 @@ namespace Walnut {
 
 		VkBuffer m_StagingBuffer;
 		VkDeviceMemory m_StagingBufferMemory;
-
-		size_t m_AlignedSize = 0;
 
 		VkDescriptorSet m_DescriptorSet;
 

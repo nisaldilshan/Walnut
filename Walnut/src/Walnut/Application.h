@@ -52,14 +52,14 @@ namespace Walnut {
 		float GetTime();
 		GLFWwindow* GetWindowHandle() const { return m_WindowHandle; }
 
-		static VkInstance GetInstance();
-		static VkPhysicalDevice GetPhysicalDevice();
-		static VkDevice GetDevice();
+		static VkInstance GetInstance1();
+		static VkPhysicalDevice GetPhysicalDevice1();
+		static VkDevice GetDevice1();
 
-		static VkCommandBuffer GetCommandBuffer(bool begin);
-		static void FlushCommandBuffer(VkCommandBuffer commandBuffer);
+		static VkCommandBuffer GetGraphicsCommandBuffer(bool begin);
+		static void FlushGraphicsCommandBuffer(VkCommandBuffer commandBuffer);
 
-		static void SubmitResourceFree(std::function<void()>&& func);
+		static void SubmitGraphicsResourceFree(std::function<void()>&& func);
 	private:
 		void Init();
 		void Shutdown();
