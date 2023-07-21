@@ -34,13 +34,6 @@ extern bool g_ApplicationRunning;
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
-static int                      g_MinImageCount = 2;
-static bool                     g_SwapChainRebuild = false;
-
-// Unlike g_MainWindowData.FrameIndex, this is not the the swapchain image index
-// and is always guaranteed to increase (eg. 0, 1, 2, 0, 1, 2)
-static uint32_t s_CurrentFrameIndex = 0;
-
 static Walnut::Application* s_Instance = nullptr;
 
 static void SetupGraphicsAPI(const char** extensions, uint32_t extensions_count)
@@ -185,13 +178,7 @@ namespace Walnut {
 
 		VulkanGraphicsAPI::GraphicsDeviceWaitIdle();
 
-		// Free resources in queue
-		for (auto& queue : s_ResourceFreeQueue)
-		{
-			for (auto& func : queue)
-				func();
-		}
-		s_ResourceFreeQueue.clear();
+		VulkanGraphicsAPI::FreeGraphicsResources();
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -225,17 +212,14 @@ namespace Walnut {
 				layer->OnUpdate(m_TimeStep);
 
 			// Resize swap chain?
-			if (g_SwapChainRebuild)
+			if (VulkanGraphicsAPI::NeedSwapChainRebuild())
 			{
 				int width, height;
 				glfwGetFramebufferSize(m_WindowHandle, &width, &height);
 				if (width > 0 && height > 0)
 				{
 					VulkanGraphicsAPI::ResizeVulkanWindow(width, height);
-
-					
-
-					g_SwapChainRebuild = false;
+					VulkanGraphicsAPI::SetSwapChainRebuildStatus(false);
 				}
 			}
 
@@ -355,7 +339,7 @@ namespace Walnut {
 
 	VkCommandBuffer Application::GetGraphicsCommandBuffer(bool begin)
 	{
-		VulkanGraphicsAPI::GetCommandBuffer(begin);
+		return VulkanGraphicsAPI::GetCommandBuffer(begin);
 	}
 
 	void Application::FlushGraphicsCommandBuffer(VkCommandBuffer commandBuffer)
@@ -363,9 +347,9 @@ namespace Walnut {
 		VulkanGraphicsAPI::FlushCommandBuffer(commandBuffer);
 	}
 
-	void Application::SubmitGraphicsResourceFree(std::function<void()>&& func)
+	void Application::SubmitGraphicsResourceFree() // std::function<void()>&& func
 	{
-		VulkanGraphicsAPI::SubmitResourceFree(std::move(func));
+		VulkanGraphicsAPI::SubmitResourceFree(); //std::move(func)
 	}
 
 }

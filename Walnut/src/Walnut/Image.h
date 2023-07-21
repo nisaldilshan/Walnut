@@ -22,7 +22,7 @@ namespace Walnut {
 
 		void SetData(const void* data);
 
-		VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
+		//VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
 
 		void Resize(uint32_t width, uint32_t height);
 
@@ -34,16 +34,9 @@ namespace Walnut {
 	private:
 		uint32_t m_Width = 0, m_Height = 0;
 
-		VkDeviceMemory m_Memory;
-		VkSampler m_Sampler;
-
 		ImageFormat m_Format = ImageFormat::None;
 
-		VkBuffer m_StagingBuffer;
-		VkDeviceMemory m_StagingBufferMemory;
-
-		VkDescriptorSet m_DescriptorSet;
-
+		size_t m_AlignedSize = 0;
 		std::string m_Filepath;
 	};
 

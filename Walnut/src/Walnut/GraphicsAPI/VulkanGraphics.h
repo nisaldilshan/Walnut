@@ -1,6 +1,29 @@
 #pragma once
 
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
+#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
 #include <vulkan/vulkan.h>
+
+namespace Utils 
+{
+    static uint32_t GetVulkanMemoryType(VkPhysicalDevice physicalDevice, VkMemoryPropertyFlags properties, uint32_t type_bits)
+    {
+        VkPhysicalDeviceMemoryProperties prop;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &prop);
+        for (uint32_t i = 0; i < prop.memoryTypeCount; i++)
+        {
+            if ((prop.memoryTypes[i].propertyFlags & properties) == properties && type_bits & (1 << i))
+                return i;
+        }
+        
+        return 0xffffffff;
+    }
+}
+
 
 namespace VulkanGraphicsAPI
 {
@@ -30,6 +53,13 @@ static VkDescriptorPool         g_DescriptorPool = VK_NULL_HANDLE;
 
 static VkSurfaceKHR             surface = VK_NULL_HANDLE;
 static ImGui_ImplVulkanH_Window g_MainWindowData;
+
+static int                      g_MinImageCount = 2;
+static bool                     g_SwapChainRebuild = false;
+
+// Unlike g_MainWindowData.FrameIndex, this is not the the swapchain image index
+// and is always guaranteed to increase (eg. 0, 1, 2, 0, 1, 2)
+static uint32_t s_CurrentFrameIndex = 0;
 
 // Per-frame-in-flight
 static std::vector<std::vector<VkCommandBuffer>> s_AllocatedCommandBuffers;
@@ -469,6 +499,16 @@ static void ResizeVulkanWindow(int width, int height)
     s_AllocatedCommandBuffers.resize(g_MainWindowData.ImageCount);
 }
 
+static bool NeedSwapChainRebuild()
+{
+    return g_SwapChainRebuild;
+}
+
+static void SetSwapChainRebuildStatus(bool status)
+{
+    g_SwapChainRebuild = status;
+}
+
 static void GraphicsDeviceWaitIdle()
 {
     // Cleanup
@@ -484,10 +524,22 @@ static void SetClearColor(ImVec4 clear_color)
     g_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
 }
 
-static void SubmitResourceFree(std::function<void()>&& func)
+static void FreeGraphicsResources()
 {
-    s_ResourceFreeQueue[s_CurrentFrameIndex].emplace_back(func);
+    // Free resources in queue
+    for (auto& queue : s_ResourceFreeQueue)
+    {
+        for (auto& func : queue)
+            func();
+    }
+    s_ResourceFreeQueue.clear();
 }
+
+
+
+
+
+
 
 
 
@@ -500,8 +552,19 @@ static void SubmitResourceFree(std::function<void()>&& func)
 
 
 
+
+
+
+
+
+
 static VkImage m_Image;
 static VkImageView m_ImageView;
+static VkSampler m_Sampler;
+static VkDeviceMemory m_Memory;
+static VkDescriptorSet m_DescriptorSet;
+static VkBuffer m_StagingBuffer;
+static VkDeviceMemory m_StagingBufferMemory;
 
 static size_t CreateUploadBuffer(size_t upload_size)
 {
@@ -511,18 +574,18 @@ static size_t CreateUploadBuffer(size_t upload_size)
     buffer_info.size = upload_size;
     buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    err = vkCreateBuffer(device, &buffer_info, nullptr, &m_StagingBuffer);
+    err = vkCreateBuffer(g_Device, &buffer_info, nullptr, &m_StagingBuffer);
     check_vk_result(err);
     VkMemoryRequirements req;
-    vkGetBufferMemoryRequirements(device, m_StagingBuffer, &req);
+    vkGetBufferMemoryRequirements(g_Device, m_StagingBuffer, &req);
     size_t alignedSize = req.size;
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     alloc_info.allocationSize = req.size;
-    alloc_info.memoryTypeIndex = Utils::GetVulkanMemoryType(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, req.memoryTypeBits);
-    err = vkAllocateMemory(device, &alloc_info, nullptr, &m_StagingBufferMemory);
+    alloc_info.memoryTypeIndex = Utils::GetVulkanMemoryType(g_PhysicalDevice, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, req.memoryTypeBits);
+    err = vkAllocateMemory(g_Device, &alloc_info, nullptr, &m_StagingBufferMemory);
     check_vk_result(err);
-    err = vkBindBufferMemory(device, m_StagingBuffer, m_StagingBufferMemory, 0);
+    err = vkBindBufferMemory(g_Device, m_StagingBuffer, m_StagingBufferMemory, 0);
     check_vk_result(err);
     return alignedSize;
 }
@@ -544,17 +607,17 @@ static void CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height)
     info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    err = vkCreateImage(device, &info, nullptr, &m_Image);
+    err = vkCreateImage(g_Device, &info, nullptr, &m_Image);
     check_vk_result(err);
     VkMemoryRequirements req;
-    vkGetImageMemoryRequirements(device, m_Image, &req);
+    vkGetImageMemoryRequirements(g_Device, m_Image, &req);
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     alloc_info.allocationSize = req.size;
-    alloc_info.memoryTypeIndex = Utils::GetVulkanMemoryType(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.memoryTypeBits);
-    err = vkAllocateMemory(device, &alloc_info, nullptr, &m_Memory);
+    alloc_info.memoryTypeIndex = Utils::GetVulkanMemoryType(g_PhysicalDevice, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.memoryTypeBits);
+    err = vkAllocateMemory(g_Device, &alloc_info, nullptr, &m_Memory);
     check_vk_result(err);
-    err = vkBindImageMemory(device, m_Image, m_Memory, 0);
+    err = vkBindImageMemory(g_Device, m_Image, m_Memory, 0);
     check_vk_result(err);
 }
 
@@ -569,7 +632,7 @@ static void CreateImageView(VkFormat vulkanFormat)
     info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     info.subresourceRange.levelCount = 1;
     info.subresourceRange.layerCount = 1;
-    err = vkCreateImageView(device, &info, nullptr, &m_ImageView);
+    err = vkCreateImageView(g_Device, &info, nullptr, &m_ImageView);
     check_vk_result(err);
 }
 
@@ -614,16 +677,65 @@ static void CopyToImage(VkCommandBuffer command_buffer, uint32_t width, uint32_t
 static void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize)
 {
     char* map = NULL;
-    VkResult err = vkMapMemory(device, m_StagingBufferMemory, 0, alignedSize, 0, (void**)(&map));
+    VkResult err = vkMapMemory(g_Device, m_StagingBufferMemory, 0, alignedSize, 0, (void**)(&map));
     check_vk_result(err);
     memcpy(map, data, uploadSize);
     VkMappedMemoryRange range[1] = {};
     range[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range[0].memory = m_StagingBufferMemory;
     range[0].size = alignedSize;
-    err = vkFlushMappedMemoryRanges(device, 1, range);
+    err = vkFlushMappedMemoryRanges(g_Device, 1, range);
     check_vk_result(err);
-    vkUnmapMemory(device, m_StagingBufferMemory);
+    vkUnmapMemory(g_Device, m_StagingBufferMemory);
 }
 
+static void CreateSampler()
+{
+    VkSamplerCreateInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    info.magFilter = VK_FILTER_LINEAR;
+    info.minFilter = VK_FILTER_LINEAR;
+    info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    info.minLod = -1000;
+    info.maxLod = 1000;
+    info.maxAnisotropy = 1.0f;
+    VkResult err = vkCreateSampler(g_Device, &info, nullptr, &m_Sampler);
+    check_vk_result(err);
+}
+
+static void CreateDescriptorSet()
+{
+    m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+}
+
+static bool ImageAvailable()
+{
+    if (m_Image)
+        return true;
+
+    return false;
+}
+
+static void SubmitResourceFree() // std::function<void()> &&func
+{
+    s_ResourceFreeQueue[s_CurrentFrameIndex].emplace_back([sampler = m_Sampler, imageView = m_ImageView, image = m_Image,
+                                                           memory = m_Memory, stagingBuffer = m_StagingBuffer, stagingBufferMemory = m_StagingBufferMemory]()
+                                                          {
+    vkDestroySampler(g_Device, sampler, nullptr);
+    vkDestroyImageView(g_Device, imageView, nullptr);
+    vkDestroyImage(g_Device, image, nullptr);
+    vkFreeMemory(g_Device, memory, nullptr);
+    vkDestroyBuffer(g_Device, stagingBuffer, nullptr);
+    vkFreeMemory(g_Device, stagingBufferMemory, nullptr); });
+
+    m_Sampler = 0;
+    m_ImageView = 0;
+    m_Image = 0;
+    m_Memory = 0;
+    m_StagingBuffer = 0;
+    m_StagingBufferMemory = 0;
+}
 }
