@@ -13,3 +13,4 @@ bin-int/
 !vendor/bin
 build
 .vsconan
+.vscode
