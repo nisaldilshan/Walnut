@@ -7,9 +7,18 @@ class Walnut(ConanFile):
     homepage = "https://github.com/TheCherno/Walnut"
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
     settings = "os", "compiler", "build_type", "arch"
-    requires = ("glfw/3.3.2", "stb/20200203", "imgui/latest@nisaldilshan/docking", "glm/0.9.9.8", "moltenvk/1.2.2")
+    requires = ("stb/20200203", "imgui/latest@nisaldilshan/docking", "glm/0.9.9.8")
     generators = "cmake"
     build_policy = "missing"
+
+    def requirements(self):
+        if self.settings.os == 'Macos':
+            self.requires("moltenvk/1.2.2", private=True)
+        if not self.settings.os == 'Emscripten':
+            self.requires("glfw/3.3.2")
+        else:
+            self.requires("vulkan-headers/1.3.239.0")
+            #self.requires("dawn/5899")
 
     def source(self):
         git = tools.Git()
