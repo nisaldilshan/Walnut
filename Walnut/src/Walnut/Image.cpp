@@ -13,19 +13,6 @@ namespace Walnut {
 
 	namespace Utils {
 
-		static uint32_t GetVulkanMemoryType(VkMemoryPropertyFlags properties, uint32_t type_bits)
-		{
-			VkPhysicalDeviceMemoryProperties prop;
-			vkGetPhysicalDeviceMemoryProperties(Application::GetPhysicalDevice(), &prop);
-			for (uint32_t i = 0; i < prop.memoryTypeCount; i++)
-			{
-				if ((prop.memoryTypes[i].propertyFlags & properties) == properties && type_bits & (1 << i))
-					return i;
-			}
-			
-			return 0xffffffff;
-		}
-
 		static uint32_t BytesPerPixel(ImageFormat format)
 		{
 			switch (format)
@@ -90,10 +77,6 @@ namespace Walnut {
 
 	void Image::AllocateMemory(uint64_t size)
 	{
-		VkDevice device = Application::GetDevice();
-
-		VkResult err;
-		
 		VkFormat vulkanFormat = Utils::WalnutFormatToVulkanFormat(m_Format);
 
 		// Create the Image
@@ -108,66 +91,35 @@ namespace Walnut {
 
 		// Create sampler:
 		{
-			VkSamplerCreateInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-			info.magFilter = VK_FILTER_LINEAR;
-			info.minFilter = VK_FILTER_LINEAR;
-			info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-			info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-			info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-			info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-			info.minLod = -1000;
-			info.maxLod = 1000;
-			info.maxAnisotropy = 1.0f;
-			VkResult err = vkCreateSampler(device, &info, nullptr, &m_Sampler);
-			check_vk_result(err);
+			VulkanGraphicsAPI::CreateSampler();
 		}
 
 		// Create the Descriptor Set:
-		m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		VulkanGraphicsAPI::CreateDescriptorSet();
 	}
 
 	void Image::Release()
 	{
-		Application::SubmitGraphicsResourceFree([sampler = m_Sampler, imageView = m_ImageView, image = m_Image,
-			memory = m_Memory, stagingBuffer = m_StagingBuffer, stagingBufferMemory = m_StagingBufferMemory]()
-		{
-			VkDevice device = Application::GetDevice();
+		Application::SubmitGraphicsResourceFree();
 
-			vkDestroySampler(device, sampler, nullptr);
-			vkDestroyImageView(device, imageView, nullptr);
-			vkDestroyImage(device, image, nullptr);
-			vkFreeMemory(device, memory, nullptr);
-			vkDestroyBuffer(device, stagingBuffer, nullptr);
-			vkFreeMemory(device, stagingBufferMemory, nullptr);
-		});
-
-		m_Sampler = 0;
-		m_ImageView = 0;
-		m_Image = 0;
-		m_Memory = 0;
-		m_StagingBuffer = 0;
-		m_StagingBufferMemory = 0;
+		
 	}
 
 	void Image::SetData(const void* data)
 	{
-		VkDevice device = Application::GetDevice();
-
 		size_t upload_size = m_Width * m_Height * Utils::BytesPerPixel(m_Format);
 
 		VkResult err;
 
-		size_t alignedSize = 0;
-		if (!m_StagingBuffer)
+		if (!m_AlignedSize)
 		{
 			// Create the Upload Buffer
-			alignedSize = VulkanGraphicsAPI::CreateUploadBuffer(upload_size);
+			m_AlignedSize = VulkanGraphicsAPI::CreateUploadBuffer(upload_size);
 		}
 
 		// Upload to Buffer
 		{
-			VulkanGraphicsAPI::UploadToBuffer(data, upload_size, alignedSize);
+			VulkanGraphicsAPI::UploadToBuffer(data, upload_size, m_AlignedSize);
 		}
 
 
@@ -183,7 +135,7 @@ namespace Walnut {
 
 	void Image::Resize(uint32_t width, uint32_t height)
 	{
-		if (m_Image && m_Width == width && m_Height == height)
+		if (VulkanGraphicsAPI::ImageAvailable() && m_Width == width && m_Height == height)
 			return;
 
 		// TODO: max size?

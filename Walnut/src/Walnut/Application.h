@@ -53,7 +53,7 @@ namespace Walnut {
 		static VkCommandBuffer GetGraphicsCommandBuffer(bool begin);
 		static void FlushGraphicsCommandBuffer(VkCommandBuffer commandBuffer);
 
-		static void SubmitGraphicsResourceFree(std::function<void()>&& func);
+		static void SubmitGraphicsResourceFree(); // std::function<void()>&& func
 	private:
 		void Init();
 		void Shutdown();
