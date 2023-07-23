@@ -38,7 +38,11 @@ static Walnut::Application* s_Instance = nullptr;
 
 static void SetupGraphicsAPI(const char** extensions, uint32_t extensions_count)
 {
-	VulkanGraphicsAPI::SetupVulkan(extensions, extensions_count);
+#ifdef __EMSCRIPTEN__
+    	SetupWebGPU(extensions, extensions_count);
+#else
+		VulkanGraphicsAPI::SetupVulkan(extensions, extensions_count);
+#endif	
 }
 
 // All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
@@ -118,11 +122,6 @@ namespace Walnut {
 		const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
 		SetupGraphicsAPI(extensions, extensions_count);
 
-#ifdef __EMSCRIPTEN__
-    	SetupWebGPU(extensions, extensions_count);
-#else
-		SetupVulkan(extensions, extensions_count);
-#endif
 		// Create Window Surface
 		VulkanGraphicsAPI::AddWindowHandle(m_WindowHandle);
 
