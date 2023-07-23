@@ -16,6 +16,11 @@
 
 #include <iostream>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/html5_webgpu.h>
+#endif
+
 // Emedded font
 #include "ImGui/Roboto-Regular.embed"
 
@@ -74,6 +79,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, 
 	return VK_FALSE;
 }
 #endif // IMGUI_VULKAN_DEBUG_REPORT
+
+#ifdef __EMSCRIPTEN__
+static void SetupWebGPU(const char** extensions, uint32_t extensions_count)
+{
+	auto emscripten_webgpu_device = emscripten_webgpu_get_device();
+	//device_ = wgpu::Device::Acquire(emscripten_webgpu_device);
+}
+#endif
 
 static void SetupVulkan(const char** extensions, uint32_t extensions_count)
 {
@@ -425,8 +438,12 @@ namespace Walnut {
 		}
 		uint32_t extensions_count = 0;
 		const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
-		SetupVulkan(extensions, extensions_count);
 
+#ifdef __EMSCRIPTEN__
+    	SetupWebGPU(extensions, extensions_count);
+#else
+		SetupVulkan(extensions, extensions_count);
+#endif
 		// Create Window Surface
 		VkSurfaceKHR surface;
 		VkResult err = glfwCreateWindowSurface(g_Instance, m_WindowHandle, g_Allocator, &surface);

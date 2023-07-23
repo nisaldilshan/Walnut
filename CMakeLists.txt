@@ -72,8 +72,11 @@ target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
                         # )
 target_link_libraries(walnut INTERFACE walnut-imgui)
-target_link_libraries(walnut INTERFACE vulkan-1.lib)
+if(MSVC)
+    target_link_libraries(walnut INTERFACE vulkan-1.lib)
+endif()
 
+#set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 if(APPLE)
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
                         COMMAND rm -f bin/libMoltenVK.dylib
