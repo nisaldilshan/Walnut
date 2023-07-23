@@ -14,8 +14,6 @@
 #include <webgpu/webgpu_cpp.h>
 #endif
 
-void check_vk_result(VkResult err);
-
 struct GLFWwindow;
 
 namespace Walnut {
