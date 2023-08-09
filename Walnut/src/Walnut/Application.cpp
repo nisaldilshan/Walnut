@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 
 #include "GraphicsAPI/VulkanGraphics.h"
+#include "RenderingBackend.h"
 
 #include <iostream>
 
@@ -36,40 +37,31 @@ extern bool g_ApplicationRunning;
 
 static Walnut::Application* s_Instance = nullptr;
 
-static void SetupGraphicsAPI(const char** extensions, uint32_t extensions_count)
-{
-#ifdef __EMSCRIPTEN__
-    	SetupWebGPU(extensions, extensions_count);
-#else
-		VulkanGraphicsAPI::SetupVulkan(extensions, extensions_count);
-#endif	
-}
-
 // All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
 // Your real engine/app may not use them.
 static void SetupGraphicsAPIWindow(int width, int height)
 {
-	VulkanGraphicsAPI::SetupVulkanWindow(width, height);
+	GraphicsAPI::Vulkan::SetupVulkanWindow(width, height);
 }
 
 static void CleanupGraphicsAPI()
 {
-	VulkanGraphicsAPI::CleanupVulkan();
+	GraphicsAPI::Vulkan::CleanupVulkan();
 }
 
 static void CleanupGraphicsAPIWindow()
 {
-	VulkanGraphicsAPI::CleanupVulkanWindow();
+	GraphicsAPI::Vulkan::CleanupVulkanWindow();
 }
 
 static void FrameRender(ImDrawData* draw_data)
 {
-	VulkanGraphicsAPI::FrameRender(draw_data);
+	GraphicsAPI::Vulkan::FrameRender(draw_data);
 }
 
 static void FramePresent()
 {
-	VulkanGraphicsAPI::FramePresent();
+	GraphicsAPI::Vulkan::FramePresent();
 }
 
 static void glfw_error_callback(int error, const char* description)
@@ -113,17 +105,12 @@ namespace Walnut {
 		m_WindowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
 
 		// Setup Vulkan
-		if (!glfwVulkanSupported())
-		{
-			std::cerr << "GLFW: Vulkan not supported!\n";
-			return;
-		}
-		uint32_t extensions_count = 0;
-		const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
-		SetupGraphicsAPI(extensions, extensions_count);
+		auto bk = RenderingBackend::Create();
+		bk->Init();
+		bk->SetupGraphicsAPI();
 
 		// Create Window Surface
-		VulkanGraphicsAPI::AddWindowHandle(m_WindowHandle);
+		GraphicsAPI::Vulkan::AddWindowHandle(m_WindowHandle);
 
 		// Create Framebuffers
 		int w, h;
@@ -154,7 +141,7 @@ namespace Walnut {
 		}
 
 		// Setup Platform/Renderer backends
-		VulkanGraphicsAPI::ConfigureRendererBackend(m_WindowHandle);
+		GraphicsAPI::Vulkan::ConfigureRendererBackend(m_WindowHandle);
 
 		// Load default font
 		ImFontConfig fontConfig;
@@ -164,7 +151,7 @@ namespace Walnut {
 
 		// Upload Fonts
 		{
-			VulkanGraphicsAPI::UploadFonts();
+			GraphicsAPI::Vulkan::UploadFonts();
 		}
 	}
 
@@ -175,9 +162,9 @@ namespace Walnut {
 
 		m_LayerStack.clear();
 
-		VulkanGraphicsAPI::GraphicsDeviceWaitIdle();
+		GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
 
-		VulkanGraphicsAPI::FreeGraphicsResources();
+		GraphicsAPI::Vulkan::FreeGraphicsResources();
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -211,14 +198,14 @@ namespace Walnut {
 				layer->OnUpdate(m_TimeStep);
 
 			// Resize swap chain?
-			if (VulkanGraphicsAPI::NeedSwapChainRebuild())
+			if (GraphicsAPI::Vulkan::NeedSwapChainRebuild())
 			{
 				int width, height;
 				glfwGetFramebufferSize(m_WindowHandle, &width, &height);
 				if (width > 0 && height > 0)
 				{
-					VulkanGraphicsAPI::ResizeVulkanWindow(width, height);
-					VulkanGraphicsAPI::SetSwapChainRebuildStatus(false);
+					GraphicsAPI::Vulkan::ResizeVulkanWindow(width, height);
+					GraphicsAPI::Vulkan::SetSwapChainRebuildStatus(false);
 				}
 			}
 
@@ -288,7 +275,7 @@ namespace Walnut {
 			ImGui::Render();
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
 			const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-			VulkanGraphicsAPI::SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
+			GraphicsAPI::Vulkan::SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
 			if (!main_is_minimized)
 				FrameRender(main_draw_data);
 
@@ -338,17 +325,17 @@ namespace Walnut {
 
 	VkCommandBuffer Application::GetGraphicsCommandBuffer(bool begin)
 	{
-		return VulkanGraphicsAPI::GetCommandBuffer(begin);
+		return GraphicsAPI::Vulkan::GetCommandBuffer(begin);
 	}
 
 	void Application::FlushGraphicsCommandBuffer(VkCommandBuffer commandBuffer)
 	{
-		VulkanGraphicsAPI::FlushCommandBuffer(commandBuffer);
+		GraphicsAPI::Vulkan::FlushCommandBuffer(commandBuffer);
 	}
 
 	void Application::SubmitGraphicsResourceFree() // std::function<void()>&& func
 	{
-		VulkanGraphicsAPI::SubmitResourceFree(); //std::move(func)
+		GraphicsAPI::Vulkan::SubmitResourceFree(); //std::move(func)
 	}
 
 }

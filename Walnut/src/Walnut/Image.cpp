@@ -81,21 +81,21 @@ namespace Walnut {
 
 		// Create the Image
 		{
-			VulkanGraphicsAPI::CreateImage(vulkanFormat, m_Width, m_Height);
+			GraphicsAPI::Vulkan::CreateImage(vulkanFormat, m_Width, m_Height);
 		}
 
 		// Create the Image View:
 		{
-			VulkanGraphicsAPI::CreateImageView(vulkanFormat);
+			GraphicsAPI::Vulkan::CreateImageView(vulkanFormat);
 		}
 
 		// Create sampler:
 		{
-			VulkanGraphicsAPI::CreateSampler();
+			GraphicsAPI::Vulkan::CreateSampler();
 		}
 
 		// Create the Descriptor Set:
-		VulkanGraphicsAPI::CreateDescriptorSet();
+		GraphicsAPI::Vulkan::CreateDescriptorSet();
 	}
 
 	void Image::Release()
@@ -114,12 +114,12 @@ namespace Walnut {
 		if (!m_AlignedSize)
 		{
 			// Create the Upload Buffer
-			m_AlignedSize = VulkanGraphicsAPI::CreateUploadBuffer(upload_size);
+			m_AlignedSize = GraphicsAPI::Vulkan::CreateUploadBuffer(upload_size);
 		}
 
 		// Upload to Buffer
 		{
-			VulkanGraphicsAPI::UploadToBuffer(data, upload_size, m_AlignedSize);
+			GraphicsAPI::Vulkan::UploadToBuffer(data, upload_size, m_AlignedSize);
 		}
 
 
@@ -127,7 +127,7 @@ namespace Walnut {
 		{
 			VkCommandBuffer command_buffer = Application::GetGraphicsCommandBuffer(true);
 
-			VulkanGraphicsAPI::CopyToImage(command_buffer, m_Width, m_Height);
+			GraphicsAPI::Vulkan::CopyToImage(command_buffer, m_Width, m_Height);
 
 			Application::FlushGraphicsCommandBuffer(command_buffer);
 		}
@@ -135,7 +135,7 @@ namespace Walnut {
 
 	void Image::Resize(uint32_t width, uint32_t height)
 	{
-		if (VulkanGraphicsAPI::ImageAvailable() && m_Width == width && m_Height == height)
+		if (GraphicsAPI::Vulkan::ImageAvailable() && m_Width == width && m_Height == height)
 			return;
 
 		// TODO: max size?

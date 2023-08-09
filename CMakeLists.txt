@@ -55,6 +55,8 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
+                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
+                Walnut/src/Walnut/RenderingBackend.cpp
             )
 
 #target_compile_definitions(walnut PUBLIC VK_USE_PLATFORM_MACOS_MVK)
