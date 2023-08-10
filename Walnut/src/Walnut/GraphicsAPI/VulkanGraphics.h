@@ -58,6 +58,7 @@ public:
 	static void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
 	static void CreateSampler();
 	static void CreateDescriptorSet();
+	static VkDescriptorSet GetDescriptorSet();
 	static bool ImageAvailable();
 	static void SubmitResourceFree(); // std::function<void()> &&func
 	

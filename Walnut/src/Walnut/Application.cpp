@@ -73,6 +73,7 @@ namespace Walnut {
 
 	Application::Application(const ApplicationSpecification& specification)
 		: m_Specification(specification)
+		, m_RenderingBackend(std::move(RenderingBackend::Create()))
 	{
 		s_Instance = this;
 
@@ -102,19 +103,18 @@ namespace Walnut {
 		}
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		m_WindowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
+		auto* windowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
 
 		// Setup Vulkan
-		auto bk = RenderingBackend::Create();
-		bk->Init();
-		bk->SetupGraphicsAPI();
+		m_RenderingBackend->Init(windowHandle);
+		m_RenderingBackend->SetupGraphicsAPI();
 
 		// Create Window Surface
-		GraphicsAPI::Vulkan::AddWindowHandle(m_WindowHandle);
+		GraphicsAPI::Vulkan::AddWindowHandle(windowHandle);
 
 		// Create Framebuffers
 		int w, h;
-		glfwGetFramebufferSize(m_WindowHandle, &w, &h);
+		glfwGetFramebufferSize(windowHandle, &w, &h);
 		SetupGraphicsAPIWindow(w, h);
 
 		// Setup Dear ImGui context
@@ -141,7 +141,7 @@ namespace Walnut {
 		}
 
 		// Setup Platform/Renderer backends
-		GraphicsAPI::Vulkan::ConfigureRendererBackend(m_WindowHandle);
+		GraphicsAPI::Vulkan::ConfigureRendererBackend(windowHandle);
 
 		// Load default font
 		ImFontConfig fontConfig;
@@ -173,7 +173,7 @@ namespace Walnut {
 		CleanupGraphicsAPIWindow();
 		CleanupGraphicsAPI();
 
-		glfwDestroyWindow(m_WindowHandle);
+		glfwDestroyWindow(m_RenderingBackend->GetWindowHandle());
 		glfwTerminate();
 
 		g_ApplicationRunning = false;
@@ -185,7 +185,7 @@ namespace Walnut {
 		ImGuiIO& io = ImGui::GetIO();
 
 		// Main loop
-		while (!glfwWindowShouldClose(m_WindowHandle) && m_Running)
+		while (!glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && m_Running)
 		{
 			// Poll and handle events (inputs, window resize, etc.)
 			// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -201,7 +201,7 @@ namespace Walnut {
 			if (GraphicsAPI::Vulkan::NeedSwapChainRebuild())
 			{
 				int width, height;
-				glfwGetFramebufferSize(m_WindowHandle, &width, &height);
+				glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
 				if (width > 0 && height > 0)
 				{
 					GraphicsAPI::Vulkan::ResizeVulkanWindow(width, height);
@@ -308,7 +308,12 @@ namespace Walnut {
 		return (float)glfwGetTime();
 	}
 
-	VkInstance Application::GetInstance1()
+    GLFWwindow* Application::GetWindowHandle() const
+    {
+        return m_RenderingBackend->GetWindowHandle();
+    }
+
+    VkInstance Application::GetInstance1()
 	{
 		return nullptr;//g_Instance;
 	}

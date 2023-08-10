@@ -14,6 +14,8 @@
 #include <webgpu/webgpu_cpp.h>
 #endif
 
+#include "RenderingBackend.h"
+
 struct GLFWwindow;
 
 namespace Walnut {
@@ -48,7 +50,7 @@ namespace Walnut {
 		void Close();
 
 		float GetTime();
-		GLFWwindow* GetWindowHandle() const { return m_WindowHandle; }
+		GLFWwindow* GetWindowHandle() const;
 
 		static VkInstance GetInstance1();
 		static VkPhysicalDevice GetPhysicalDevice1();
@@ -63,7 +65,7 @@ namespace Walnut {
 		void Shutdown();
 	private:
 		ApplicationSpecification m_Specification;
-		GLFWwindow* m_WindowHandle = nullptr;
+		std::unique_ptr<RenderingBackend> m_RenderingBackend = nullptr;
 		bool m_Running = false;
 
 		float m_TimeStep = 0.0f;

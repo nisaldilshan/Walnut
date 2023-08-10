@@ -689,6 +689,11 @@ void Vulkan::CreateDescriptorSet()
     m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
+VkDescriptorSet Vulkan::GetDescriptorSet()
+{
+	return m_DescriptorSet;
+}
+
 bool Vulkan::ImageAvailable()
 {
     if (m_Image)

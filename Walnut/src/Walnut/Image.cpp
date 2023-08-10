@@ -133,7 +133,12 @@ namespace Walnut {
 		}
 	}
 
-	void Image::Resize(uint32_t width, uint32_t height)
+    VkDescriptorSet Image::GetDescriptorSet() const
+    { 
+		return GraphicsAPI::Vulkan::GetDescriptorSet(); 
+	}
+
+    void Image::Resize(uint32_t width, uint32_t height)
 	{
 		if (GraphicsAPI::Vulkan::ImageAvailable() && m_Width == width && m_Height == height)
 			return;

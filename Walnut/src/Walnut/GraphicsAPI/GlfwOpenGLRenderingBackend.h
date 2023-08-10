@@ -7,7 +7,7 @@ namespace Walnut {
 	class GlfwOpenGLRenderingBackend : public RenderingBackend
 	{
 	public:
-		virtual void Init() override
+		virtual void Init(GLFWwindow* windowHandle) override
         {
             
         }
@@ -15,6 +15,11 @@ namespace Walnut {
 		void SetupGraphicsAPI() override
 		{
 
+		}
+
+		GLFWwindow* GetWindowHandle() override
+		{
+			return nullptr;
 		}
 
 		virtual void Clear() override
