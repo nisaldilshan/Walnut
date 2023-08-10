@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #define GLFW_INCLUDE_NONE
@@ -31,6 +33,7 @@ namespace GraphicsAPI
 class Vulkan
 {
 public:
+	static void check_vk_result(VkResult err);
 	static void SetupVulkan(const char** extensions, uint32_t extensions_count);
 	static void AddWindowHandle(GLFWwindow* windowHandle);
 	static void SetupVulkanWindow(int width, int height);
@@ -48,19 +51,9 @@ public:
 	static void GraphicsDeviceWaitIdle();
 	static void SetClearColor(ImVec4 clear_color);
 	static void FreeGraphicsResources();
-
-	// IMAGE
-
-	static size_t CreateUploadBuffer(size_t upload_size);
-	static void CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height);
-	static void CreateImageView(VkFormat vulkanFormat);
-	static void CopyToImage(VkCommandBuffer command_buffer, uint32_t width, uint32_t height);
-	static void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
-	static void CreateSampler();
-	static void CreateDescriptorSet();
-	static VkDescriptorSet GetDescriptorSet();
-	static bool ImageAvailable();
-	static void SubmitResourceFree(); // std::function<void()> &&func
+	static void SubmitResourceFree(std::function<void()> func);
+	static VkDevice GetDevice();
+	static VkPhysicalDevice GetPhysicalDevice();
 	
 };
 

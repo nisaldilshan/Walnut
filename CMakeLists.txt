@@ -56,6 +56,7 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
+                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
             )
 

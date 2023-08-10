@@ -313,21 +313,6 @@ namespace Walnut {
         return m_RenderingBackend->GetWindowHandle();
     }
 
-    VkInstance Application::GetInstance1()
-	{
-		return nullptr;//g_Instance;
-	}
-
-	VkPhysicalDevice Application::GetPhysicalDevice1()
-	{
-		return nullptr;//g_PhysicalDevice;
-	}
-
-	VkDevice Application::GetDevice1()
-	{
-		return nullptr;//g_Device;
-	}
-
 	VkCommandBuffer Application::GetGraphicsCommandBuffer(bool begin)
 	{
 		return GraphicsAPI::Vulkan::GetCommandBuffer(begin);
@@ -336,11 +321,6 @@ namespace Walnut {
 	void Application::FlushGraphicsCommandBuffer(VkCommandBuffer commandBuffer)
 	{
 		GraphicsAPI::Vulkan::FlushCommandBuffer(commandBuffer);
-	}
-
-	void Application::SubmitGraphicsResourceFree() // std::function<void()>&& func
-	{
-		GraphicsAPI::Vulkan::SubmitResourceFree(); //std::move(func)
 	}
 
 }

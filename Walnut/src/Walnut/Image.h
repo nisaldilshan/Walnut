@@ -3,6 +3,7 @@
 #include <string>
 
 #include <vulkan/vulkan.h>
+#include "GraphicsAPI/VulkanImage.h"
 
 namespace Walnut {
 
@@ -22,7 +23,7 @@ namespace Walnut {
 
 		void SetData(const void* data);
 
-		VkDescriptorSet GetDescriptorSet() const;
+		VkDescriptorSet GetDescriptorSet();
 
 		void Resize(uint32_t width, uint32_t height);
 
@@ -32,6 +33,7 @@ namespace Walnut {
 		void AllocateMemory(uint64_t size);
 		void Release();
 	private:
+		GraphicsAPI::VulkanImage m_vulkanImage;
 		uint32_t m_Width = 0, m_Height = 0;
 
 		ImageFormat m_Format = ImageFormat::None;

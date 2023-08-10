@@ -3,7 +3,10 @@
 #include <vector>
 #include <functional>
 
-void check_vk_result(VkResult err)
+namespace GraphicsAPI
+{
+
+void Vulkan::check_vk_result(VkResult err)
 {
 	if (err == 0)
 		return;
@@ -11,9 +14,6 @@ void check_vk_result(VkResult err)
 	if (err < 0)
 		abort();
 }
-
-namespace GraphicsAPI
-{
 
 #ifdef _DEBUG
 #define IMGUI_VULKAN_DEBUG_REPORT
@@ -515,6 +515,21 @@ void Vulkan::FreeGraphicsResources()
     s_ResourceFreeQueue.clear();
 }
 
+void Vulkan::SubmitResourceFree(std::function<void()> func)
+{
+	s_ResourceFreeQueue[s_CurrentFrameIndex].emplace_back(func);
+}
+
+VkDevice Vulkan::GetDevice()
+{
+	return g_Device;
+}
+
+VkPhysicalDevice Vulkan::GetPhysicalDevice()
+{
+	return g_PhysicalDevice;
+}
+
 
 
 
@@ -536,190 +551,14 @@ void Vulkan::FreeGraphicsResources()
 
 
 
-static VkImage m_Image;
-static VkImageView m_ImageView;
-static VkSampler m_Sampler;
-static VkDeviceMemory m_Memory;
-static VkDescriptorSet m_DescriptorSet;
-static VkBuffer m_StagingBuffer;
-static VkDeviceMemory m_StagingBufferMemory;
 
-size_t Vulkan::CreateUploadBuffer(size_t upload_size)
-{
-    VkResult err;
-    VkBufferCreateInfo buffer_info = {};
-    buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    buffer_info.size = upload_size;
-    buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    err = vkCreateBuffer(g_Device, &buffer_info, nullptr, &m_StagingBuffer);
-    check_vk_result(err);
-    VkMemoryRequirements req;
-    vkGetBufferMemoryRequirements(g_Device, m_StagingBuffer, &req);
-    size_t alignedSize = req.size;
-    VkMemoryAllocateInfo alloc_info = {};
-    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    alloc_info.allocationSize = req.size;
-    alloc_info.memoryTypeIndex = Utils::GetVulkanMemoryType(g_PhysicalDevice, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, req.memoryTypeBits);
-    err = vkAllocateMemory(g_Device, &alloc_info, nullptr, &m_StagingBufferMemory);
-    check_vk_result(err);
-    err = vkBindBufferMemory(g_Device, m_StagingBuffer, m_StagingBufferMemory, 0);
-    check_vk_result(err);
-    return alignedSize;
-}
 
-void Vulkan::CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height)
-{
-    VkResult err;
-    VkImageCreateInfo info = {};
-    info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    info.imageType = VK_IMAGE_TYPE_2D;
-    info.format = vulkanFormat;
-    info.extent.width = width;
-    info.extent.height = height;
-    info.extent.depth = 1;
-    info.mipLevels = 1;
-    info.arrayLayers = 1;
-    info.samples = VK_SAMPLE_COUNT_1_BIT;
-    info.tiling = VK_IMAGE_TILING_OPTIMAL;
-    info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-    info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    err = vkCreateImage(g_Device, &info, nullptr, &m_Image);
-    check_vk_result(err);
-    VkMemoryRequirements req;
-    vkGetImageMemoryRequirements(g_Device, m_Image, &req);
-    VkMemoryAllocateInfo alloc_info = {};
-    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    alloc_info.allocationSize = req.size;
-    alloc_info.memoryTypeIndex = Utils::GetVulkanMemoryType(g_PhysicalDevice, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.memoryTypeBits);
-    err = vkAllocateMemory(g_Device, &alloc_info, nullptr, &m_Memory);
-    check_vk_result(err);
-    err = vkBindImageMemory(g_Device, m_Image, m_Memory, 0);
-    check_vk_result(err);
-}
 
-void Vulkan::CreateImageView(VkFormat vulkanFormat)
-{
-    VkResult err;
-    VkImageViewCreateInfo info = {};
-    info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    info.image = m_Image;
-    info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    info.format = vulkanFormat;
-    info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    info.subresourceRange.levelCount = 1;
-    info.subresourceRange.layerCount = 1;
-    err = vkCreateImageView(g_Device, &info, nullptr, &m_ImageView);
-    check_vk_result(err);
-}
 
-void Vulkan::CopyToImage(VkCommandBuffer command_buffer, uint32_t width, uint32_t height)
-{
-    VkImageMemoryBarrier copy_barrier = {};
-    copy_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    copy_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    copy_barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    copy_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    copy_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    copy_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    copy_barrier.image = m_Image;
-    copy_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    copy_barrier.subresourceRange.levelCount = 1;
-    copy_barrier.subresourceRange.layerCount = 1;
-    vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &copy_barrier);
 
-    VkBufferImageCopy region = {};
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.layerCount = 1;
-    region.imageExtent.width = width;
-    region.imageExtent.height = height;
-    region.imageExtent.depth = 1;
-    vkCmdCopyBufferToImage(command_buffer, m_StagingBuffer, m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-    VkImageMemoryBarrier use_barrier = {};
-    use_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    use_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    use_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    use_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    use_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    use_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    use_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    use_barrier.image = m_Image;
-    use_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    use_barrier.subresourceRange.levelCount = 1;
-    use_barrier.subresourceRange.layerCount = 1;
-    vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &use_barrier);
-}
 
-void Vulkan::UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize)
-{
-    char* map = NULL;
-    VkResult err = vkMapMemory(g_Device, m_StagingBufferMemory, 0, alignedSize, 0, (void**)(&map));
-    check_vk_result(err);
-    memcpy(map, data, uploadSize);
-    VkMappedMemoryRange range[1] = {};
-    range[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range[0].memory = m_StagingBufferMemory;
-    range[0].size = alignedSize;
-    err = vkFlushMappedMemoryRanges(g_Device, 1, range);
-    check_vk_result(err);
-    vkUnmapMemory(g_Device, m_StagingBufferMemory);
-}
 
-void Vulkan::CreateSampler()
-{
-    VkSamplerCreateInfo info = {};
-    info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    info.magFilter = VK_FILTER_LINEAR;
-    info.minFilter = VK_FILTER_LINEAR;
-    info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    info.minLod = -1000;
-    info.maxLod = 1000;
-    info.maxAnisotropy = 1.0f;
-    VkResult err = vkCreateSampler(g_Device, &info, nullptr, &m_Sampler);
-    check_vk_result(err);
-}
 
-void Vulkan::CreateDescriptorSet()
-{
-    m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-}
-
-VkDescriptorSet Vulkan::GetDescriptorSet()
-{
-	return m_DescriptorSet;
-}
-
-bool Vulkan::ImageAvailable()
-{
-    if (m_Image)
-        return true;
-
-    return false;
-}
-
-void Vulkan::SubmitResourceFree() // std::function<void()> &&func
-{
-    s_ResourceFreeQueue[s_CurrentFrameIndex].emplace_back([sampler = m_Sampler, imageView = m_ImageView, image = m_Image,
-                                                           memory = m_Memory, stagingBuffer = m_StagingBuffer, stagingBufferMemory = m_StagingBufferMemory]()
-                                                          {
-    vkDestroySampler(g_Device, sampler, nullptr);
-    vkDestroyImageView(g_Device, imageView, nullptr);
-    vkDestroyImage(g_Device, image, nullptr);
-    vkFreeMemory(g_Device, memory, nullptr);
-    vkDestroyBuffer(g_Device, stagingBuffer, nullptr);
-    vkFreeMemory(g_Device, stagingBufferMemory, nullptr); });
-
-    m_Sampler = 0;
-    m_ImageView = 0;
-    m_Image = 0;
-    m_Memory = 0;
-    m_StagingBuffer = 0;
-    m_StagingBufferMemory = 0;
-}
 
 } // namespace
