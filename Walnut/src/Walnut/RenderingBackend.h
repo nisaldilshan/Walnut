@@ -3,6 +3,8 @@
 #include <memory>
 #include <functional>
 
+#include <imgui_impl_glfw.h>
+
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -16,11 +18,11 @@ namespace Walnut {
 		{
 			None = 0, Vulkan = 1, OpenGL = 2
 		};
-	public:
 		virtual ~RenderingBackend() = default;
 
 		virtual void Init(GLFWwindow* windowHandle) = 0;
-		virtual void Clear() = 0;
+		virtual void Shutdown() = 0;
+		virtual void Cleanup() = 0;
 
         virtual void SetupGraphicsAPI() = 0;
 		virtual GLFWwindow* GetWindowHandle() = 0;
@@ -30,6 +32,9 @@ namespace Walnut {
 		virtual void ConfigureImGui() = 0;
 		virtual void StartImGuiFrame(const std::function<void()>& applicationMenubarCallback, const std::function<void()>& applicationUIRenderingCallback) = 0;
 		virtual void UploadFonts() = 0;
+		virtual void FrameRender(ImDrawData* draw_data) = 0;
+		virtual void FramePresent() = 0;
+		virtual void SetClearColor(ImVec4 color) = 0;
 
 		static BACKEND GetBackend() { return s_backend; }
 		static std::unique_ptr<RenderingBackend> Create();

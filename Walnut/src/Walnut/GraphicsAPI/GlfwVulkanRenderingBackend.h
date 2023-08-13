@@ -15,7 +15,7 @@ namespace Walnut {
 class GlfwVulkanRenderingBackend : public RenderingBackend
 {
 public:
-	virtual void Init(GLFWwindow* windowHandle) override
+	void Init(GLFWwindow* windowHandle) override
 	{
 		if (!glfwVulkanSupported())
 		{
@@ -121,7 +121,7 @@ public:
 			if (applicationUIRenderingCallback)
 				applicationUIRenderingCallback();
 			else
-				assert(false); std::cout << "Error - applicationUIRenderingCallback is not set!" << std::endl;
+				std::cout << "Error - applicationUIRenderingCallback is not set!" << std::endl;
 
 			ImGui::End();
 		}
@@ -132,14 +132,36 @@ public:
 		GraphicsAPI::Vulkan::UploadFonts();
 	}
 
+	void FrameRender(ImDrawData* draw_data) override
+	{
+		GraphicsAPI::Vulkan::FrameRender(draw_data);
+	}
+
+	void FramePresent() override
+	{
+		GraphicsAPI::Vulkan::FramePresent();
+	}
+
 	GLFWwindow* GetWindowHandle() override
 	{
 		return m_windowHandle;
 	}
 	
-	virtual void Clear() override
+	void Shutdown() override
 	{
-		
+		GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
+		GraphicsAPI::Vulkan::FreeGraphicsResources();
+	}
+
+	void Cleanup() override
+	{
+		GraphicsAPI::Vulkan::CleanupVulkanWindow();
+		GraphicsAPI::Vulkan::CleanupVulkan();
+	}
+
+	void SetClearColor(ImVec4 color) override
+	{
+		GraphicsAPI::Vulkan::SetClearColor(color);
 	}
 
 private:

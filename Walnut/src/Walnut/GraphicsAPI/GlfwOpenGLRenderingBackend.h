@@ -7,7 +7,7 @@ namespace Walnut {
 	class GlfwOpenGLRenderingBackend : public RenderingBackend
 	{
 	public:
-		virtual void Init(GLFWwindow* windowHandle) override
+		void Init(GLFWwindow* windowHandle) override
         {
             
         }
@@ -47,15 +47,35 @@ namespace Walnut {
 
 		}
 
+		void FrameRender(ImDrawData* draw_data) override
+		{
+
+		}
+
+		void FramePresent() override
+		{
+
+		}
+
 		GLFWwindow* GetWindowHandle() override
 		{
 			return nullptr;
 		}
 
-		virtual void Clear() override
+		void Shutdown() override
         {
             
         }
+
+		void Cleanup() override
+		{
+
+		}
+
+		void SetClearColor(ImVec4 color) override
+		{
+
+		}
 	};
 
 

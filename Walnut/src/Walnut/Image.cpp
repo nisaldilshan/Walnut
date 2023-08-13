@@ -123,11 +123,11 @@ namespace Walnut {
 
 		// Copy to Image
 		{
-			VkCommandBuffer command_buffer = Application::GetGraphicsCommandBuffer(true);
+			VkCommandBuffer command_buffer = GraphicsAPI::Vulkan::GetCommandBuffer(true);
 
 			m_vulkanImage.CopyToImage(command_buffer, m_Width, m_Height);
 
-			Application::FlushGraphicsCommandBuffer(command_buffer);
+			GraphicsAPI::Vulkan::FlushCommandBuffer(command_buffer);
 		}
 	}
 

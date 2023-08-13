@@ -35,26 +35,6 @@ static Walnut::Application* s_Instance = nullptr;
 // All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
 // Your real engine/app may not use them.
 
-static void CleanupGraphicsAPI()
-{
-	GraphicsAPI::Vulkan::CleanupVulkan();
-}
-
-static void CleanupGraphicsAPIWindow()
-{
-	GraphicsAPI::Vulkan::CleanupVulkanWindow();
-}
-
-static void FrameRender(ImDrawData* draw_data)
-{
-	GraphicsAPI::Vulkan::FrameRender(draw_data);
-}
-
-static void FramePresent()
-{
-	GraphicsAPI::Vulkan::FramePresent();
-}
-
 static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -147,16 +127,13 @@ namespace Walnut {
 
 		m_LayerStack.clear();
 
-		GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
-
-		GraphicsAPI::Vulkan::FreeGraphicsResources();
+		m_RenderingBackend->Shutdown();
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 
-		CleanupGraphicsAPIWindow();
-		CleanupGraphicsAPI();
+		m_RenderingBackend->Cleanup();
 
 		glfwDestroyWindow(m_RenderingBackend->GetWindowHandle());
 		glfwTerminate();
@@ -197,9 +174,9 @@ namespace Walnut {
 			ImGui::Render();
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
 			const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-			GraphicsAPI::Vulkan::SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
+			m_RenderingBackend->SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
 			if (!main_is_minimized)
-				FrameRender(main_draw_data);
+				m_RenderingBackend->FrameRender(main_draw_data);
 
 			// Update and Render additional Platform Windows
 			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -210,7 +187,7 @@ namespace Walnut {
 
 			// Present Main Platform Window
 			if (!main_is_minimized)
-				FramePresent();
+				m_RenderingBackend->FramePresent();
 
 			float time = GetTime();
 			m_FrameTime = time - m_LastFrameTime;
@@ -247,15 +224,5 @@ namespace Walnut {
     {
         return m_RenderingBackend->GetWindowHandle();
     }
-
-	VkCommandBuffer Application::GetGraphicsCommandBuffer(bool begin)
-	{
-		return GraphicsAPI::Vulkan::GetCommandBuffer(begin);
-	}
-
-	void Application::FlushGraphicsCommandBuffer(VkCommandBuffer commandBuffer)
-	{
-		GraphicsAPI::Vulkan::FlushCommandBuffer(commandBuffer);
-	}
 
 }
