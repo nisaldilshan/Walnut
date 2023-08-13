@@ -7,9 +7,6 @@
 #include <memory>
 #include <functional>
 
-#include "imgui.h"
-#include <vulkan/vulkan.h>
-
 #ifdef __EMSCRIPTEN__
 #include <webgpu/webgpu_cpp.h>
 #endif

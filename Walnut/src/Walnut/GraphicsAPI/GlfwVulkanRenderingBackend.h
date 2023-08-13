@@ -151,6 +151,7 @@ public:
 	{
 		GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
 		GraphicsAPI::Vulkan::FreeGraphicsResources();
+		ImGui_ImplVulkan_Shutdown();
 	}
 
 	void Cleanup() override

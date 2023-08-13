@@ -5,10 +5,6 @@
 
 #include <imgui_impl_glfw.h>
 
-#define GLFW_INCLUDE_NONE
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
 namespace Walnut {
 
 	class RenderingBackend

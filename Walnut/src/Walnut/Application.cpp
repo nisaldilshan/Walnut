@@ -4,19 +4,13 @@
 // Adapted from Dear ImGui Vulkan example
 //
 
+#include <iostream>
+
 #include <imgui_impl_glfw.h>
-#include <imgui_impl_vulkan.h>
-#include <stdio.h>          // printf, fprintf
-#include <stdlib.h>         // abort
-#define GLFW_INCLUDE_NONE
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "GraphicsAPI/VulkanGraphics.h"
 #include "RenderingBackend.h"
-
-#include <iostream>
 
 // Emedded font
 #include "ImGui/Roboto-Regular.embed"
@@ -129,7 +123,6 @@ namespace Walnut {
 
 		m_RenderingBackend->Shutdown();
 
-		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 
