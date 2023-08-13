@@ -94,5 +94,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 			ImGui::EndMenu();
 		}
 	});
+
+	app->SetUIRenderingCallback();
 	return app;
 }

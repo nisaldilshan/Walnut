@@ -36,7 +36,8 @@ namespace Walnut {
 		static Application& Get();
 
 		void Run();
-		void SetMenubarCallback(const std::function<void()>& menubarCallback) { m_MenubarCallback = menubarCallback; }
+		void SetMenubarCallback(const std::function<void()>& menubarCallback);
+		void SetUIRenderingCallback();
 		
 		template<typename T>
 		void PushLayer()
@@ -74,6 +75,7 @@ namespace Walnut {
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::function<void()> m_MenubarCallback;
+		std::function<void()> m_UIRenderingCallback;
 
 #ifdef __EMSCRIPTEN__
 		wgpu::Device device_;
