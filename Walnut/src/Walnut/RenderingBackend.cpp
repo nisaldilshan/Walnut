@@ -6,7 +6,7 @@
 
 namespace Walnut {
 
-	RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::Vulkan;
+	RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::OpenGL;
 
     std::unique_ptr<RenderingBackend> RenderingBackend::Create()
     {
