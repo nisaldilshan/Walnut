@@ -35,8 +35,8 @@ public:
         ImGui::Begin("Viewport");
 		m_viewportWidth = ImGui::GetContentRegionAvail().x;
         m_viewportHeight = ImGui::GetContentRegionAvail().y;
-        if (m_image)
-            ImGui::Image(m_image->GetDescriptorSet(), {(float)m_image->GetWidth(),(float)m_image->GetWidth()});
+        // if (m_image)
+        //     ImGui::Image(m_image->GetDescriptorSet(), {(float)m_image->GetWidth(),(float)m_image->GetWidth()});
 		ImGui::End();
         ImGui::PopStyleVar();
 
