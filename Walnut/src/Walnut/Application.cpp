@@ -67,8 +67,16 @@ namespace Walnut {
 			return;
 		}
 
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+		glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		auto* windowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
+		if (!windowHandle)
+		{
+			std::cerr << "Could not create GLFW Window!\n";
+			return;
+		}
 
 		m_RenderingBackend->Init(windowHandle);
 		m_RenderingBackend->SetupGraphicsAPI();

@@ -1,14 +1,20 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <stdint.h>
 
 namespace GraphicsAPI
 {
+
+    typedef int VkFormat;
+    typedef int VkCommandBuffer;
+    typedef int VkDescriptorSet;
     class OpenGLImage
     {
     public:
         OpenGLImage() = default;
         ~OpenGLImage() = default;
+
+        
 
         size_t CreateUploadBuffer(size_t upload_size);
         void CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height);

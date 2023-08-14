@@ -43,32 +43,32 @@ set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 set(USE_OPENGL_RENDERER)
-
+find_package (OpenGL REQUIRED)
 
 #### Third Party Libs which are not already built ####
 add_library(imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
-add_library(imgui-vulkan STATIC
-                Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
-                )
-target_link_libraries(imgui-vulkan PRIVATE imgui)
+# add_library(imgui-vulkan STATIC
+#                 Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
+#                 )
+# target_link_libraries(imgui-vulkan PRIVATE imgui)
 add_library(imgui-opengl STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
                 )
 target_link_libraries(imgui-opengl PRIVATE imgui)
 
-if(MSVC)
-    target_include_directories(walnut-imgui PRIVATE "C:\\VulkanSDK\\1.3.250.1\\Include")
-endif()
+# if(MSVC)
+#     target_include_directories(walnut-imgui PRIVATE "C:\\VulkanSDK\\1.3.250.1\\Include")
+# endif()
 
 #### ENGINE ###
-add_library (walnut-graphics-vulkan STATIC
-                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
-                Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
-                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
-            )
-target_link_libraries(walnut-graphics-vulkan PRIVATE imgui-vulkan)
+# add_library (walnut-graphics-vulkan STATIC
+#                 Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
+#                 Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
+#                 Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
+#             )
+# target_link_libraries(walnut-graphics-vulkan PRIVATE imgui-vulkan)
 
 add_library (walnut-graphics-opengl STATIC
                 Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
@@ -105,9 +105,9 @@ target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
                         # )
 target_link_libraries(walnut INTERFACE walnut-graphics-opengl)
-if(MSVC)
-    target_link_libraries(walnut INTERFACE vulkan-1.lib)
-endif()
+# if(MSVC)
+#     target_link_libraries(walnut INTERFACE vulkan-1.lib)
+# endif()
 
 #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 if(APPLE)

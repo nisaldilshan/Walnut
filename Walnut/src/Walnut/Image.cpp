@@ -132,7 +132,8 @@ namespace Walnut {
 
     VkDescriptorSet Image::GetDescriptorSet()
     { 
-		return m_rendererBackendImage.GetDescriptorSet(); 
+		//return m_rendererBackendImage.GetDescriptorSet(); 
+		return VkDescriptorSet();
 	}
 
     void Image::Resize(uint32_t width, uint32_t height)

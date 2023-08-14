@@ -1,20 +1,39 @@
 #pragma once
 
-//#include <glad/glad.h>
-#include <imgui_impl_opengl3_loader.h>
-#include <imgui_impl_opengl3.h>
+#include <iostream>
+#include <glad/glad.h>
 
 #include "../RenderingBackend.h"
+#include "OpenGLGraphics.h"
 
 namespace Walnut {
+
+static void GLFWErrorCallback(int error, const char* description)
+{
+	std::cout << error << " - " << description << std::endl;
+	//HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
+}
 
 class GlfwOpenGLRenderingBackend : public RenderingBackend
 {
 public:
 	void Init(GLFWwindow* windowHandle) override
 	{
+		m_windowHandle = windowHandle;
+		glfwSetErrorCallback(GLFWErrorCallback);
+		glfwMakeContextCurrent(windowHandle);
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		gladLoadGL();
+		if (!status)
+			std::cout << "Failed to initialize Glad!" << std::endl;
+
+		// HZ_CORE_INFO("OpenGL Info:");
+		// HZ_CORE_INFO("    Vendor: {0}", glGetString(GL_VENDOR));
+		// HZ_CORE_INFO("    Renderer: {0}", glGetString(GL_RENDERER));
+		// HZ_CORE_INFO("    Version: {0}", glGetString(GL_VERSION));
+		// HZ_CORE_INFO("    Extensions: {0}", glGetString(GL_EXTENSIONS));
 		glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_DEPTH_TEST);
 	}
@@ -66,7 +85,7 @@ public:
 
 	GLFWwindow* GetWindowHandle() override
 	{
-		return nullptr;
+		return m_windowHandle;
 	}
 
 	void Shutdown() override
