@@ -41,7 +41,9 @@ public:
 
 	void SetupWindow(int width, int height) override
 	{
-
+		int x = 0;
+		int y = 0;
+		glViewport(x, y, width, height);
 	}
 
 	bool NeedToResizeWindow() override
@@ -56,12 +58,15 @@ public:
 
 	void ConfigureImGui() override
 	{
-
+		ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
+		ImGui_ImplOpenGL3_Init("#version 410");
 	}
 
 	void StartImGuiFrame(const std::function<void()>& applicationMenubarCallback, const std::function<void()>& applicationUIRenderingCallback) override
 	{
-
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 	}
 
 	void UploadFonts() override
