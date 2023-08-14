@@ -8,30 +8,26 @@
 
 namespace Walnut {
 
-static void GLFWErrorCallback(int error, const char* description)
-{
-	std::cout << error << " - " << description << std::endl;
-	//HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
-}
-
 class GlfwOpenGLRenderingBackend : public RenderingBackend
 {
 public:
 	void Init(GLFWwindow* windowHandle) override
 	{
 		m_windowHandle = windowHandle;
-		glfwSetErrorCallback(GLFWErrorCallback);
 		glfwMakeContextCurrent(windowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		gladLoadGL();
 		if (!status)
+		{
 			std::cout << "Failed to initialize Glad!" << std::endl;
+			return;
+		}
 
-		// HZ_CORE_INFO("OpenGL Info:");
-		// HZ_CORE_INFO("    Vendor: {0}", glGetString(GL_VENDOR));
-		// HZ_CORE_INFO("    Renderer: {0}", glGetString(GL_RENDERER));
-		// HZ_CORE_INFO("    Version: {0}", glGetString(GL_VERSION));
-		// HZ_CORE_INFO("    Extensions: {0}", glGetString(GL_EXTENSIONS));
+		std::cout << "Graphics Info:" << std::endl;
+		std::cout << "\tVendor: " << glGetString(GL_VENDOR) << std::endl;
+		std::cout << "\tRenderer: " << glGetString(GL_RENDERER) << std::endl;
+		std::cout << "\tVersion: " << glGetString(GL_VERSION) << std::endl;
+			
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
