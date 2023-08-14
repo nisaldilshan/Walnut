@@ -1,5 +1,9 @@
 #pragma once
 
+//#include <glad/glad.h>
+#include <imgui_impl_opengl3_loader.h>
+#include <imgui_impl_opengl3.h>
+
 #include "../RenderingBackend.h"
 
 namespace Walnut {
@@ -9,14 +13,10 @@ class GlfwOpenGLRenderingBackend : public RenderingBackend
 public:
 	void Init(GLFWwindow* windowHandle) override
 	{
-		// if (!glfwOpenGLSupported())
-		// {
-		// 	std::cerr << "GLFW: Vulkan not supported!\n";
-		// 	return;
-		// }
+		glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		m_extensions = glfwGetRequiredInstanceExtensions(&m_extensions_count);
-		m_windowHandle = windowHandle;
+		glEnable(GL_DEPTH_TEST);
 	}
 
 	void SetupGraphicsAPI() override

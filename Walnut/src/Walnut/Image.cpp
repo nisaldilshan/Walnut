@@ -1,10 +1,9 @@
 #include "Image.h"
 
 #include "imgui.h"
-#include <imgui_impl_vulkan.h>
 
 #include "Application.h"
-#include "GraphicsAPI/VulkanGraphics.h"
+//#include "GraphicsAPI/VulkanGraphics.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -81,26 +80,26 @@ namespace Walnut {
 
 		// Create the Image
 		{
-			m_vulkanImage.CreateImage(vulkanFormat, m_Width, m_Height);
+			m_rendererBackendImage.CreateImage(vulkanFormat, m_Width, m_Height);
 		}
 
 		// Create the Image View:
 		{
-			m_vulkanImage.CreateImageView(vulkanFormat);
+			m_rendererBackendImage.CreateImageView(vulkanFormat);
 		}
 
 		// Create sampler:
 		{
-			m_vulkanImage.CreateSampler();
+			m_rendererBackendImage.CreateSampler();
 		}
 
 		// Create the Descriptor Set:
-		m_vulkanImage.CreateDescriptorSet();
+		m_rendererBackendImage.CreateDescriptorSet();
 	}
 
 	void Image::Release()
 	{
-		m_vulkanImage.ResourceFree();
+		m_rendererBackendImage.ResourceFree();
 	}
 
 	void Image::SetData(const void* data)
@@ -112,33 +111,33 @@ namespace Walnut {
 		if (!m_AlignedSize)
 		{
 			// Create the Upload Buffer
-			m_AlignedSize = m_vulkanImage.CreateUploadBuffer(upload_size);
+			m_AlignedSize = m_rendererBackendImage.CreateUploadBuffer(upload_size);
 		}
 
 		// Upload to Buffer
 		{
-			m_vulkanImage.UploadToBuffer(data, upload_size, m_AlignedSize);
+			m_rendererBackendImage.UploadToBuffer(data, upload_size, m_AlignedSize);
 		}
 
 
 		// Copy to Image
 		{
-			VkCommandBuffer command_buffer = GraphicsAPI::Vulkan::GetCommandBuffer(true);
+			//VkCommandBuffer command_buffer = GraphicsAPI::Vulkan::GetCommandBuffer(true);
 
-			m_vulkanImage.CopyToImage(command_buffer, m_Width, m_Height);
+			//m_rendererBackendImage.CopyToImage(command_buffer, m_Width, m_Height);
 
-			GraphicsAPI::Vulkan::FlushCommandBuffer(command_buffer);
+			//GraphicsAPI::Vulkan::FlushCommandBuffer(command_buffer);
 		}
 	}
 
     VkDescriptorSet Image::GetDescriptorSet()
     { 
-		return m_vulkanImage.GetDescriptorSet(); 
+		return m_rendererBackendImage.GetDescriptorSet(); 
 	}
 
     void Image::Resize(uint32_t width, uint32_t height)
 	{
-		if (m_vulkanImage.ImageAvailable() && m_Width == width && m_Height == height)
+		if (m_rendererBackendImage.ImageAvailable() && m_Width == width && m_Height == height)
 			return;
 
 		// TODO: max size?

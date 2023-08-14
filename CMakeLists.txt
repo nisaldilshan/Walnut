@@ -42,23 +42,53 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
+set(USE_OPENGL_RENDERER)
+
+
 #### Third Party Libs which are not already built ####
-add_library(walnut-imgui STATIC
-                Walnut/src/Walnut/ImGui/ImGuiBuild.cpp)
+add_library(imgui STATIC
+                Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
+                )
+add_library(imgui-vulkan STATIC
+                Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
+                )
+target_link_libraries(imgui-vulkan PRIVATE imgui)
+add_library(imgui-opengl STATIC
+                Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
+                )
+target_link_libraries(imgui-opengl PRIVATE imgui)
+
 if(MSVC)
     target_include_directories(walnut-imgui PRIVATE "C:\\VulkanSDK\\1.3.250.1\\Include")
 endif()
 
 #### ENGINE ###
+add_library (walnut-graphics-vulkan STATIC
+                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
+                Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
+                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
+            )
+target_link_libraries(walnut-graphics-vulkan PRIVATE imgui-vulkan)
+
+add_library (walnut-graphics-opengl STATIC
+                Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
+            )
+
+target_link_libraries(walnut-graphics-opengl PRIVATE imgui-opengl)
+
 add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
-                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
-                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
             )
+
+# if (USE_OPENGL_RENDERER)
+#     target_compile_definitions(walnut PRIVATE RENDERER_OPENGL)
+# endif()
+
+#target_compile_definitions(walnut PRIVATE RENDERER_OPENGL)
 
 #target_compile_definitions(walnut PUBLIC VK_USE_PLATFORM_MACOS_MVK)
 
@@ -74,7 +104,7 @@ target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/Cocoa.framework
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
                         # )
-target_link_libraries(walnut INTERFACE walnut-imgui)
+target_link_libraries(walnut INTERFACE walnut-graphics-opengl)
 if(MSVC)
     target_link_libraries(walnut INTERFACE vulkan-1.lib)
 endif()
