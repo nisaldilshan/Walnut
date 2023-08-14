@@ -22,7 +22,7 @@ class Walnut(ConanFile):
         if self.settings.os == 'Macos':
             self.requires("moltenvk/1.2.2")
         if not self.settings.os == 'Emscripten':
-            self.requires("glfw/3.3.2")
+            self.requires("glfw/3.3.8")
         # else:
         #     self.requires("vulkan-headers/1.3.239.0")
             #self.requires("dawn/5899")
