@@ -10,6 +10,10 @@
 #include "imgui.h"
 #include <vulkan/vulkan.h>
 
+#ifdef __EMSCRIPTEN__
+#include <webgpu/webgpu_cpp.h>
+#endif
+
 void check_vk_result(VkResult err);
 
 struct GLFWwindow;
@@ -70,6 +74,11 @@ namespace Walnut {
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::function<void()> m_MenubarCallback;
+
+#ifdef __EMSCRIPTEN__
+		wgpu::Device device_;
+    	wgpu::Queue queue_;
+#endif
 	};
 
 	// Implemented by CLIENT
