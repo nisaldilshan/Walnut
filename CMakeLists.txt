@@ -71,7 +71,10 @@ target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # MoltenVK 
                         # glfw3 
                         
-target_link_libraries(walnut INTERFACE walnut-imgui vulkan)
+target_link_libraries(walnut INTERFACE walnut-imgui)
+if(LINUX)
+    target_link_libraries(walnut INTERFACE vulkan)
+endif()
 if(MSVC)
     target_link_libraries(walnut INTERFACE vulkan-1.lib)
 endif()
