@@ -42,6 +42,8 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
+find_package(Vulkan REQUIRED)
+
 #### Third Party Libs which are not already built ####
 add_library(walnut-imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp)
@@ -68,10 +70,8 @@ endif()
 target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # MoltenVK 
                         # glfw3 
-                        # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/Cocoa.framework
-                        # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
-                        # )
-target_link_libraries(walnut INTERFACE walnut-imgui)
+                        
+target_link_libraries(walnut INTERFACE walnut-imgui vulkan)
 if(MSVC)
     target_link_libraries(walnut INTERFACE vulkan-1.lib)
 endif()

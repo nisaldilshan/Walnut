@@ -12,5 +12,6 @@ bin-int/
 # Exclude
 !vendor/bin
 build
+build-linux
 .vsconan
 .vscode
