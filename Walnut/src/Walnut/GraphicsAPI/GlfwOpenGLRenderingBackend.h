@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <glad/glad.h>
 
 #include "../RenderingBackend.h"
 #include "OpenGLGraphics.h"
