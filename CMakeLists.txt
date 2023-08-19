@@ -58,10 +58,10 @@ find_package (OpenGL REQUIRED)
 add_library(imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
-# add_library(imgui-vulkan STATIC
-#                 Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
-#                 )
-# target_link_libraries(imgui-vulkan PRIVATE imgui)
+add_library(imgui-vulkan STATIC
+                Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
+                )
+target_link_libraries(imgui-vulkan PRIVATE imgui)
 add_library(imgui-opengl STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
                 )
@@ -72,18 +72,18 @@ target_link_libraries(imgui-opengl PRIVATE imgui)
 # endif()
 
 #### ENGINE ###
-# add_library (walnut-graphics-vulkan STATIC
-#                 Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
-#                 Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
-#                 Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
-#             )
-# target_link_libraries(walnut-graphics-vulkan PRIVATE imgui-vulkan)
+add_library (walnut-graphics-vulkan SHARED
+                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
+                Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
+                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
+            )
+target_link_libraries(walnut-graphics-vulkan PUBLIC imgui-vulkan ${CONAN_LIBS})
 
-add_library (walnut-graphics-opengl STATIC
+add_library (walnut-graphics-opengl SHARED
                 Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
             )
 
-target_link_libraries(walnut-graphics-opengl PRIVATE imgui-opengl)
+target_link_libraries(walnut-graphics-opengl PUBLIC imgui-opengl ${CONAN_LIBS})
 
 add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
@@ -91,6 +91,7 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
+                Walnut/src/Walnut/RenderCommand.cpp
             )
 
 # if (USE_OPENGL_RENDERER)
@@ -113,7 +114,7 @@ target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/Cocoa.framework
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
                         # )
-target_link_libraries(walnut INTERFACE walnut-graphics-opengl)
+target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
 # if(MSVC)
 #     target_link_libraries(walnut INTERFACE vulkan-1.lib)
 # endif()
