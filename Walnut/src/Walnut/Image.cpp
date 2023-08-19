@@ -3,6 +3,7 @@
 #include "imgui.h"
 
 #include "Application.h"
+#include <vulkan/vulkan.h>
 //#include "GraphicsAPI/VulkanGraphics.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -124,16 +125,15 @@ namespace Walnut {
 		{
 			//VkCommandBuffer command_buffer = GraphicsAPI::Vulkan::GetCommandBuffer(true);
 
-			//m_rendererBackendImage.CopyToImage(command_buffer, m_Width, m_Height);
+			// m_rendererBackendImage.CopyToImage(command_buffer, m_Width, m_Height);
 
 			//GraphicsAPI::Vulkan::FlushCommandBuffer(command_buffer);
 		}
 	}
 
-    VkDescriptorSet Image::GetDescriptorSet()
+    void* Image::GetDescriptorSet() // originally returned the type VkDescriptorSet
     { 
-		//return m_rendererBackendImage.GetDescriptorSet(); 
-		return VkDescriptorSet();
+		return m_rendererBackendImage.GetDescriptorSet(); 
 	}
 
     void Image::Resize(uint32_t width, uint32_t height)

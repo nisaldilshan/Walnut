@@ -2,7 +2,6 @@
 
 #include <string>
 
-#include <vulkan/vulkan.h>
 #include "GraphicsAPI/OpenGLImage.h"
 
 namespace Walnut {
@@ -23,7 +22,7 @@ namespace Walnut {
 
 		void SetData(const void* data);
 
-		VkDescriptorSet GetDescriptorSet();
+		void* GetDescriptorSet(); // originally returned the type VkDescriptorSet
 
 		void Resize(uint32_t width, uint32_t height);
 

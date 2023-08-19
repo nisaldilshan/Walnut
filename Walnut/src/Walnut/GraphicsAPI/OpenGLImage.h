@@ -3,19 +3,18 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "OpenGLGraphics.h"
+
 namespace GraphicsAPI
 {
 
     typedef int VkFormat;
     typedef int VkCommandBuffer;
-    typedef int VkDescriptorSet;
     class OpenGLImage
     {
     public:
         OpenGLImage() = default;
         ~OpenGLImage() = default;
-
-        
 
         size_t CreateUploadBuffer(size_t upload_size);
         void CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height);
@@ -24,10 +23,13 @@ namespace GraphicsAPI
         void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
         void CreateSampler();
         void CreateDescriptorSet();
-        VkDescriptorSet GetDescriptorSet();
+        ImTextureID GetDescriptorSet();
         bool ImageAvailable();
         void ResourceFree();
     private:
-        // some
+        GLuint m_texture;
+        uint32_t m_Width, m_Height;
+        uint32_t m_DataFormat;
+        void* m_imageBuffer;
     };
 }
