@@ -44,6 +44,15 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 set(USE_OPENGL_RENDERER)
 find_package (OpenGL REQUIRED)
+#find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets REQUIRED)
+
+### if QT version is 5
+# set(CMAKE_AUTOMOC ON) 
+# set(CMAKE_AUTORCC ON) 
+# set(CMAKE_AUTOUIC ON)
+### if QT version is 6
+#qt_standard_project_setup()
+
 
 #### Third Party Libs which are not already built ####
 add_library(imgui STATIC
