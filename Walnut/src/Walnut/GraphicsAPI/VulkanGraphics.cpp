@@ -1,5 +1,6 @@
 #include "VulkanGraphics.h"
 
+#include <iostream>
 #include <vector>
 #include <functional>
 
@@ -128,6 +129,17 @@ void Vulkan::SetupVulkan(const char** extensions, uint32_t extensions_count)
 				break;
 			}
 		}
+
+		// Print driver details
+		{
+			VkPhysicalDeviceProperties properties;
+			vkGetPhysicalDeviceProperties(gpus[use_gpu], &properties);
+			std::cout << "Graphics Info:" << std::endl;
+			std::cout << "\tdeviceName: " << properties.deviceName << std::endl;
+			std::cout << "\tapiVersion: " << properties.apiVersion << std::endl;
+			std::cout << "\tdriverVersion: " << properties.driverVersion << std::endl;
+		}
+
 
 		g_PhysicalDevice = gpus[use_gpu];
 		free(gpus);

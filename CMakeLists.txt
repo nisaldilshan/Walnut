@@ -42,8 +42,11 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
-set(USE_OPENGL_RENDERER)
-find_package (OpenGL REQUIRED)
+option(USE_OPENGL_RENDERER "USE OPENGL RENDERER" OFF)
+
+if (USE_OPENGL_RENDERER)
+    find_package (OpenGL REQUIRED)
+endif()
 #find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets REQUIRED)
 
 ### if QT version is 5
@@ -79,12 +82,12 @@ add_library (walnut-graphics-vulkan SHARED
             )
 target_link_libraries(walnut-graphics-vulkan PUBLIC imgui-vulkan ${CONAN_LIBS})
 
-# add_library (walnut-graphics-opengl SHARED
-#                 Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
-#                 Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
-#             )
+add_library (walnut-graphics-opengl SHARED
+                Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
+                Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
+            )
 
-# target_link_libraries(walnut-graphics-opengl PUBLIC imgui-opengl ${CONAN_LIBS})
+target_link_libraries(walnut-graphics-opengl PUBLIC imgui-opengl ${CONAN_LIBS})
 
 add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
@@ -92,14 +95,11 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
-                Walnut/src/Walnut/RenderCommand.cpp
             )
 
-# if (USE_OPENGL_RENDERER)
-#     target_compile_definitions(walnut PRIVATE RENDERER_OPENGL)
-# endif()
-
-#target_compile_definitions(walnut PRIVATE RENDERER_OPENGL)
+if (USE_OPENGL_RENDERER)
+    add_compile_definitions(USE_OPENGL_RENDERER)
+endif()
 
 #target_compile_definitions(walnut PUBLIC VK_USE_PLATFORM_MACOS_MVK)
 
@@ -115,7 +115,11 @@ target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/Cocoa.framework
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
                         # )
-target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
+if (USE_OPENGL_RENDERER)
+    target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
+else()
+    target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
+endif()
 # if(MSVC)
 #     target_link_libraries(walnut INTERFACE vulkan-1.lib)
 # endif()
