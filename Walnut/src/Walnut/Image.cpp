@@ -1,6 +1,6 @@
 #include "Image.h"
 
-#include "imgui.h"
+
 
 #include "Application.h"
 #include <vulkan/vulkan.h>
@@ -118,16 +118,6 @@ namespace Walnut {
 		// Upload to Buffer
 		{
 			m_rendererBackendImage.UploadToBuffer(data, upload_size, m_AlignedSize);
-		}
-
-
-		// Copy to Image
-		{
-			//VkCommandBuffer command_buffer = GraphicsAPI::Vulkan::GetCommandBuffer(true);
-
-			// m_rendererBackendImage.CopyToImage(command_buffer, m_Width, m_Height);
-
-			//GraphicsAPI::Vulkan::FlushCommandBuffer(command_buffer);
 		}
 	}
 

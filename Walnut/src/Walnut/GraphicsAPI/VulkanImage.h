@@ -22,6 +22,8 @@ namespace GraphicsAPI
         void ResourceFree();
     private:
         VkImage m_Image;
+        uint32_t m_width;
+        uint32_t m_height;
         VkImageView m_ImageView;
         VkSampler m_Sampler;
         VkDeviceMemory m_Memory;

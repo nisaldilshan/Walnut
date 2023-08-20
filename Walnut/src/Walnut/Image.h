@@ -3,6 +3,7 @@
 #include <string>
 
 #include "GraphicsAPI/OpenGLImage.h"
+#include "GraphicsAPI/VulkanImage.h"
 
 namespace Walnut {
 
@@ -32,7 +33,8 @@ namespace Walnut {
 		void AllocateMemory(uint64_t size);
 		void Release();
 	private:
-		GraphicsAPI::OpenGLImage m_rendererBackendImage;
+		//GraphicsAPI::OpenGLImage m_rendererBackendImage;
+		GraphicsAPI::VulkanImage m_rendererBackendImage;
 		uint32_t m_Width = 0, m_Height = 0;
 
 		ImageFormat m_Format = ImageFormat::None;

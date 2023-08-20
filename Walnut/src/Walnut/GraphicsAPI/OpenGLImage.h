@@ -7,11 +7,10 @@
 
 namespace GraphicsAPI
 {
-
-    typedef int VkFormat;
-    typedef int VkCommandBuffer;
     class OpenGLImage
     {
+        typedef int VkFormat;
+        typedef int VkCommandBuffer;
     public:
         OpenGLImage() = default;
         ~OpenGLImage() = default;

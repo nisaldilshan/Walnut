@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../RenderingBackend.h"
-#include "VulkanGraphics.h"
 
 namespace Walnut {
 

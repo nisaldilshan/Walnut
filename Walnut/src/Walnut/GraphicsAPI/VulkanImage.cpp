@@ -31,13 +31,14 @@ size_t VulkanImage::CreateUploadBuffer(size_t upload_size)
 
 void VulkanImage::CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height)
 {
-    VkResult err;
+    m_width = width;
+    m_height = height;
     VkImageCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     info.imageType = VK_IMAGE_TYPE_2D;
     info.format = vulkanFormat;
-    info.extent.width = width;
-    info.extent.height = height;
+    info.extent.width = m_width;
+    info.extent.height = m_height;
     info.extent.depth = 1;
     info.mipLevels = 1;
     info.arrayLayers = 1;
@@ -46,7 +47,7 @@ void VulkanImage::CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t he
     info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    err = vkCreateImage(Vulkan::GetDevice(), &info, nullptr, &m_Image);
+    VkResult err = vkCreateImage(Vulkan::GetDevice(), &info, nullptr, &m_Image);
     Vulkan::check_vk_result(err);
     VkMemoryRequirements req;
     vkGetImageMemoryRequirements(Vulkan::GetDevice(), m_Image, &req);
@@ -126,6 +127,13 @@ void VulkanImage::UploadToBuffer(const void* data, size_t uploadSize, size_t ali
     err = vkFlushMappedMemoryRanges(Vulkan::GetDevice(), 1, range);
     Vulkan::check_vk_result(err);
     vkUnmapMemory(Vulkan::GetDevice(), m_StagingBufferMemory);
+
+    // Copy to Image
+    {
+        VkCommandBuffer command_buffer = GraphicsAPI::Vulkan::GetCommandBuffer(true);
+        CopyToImage(command_buffer, m_width, m_height);
+        GraphicsAPI::Vulkan::FlushCommandBuffer(command_buffer);
+    }
 }
 
 void VulkanImage::CreateSampler()
