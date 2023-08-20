@@ -52,7 +52,8 @@ public:
             m_viewportWidth != m_image->GetWidth() ||
             m_viewportHeight != m_image->GetHeight())
         {
-            m_image = std::make_shared<Walnut::Image>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+			m_image.reset();
+			m_image = std::make_shared<Walnut::Image>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
             delete[] m_imageData;
             m_imageData = new uint32_t[m_viewportWidth * m_viewportHeight];
         }
