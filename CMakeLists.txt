@@ -75,20 +75,6 @@ target_link_libraries(imgui-opengl PRIVATE imgui)
 # endif()
 
 #### ENGINE ###
-add_library (walnut-graphics-vulkan SHARED
-                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
-                Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
-                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
-            )
-target_link_libraries(walnut-graphics-vulkan PUBLIC imgui-vulkan ${CONAN_LIBS})
-
-add_library (walnut-graphics-opengl SHARED
-                Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
-                Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
-            )
-
-target_link_libraries(walnut-graphics-opengl PUBLIC imgui-opengl ${CONAN_LIBS})
-
 add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
@@ -109,7 +95,7 @@ if(MSVC)
     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 endif()
-target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
+target_link_libraries(walnut PRIVATE ${CONAN_LIBS}  Vulkan::Vulkan)
                         # MoltenVK 
                         # glfw3 
                         # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/Cocoa.framework
@@ -124,6 +110,7 @@ endif()
 #     target_link_libraries(walnut INTERFACE vulkan-1.lib)
 # endif()
 
+#set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 if(APPLE)
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
