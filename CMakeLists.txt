@@ -45,14 +45,14 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 find_package(Vulkan REQUIRED FATAL_ERROR)
 
 #### Third Party Libs which are not already built ####
-add_library(walnut-imgui STATIC
+add_library(walnut-imgui SHARED
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp)
 if(MSVC)
     target_include_directories(walnut-imgui PRIVATE "C:\\VulkanSDK\\1.3.250.1\\Include")
 endif()
 
 #### ENGINE ###
-add_library (walnut STATIC
+add_library (walnut SHARED
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
@@ -67,17 +67,17 @@ if(MSVC)
     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 endif()
-target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
+target_link_libraries(walnut PRIVATE ${CONAN_LIBS}  Vulkan::Vulkan)
                         # MoltenVK 
                         # glfw3 
                         
-target_link_libraries(walnut INTERFACE walnut-imgui Vulkan::Vulkan)
-if(LINUX)
-    target_link_libraries(walnut INTERFACE vulkan)
-endif()
-if(MSVC)
-    target_link_libraries(walnut INTERFACE vulkan-1.lib)
-endif()
+target_link_libraries(walnut INTERFACE walnut-imgui)
+# if(LINUX)
+#     target_link_libraries(walnut INTERFACE vulkan)
+# endif()
+# if(MSVC)
+#     target_link_libraries(walnut INTERFACE vulkan-1.lib)
+# endif()
 
 #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 if(APPLE)
