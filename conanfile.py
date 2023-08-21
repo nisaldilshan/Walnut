@@ -43,3 +43,4 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/Input/Input.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/KeyCodes.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="*.a", dst="lib", keep_path=False)
+        self.copy(pattern="*.so", dst="lib", keep_path=False)
