@@ -42,7 +42,7 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED FATAL_ERROR)
 
 #### Third Party Libs which are not already built ####
 add_library(walnut-imgui STATIC
@@ -67,7 +67,7 @@ if(MSVC)
     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 endif()
-target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
+target_link_libraries(walnut PRIVATE ${CONAN_LIBS}  Vulkan::Vulkan)
                         # MoltenVK 
                         # glfw3 
                         
