@@ -46,6 +46,8 @@ option(USE_OPENGL_RENDERER "USE OPENGL RENDERER" OFF)
 
 if (USE_OPENGL_RENDERER)
     find_package (OpenGL REQUIRED)
+else()
+    find_package (Vulkan REQUIRED)
 endif()
 #find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets REQUIRED)
 
@@ -75,6 +77,20 @@ target_link_libraries(imgui-opengl PRIVATE imgui)
 # endif()
 
 #### ENGINE ###
+add_library (walnut-graphics-vulkan SHARED
+                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
+                Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
+                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
+            )
+target_link_libraries(walnut-graphics-vulkan PUBLIC imgui-vulkan ${CONAN_LIBS})
+
+add_library (walnut-graphics-opengl SHARED
+                Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
+                Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
+            )
+
+target_link_libraries(walnut-graphics-opengl PUBLIC imgui-opengl ${CONAN_LIBS})
+
 add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
