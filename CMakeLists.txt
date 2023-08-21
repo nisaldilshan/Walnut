@@ -60,14 +60,14 @@ endif()
 
 
 #### Third Party Libs which are not already built ####
-add_library(imgui STATIC
+add_library(imgui SHARED
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
-add_library(imgui-vulkan STATIC
+add_library(imgui-vulkan SHARED
                 Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
                 )
 target_link_libraries(imgui-vulkan PRIVATE imgui)
-add_library(imgui-opengl STATIC
+add_library(imgui-opengl SHARED
                 Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
                 )
 target_link_libraries(imgui-opengl PRIVATE imgui)

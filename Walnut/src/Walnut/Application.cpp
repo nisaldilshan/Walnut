@@ -83,6 +83,7 @@ namespace Walnut {
 		if (!windowHandle)
 		{
 			std::cerr << "Could not create GLFW Window!\n";
+			assert(false);
 			return;
 		}
 
