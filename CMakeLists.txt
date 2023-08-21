@@ -111,15 +111,11 @@ if(MSVC)
     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 endif()
-target_link_libraries(walnut PRIVATE ${CONAN_LIBS}  Vulkan::Vulkan)
-                        # MoltenVK 
-                        # glfw3 
-                        # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/Cocoa.framework
-                        # /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/IOKit.framework
-                        # )
+target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
 if (USE_OPENGL_RENDERER)
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
 else()
+    target_link_libraries(walnut PRIVATE Vulkan::Vulkan)
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
 endif()
 # if(MSVC)
