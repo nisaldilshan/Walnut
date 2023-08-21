@@ -67,11 +67,11 @@ if(MSVC)
     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 endif()
-target_link_libraries(walnut PRIVATE ${CONAN_LIBS}  Vulkan::Vulkan)
+target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
                         # MoltenVK 
                         # glfw3 
                         
-target_link_libraries(walnut INTERFACE walnut-imgui)
+target_link_libraries(walnut INTERFACE walnut-imgui Vulkan::Vulkan)
 if(LINUX)
     target_link_libraries(walnut INTERFACE vulkan)
 endif()
