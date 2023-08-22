@@ -11,8 +11,6 @@ project (Walnut)
 
 message(STATUS "CMAKE_SYSTEM " + ${CMAKE_SYSTEM})
 message(STATUS "CMAKE_SYSTEM_NAME " + ${CMAKE_SYSTEM_NAME})
-#set(CMAKE_SYSTEM_VERSION latest)
-#message(STATUS "CMAKE_SYSTEM_VERSION " + ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION})
 message(STATUS "CMAKE_SYSTEM_VERSION " + ${CMAKE_SYSTEM_VERSION})
 message(STATUS "CMAKE_SYSTEM_PROCESSOR " + ${CMAKE_SYSTEM_PROCESSOR})
 
@@ -60,37 +58,29 @@ endif()
 
 
 #### Third Party Libs which are not already built ####
-add_library(imgui SHARED
+add_library(imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
-add_library(imgui-vulkan SHARED
-                Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
+#### WALNUT GRAPHICS ###
+if (USE_OPENGL_RENDERER)
+    add_library (walnut-graphics-opengl STATIC
+                    Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
+                    Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
+                    Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
                 )
-target_link_libraries(imgui-vulkan PRIVATE imgui)
-add_library(imgui-opengl SHARED
-                Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
-                )
-target_link_libraries(imgui-opengl PRIVATE imgui)
 
-# if(MSVC)
-#     target_include_directories(walnut-imgui PRIVATE "C:\\VulkanSDK\\1.3.250.1\\Include")
-# endif()
+    target_link_libraries(walnut-graphics-opengl PUBLIC imgui ${CONAN_LIBS})
+else()
+    add_library (walnut-graphics-vulkan STATIC
+                    Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
+                    Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
+                    Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
+                    Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
+                )
+    target_link_libraries(walnut-graphics-vulkan PUBLIC imgui ${CONAN_LIBS})
+endif()
 
 #### ENGINE ###
-add_library (walnut-graphics-vulkan SHARED
-                Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
-                Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
-                Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
-            )
-target_link_libraries(walnut-graphics-vulkan PUBLIC imgui-vulkan ${CONAN_LIBS})
-
-add_library (walnut-graphics-opengl SHARED
-                Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
-                Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
-            )
-
-target_link_libraries(walnut-graphics-opengl PUBLIC imgui-opengl ${CONAN_LIBS})
-
 add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
@@ -115,7 +105,9 @@ target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
 if (USE_OPENGL_RENDERER)
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
 else()
-    target_link_libraries(walnut PRIVATE Vulkan::Vulkan)
+    if (NOT APPLE)
+        target_link_libraries(walnut PUBLIC Vulkan::Vulkan)
+    endif()
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
 endif()
 # if(MSVC)
