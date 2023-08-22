@@ -10,7 +10,11 @@ class Walnut(ConanFile):
     requires = ("stb/20200203", "imgui/latest@nisaldilshan/docking", "glm/0.9.9.8", "glad/0.1.33")
     generators = "cmake"
     build_policy = "missing"
+    options = {
+        "use_opengl": [True, False],
+    }
     default_options = {
+        "use_opengl": True,
         "glad:no_loader": False,
         "glad:spec": "gl",
         "glad:extensions": "",
@@ -34,6 +38,7 @@ class Walnut(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True
+        cmake.definitions["USE_OPENGL_RENDERER"] = self.options.use_opengl
         cmake.configure()
         cmake.build()
 
