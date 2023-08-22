@@ -7,10 +7,11 @@
 #include <memory>
 #include <functional>
 
-#include "imgui.h"
-#include <vulkan/vulkan.h>
+#ifdef __EMSCRIPTEN__
+#include <webgpu/webgpu_cpp.h>
+#endif
 
-void check_vk_result(VkResult err);
+#include "RenderingBackend.h"
 
 struct GLFWwindow;
 
@@ -32,7 +33,8 @@ namespace Walnut {
 		static Application& Get();
 
 		void Run();
-		void SetMenubarCallback(const std::function<void()>& menubarCallback) { m_MenubarCallback = menubarCallback; }
+		void SetMenubarCallback(const std::function<void()>& menubarCallback);
+		void SetUIRenderingCallback();
 		
 		template<typename T>
 		void PushLayer()
@@ -46,22 +48,15 @@ namespace Walnut {
 		void Close();
 
 		float GetTime();
-		GLFWwindow* GetWindowHandle() const { return m_WindowHandle; }
+		GLFWwindow* GetWindowHandle() const;
 
-		static VkInstance GetInstance();
-		static VkPhysicalDevice GetPhysicalDevice();
-		static VkDevice GetDevice();
-
-		static VkCommandBuffer GetCommandBuffer(bool begin);
-		static void FlushCommandBuffer(VkCommandBuffer commandBuffer);
-
-		static void SubmitResourceFree(std::function<void()>&& func);
+		static void SubmitGraphicsResourceFree(); // std::function<void()>&& func
 	private:
 		void Init();
 		void Shutdown();
 	private:
 		ApplicationSpecification m_Specification;
-		GLFWwindow* m_WindowHandle = nullptr;
+		std::unique_ptr<RenderingBackend> m_RenderingBackend = nullptr;
 		bool m_Running = false;
 
 		float m_TimeStep = 0.0f;
@@ -70,6 +65,12 @@ namespace Walnut {
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::function<void()> m_MenubarCallback;
+		std::function<void()> m_UIRenderingCallback;
+
+#ifdef __EMSCRIPTEN__
+		wgpu::Device device_;
+    	wgpu::Queue queue_;
+#endif
 	};
 
 	// Implemented by CLIENT

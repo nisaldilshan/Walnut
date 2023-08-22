@@ -2,7 +2,11 @@
 
 #include <string>
 
-#include "vulkan/vulkan.h"
+#ifdef USE_OPENGL_RENDERER
+#include "GraphicsAPI/OpenGLImage.h"
+#else
+#include "GraphicsAPI/VulkanImage.h"
+#endif
 
 namespace Walnut {
 
@@ -22,7 +26,7 @@ namespace Walnut {
 
 		void SetData(const void* data);
 
-		VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
+		void* GetDescriptorSet(); // originally returned the type VkDescriptorSet
 
 		void Resize(uint32_t width, uint32_t height);
 
@@ -32,22 +36,16 @@ namespace Walnut {
 		void AllocateMemory(uint64_t size);
 		void Release();
 	private:
+#ifdef USE_OPENGL_RENDERER
+		GraphicsAPI::OpenGLImage m_rendererBackendImage;
+#else
+		GraphicsAPI::VulkanImage m_rendererBackendImage;
+#endif
 		uint32_t m_Width = 0, m_Height = 0;
-
-		VkImage m_Image;
-		VkImageView m_ImageView;
-		VkDeviceMemory m_Memory;
-		VkSampler m_Sampler;
 
 		ImageFormat m_Format = ImageFormat::None;
 
-		VkBuffer m_StagingBuffer;
-		VkDeviceMemory m_StagingBufferMemory;
-
 		size_t m_AlignedSize = 0;
-
-		VkDescriptorSet m_DescriptorSet;
-
 		std::string m_Filepath;
 	};
 
