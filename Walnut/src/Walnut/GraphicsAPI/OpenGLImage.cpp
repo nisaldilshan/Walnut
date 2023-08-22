@@ -20,7 +20,7 @@ void OpenGLImage::CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t he
     glBindTexture(GL_TEXTURE_2D, m_texture);
 
     // Load up some initial data
-    glTexImage2D(GL_TEXTURE_2D, 0, m_DataFormat, m_Width, m_Height, 0, m_DataFormat, GL_UNSIGNED_BYTE, (GLvoid*)m_imageBuffer);
+    // glTexImage2D(GL_TEXTURE_2D, 0, m_DataFormat, m_Width, m_Height, 0, m_DataFormat, GL_UNSIGNED_BYTE, (GLvoid*)m_imageBuffer);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // GL_CLAMP
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // GL_CLAMP
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Linear Filtering
