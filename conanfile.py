@@ -43,7 +43,10 @@ class Walnut(ConanFile):
         cmake.build()
 
     def package_info(self):
-        self.cpp_info.libs = ["walnut", "walnut-imgui"]
+        if self.options.use_opengl == True:
+            self.cpp_info.libs = ["walnut", "walnut-imgui", "walnut-graphics-opengl"]
+        else:
+            self.cpp_info.libs = ["walnut", "walnut-imgui", "walnut-graphics-vulkan"]
 
     def package(self):
         self.copy(pattern="Walnut/src/Walnut/EntryPoint.h", dst="include/Walnut", keep_path=False)
