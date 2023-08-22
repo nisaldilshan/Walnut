@@ -2,11 +2,14 @@
 
 #include <string>
 
+namespace GraphicsAPI
+{
 #ifdef USE_OPENGL_RENDERER
-#include "GraphicsAPI/OpenGLImage.h"
+	class OpenGLImage;
 #else
-#include "GraphicsAPI/VulkanImage.h"
+	class VulkanImage;
 #endif
+}
 
 namespace Walnut {
 
@@ -36,17 +39,15 @@ namespace Walnut {
 		void AllocateMemory(uint64_t size);
 		void Release();
 	private:
-#ifdef USE_OPENGL_RENDERER
-		GraphicsAPI::OpenGLImage m_rendererBackendImage;
-#else
-		GraphicsAPI::VulkanImage m_rendererBackendImage;
-#endif
-		uint32_t m_Width = 0, m_Height = 0;
-
-		ImageFormat m_Format = ImageFormat::None;
-
-		size_t m_AlignedSize = 0;
 		std::string m_Filepath;
+		uint32_t m_Width = 0, m_Height = 0;
+		ImageFormat m_Format = ImageFormat::None;
+#ifdef USE_OPENGL_RENDERER
+		std::unique_ptr<GraphicsAPI::OpenGLImage> m_rendererBackendImage;
+#else
+		std::unique_ptr<GraphicsAPI::VulkanImage> m_rendererBackendImage;
+#endif
+		size_t m_AlignedSize = 0;
 	};
 
 }

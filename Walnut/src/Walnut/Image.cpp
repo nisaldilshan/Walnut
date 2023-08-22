@@ -1,10 +1,14 @@
 #include "Image.h"
 
+#ifdef USE_OPENGL_RENDERER
+#include "GraphicsAPI/OpenGLImage.h"
+#else
+#include "GraphicsAPI/VulkanImage.h"
+#endif
 
 
 #include "Application.h"
 #include <vulkan/vulkan.h>
-//#include "GraphicsAPI/VulkanGraphics.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -35,10 +39,23 @@ namespace Walnut {
 			return (VkFormat)0;
 		}
 
+#ifdef USE_OPENGL_RENDERER
+		static std::unique_ptr<GraphicsAPI::OpenGLImage> CreateBackendImage()
+		{
+			return std::make_unique<GraphicsAPI::OpenGLImage>();
+		}
+#else
+		static std::unique_ptr<GraphicsAPI::VulkanImage> CreateBackendImage()
+		{
+			return std::make_unique<GraphicsAPI::VulkanImage>();
+		}
+#endif 
+
 	}
 
 	Image::Image(std::string_view path)
 		: m_Filepath(path)
+		, m_rendererBackendImage(Utils::CreateBackendImage())
 	{
 		int width, height, channels;
 		uint8_t* data = nullptr;
@@ -64,6 +81,7 @@ namespace Walnut {
 
 	Image::Image(uint32_t width, uint32_t height, ImageFormat format, const void* data)
 		: m_Width(width), m_Height(height), m_Format(format)
+		, m_rendererBackendImage(Utils::CreateBackendImage())
 	{
 		AllocateMemory(m_Width * m_Height * Utils::BytesPerPixel(m_Format));
 		if (data)
@@ -81,26 +99,26 @@ namespace Walnut {
 
 		// Create the Image
 		{
-			m_rendererBackendImage.CreateImage(vulkanFormat, m_Width, m_Height);
+			m_rendererBackendImage->CreateImage(vulkanFormat, m_Width, m_Height);
 		}
 
 		// Create the Image View:
 		{
-			m_rendererBackendImage.CreateImageView(vulkanFormat);
+			m_rendererBackendImage->CreateImageView(vulkanFormat);
 		}
 
 		// Create sampler:
 		{
-			m_rendererBackendImage.CreateSampler();
+			m_rendererBackendImage->CreateSampler();
 		}
 
 		// Create the Descriptor Set:
-		m_rendererBackendImage.CreateDescriptorSet();
+		m_rendererBackendImage->CreateDescriptorSet();
 	}
 
 	void Image::Release()
 	{
-		m_rendererBackendImage.ResourceFree();
+		m_rendererBackendImage->ResourceFree();
 	}
 
 	void Image::SetData(const void* data)
@@ -112,23 +130,23 @@ namespace Walnut {
 		if (!m_AlignedSize)
 		{
 			// Create the Upload Buffer
-			m_AlignedSize = m_rendererBackendImage.CreateUploadBuffer(upload_size);
+			m_AlignedSize = m_rendererBackendImage->CreateUploadBuffer(upload_size);
 		}
 
 		// Upload to Buffer
 		{
-			m_rendererBackendImage.UploadToBuffer(data, upload_size, m_AlignedSize);
+			m_rendererBackendImage->UploadToBuffer(data, upload_size, m_AlignedSize);
 		}
 	}
 
     void* Image::GetDescriptorSet() // originally returned the type VkDescriptorSet
     { 
-		return m_rendererBackendImage.GetDescriptorSet(); 
+		return m_rendererBackendImage->GetDescriptorSet(); 
 	}
 
     void Image::Resize(uint32_t width, uint32_t height)
 	{
-		if (m_rendererBackendImage.ImageAvailable() && m_Width == width && m_Height == height)
+		if (m_rendererBackendImage->ImageAvailable() && m_Width == width && m_Height == height)
 			return;
 
 		// TODO: max size?
