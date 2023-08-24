@@ -79,7 +79,7 @@ else()
                 )
     target_link_libraries(walnut-graphics-vulkan PUBLIC walnut-imgui ${CONAN_LIBS})
     if (NOT APPLE)
-        target_link_libraries(walnut-graphics-vulkan PUBLIC Vulkan::Vulkan)
+        target_link_libraries(walnut-graphics-vulkan INTERFACE Vulkan::Vulkan)
     endif()
 endif()
 

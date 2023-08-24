@@ -14,12 +14,12 @@ class Walnut(ConanFile):
         "use_opengl": [True, False],
     }
     default_options = {
-        "use_opengl": True,
+        "use_opengl": False,
         "glad:no_loader": False,
         "glad:spec": "gl",
         "glad:extensions": "",
         "glad:gl_profile": "core",
-        "glad:gl_version": 4.6
+        "glad:gl_version": 4.1
     }
 
     def requirements(self):
