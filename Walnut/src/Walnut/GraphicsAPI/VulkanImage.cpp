@@ -194,4 +194,9 @@ void VulkanImage::ResourceFree() // std::function<void()> &&func
     m_StagingBufferMemory = 0;
 }
 
+VkBuffer VulkanImage::GetStagingBuffer()
+{
+    return m_StagingBuffer;
+}
+
 } // namespace

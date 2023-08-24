@@ -127,7 +127,7 @@ namespace Walnut {
 
 		VkResult err;
 
-		if (!m_AlignedSize)
+		if (!m_rendererBackendImage->GetStagingBuffer())
 		{
 			// Create the Upload Buffer
 			m_AlignedSize = m_rendererBackendImage->CreateUploadBuffer(upload_size);

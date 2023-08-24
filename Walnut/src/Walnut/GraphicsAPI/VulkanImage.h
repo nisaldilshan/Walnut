@@ -20,6 +20,8 @@ namespace GraphicsAPI
         VkDescriptorSet GetDescriptorSet();
         bool ImageAvailable();
         void ResourceFree();
+        VkBuffer GetStagingBuffer();
+
     private:
         VkImage m_Image;
         uint32_t m_width;
