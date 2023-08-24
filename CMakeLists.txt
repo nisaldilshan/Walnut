@@ -58,7 +58,7 @@ endif()
 
 
 #### Third Party Libs which are not already built ####
-add_library(walnut-imgui STATIC
+add_library(walnut-imgui SHARED
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
 #### WALNUT GRAPHICS ###
@@ -71,7 +71,7 @@ if (USE_OPENGL_RENDERER)
 
     target_link_libraries(walnut-graphics-opengl PUBLIC walnut-imgui ${CONAN_LIBS})
 else()
-    add_library (walnut-graphics-vulkan STATIC
+    add_library (walnut-graphics-vulkan SHARED
                     Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
                     Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
                     Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
@@ -79,7 +79,7 @@ else()
                 )
     target_link_libraries(walnut-graphics-vulkan PUBLIC walnut-imgui ${CONAN_LIBS})
     if (NOT APPLE)
-        target_link_libraries(walnut-graphics-vulkan INTERFACE Vulkan::Vulkan)
+        target_link_libraries(walnut-graphics-vulkan PRIVATE Vulkan::Vulkan)
     endif()
 endif()
 
