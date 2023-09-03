@@ -195,8 +195,10 @@ namespace Walnut {
 			// Update and Render additional Platform Windows
 			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 			{
+				auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
 				ImGui::UpdatePlatformWindows();
 				ImGui::RenderPlatformWindowsDefault();
+				glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
 			}
 
 			// Present Main Platform Window

@@ -39,7 +39,7 @@ const char * GetGLErrorStr(GLenum err)
     }
 }
 
-void CheckGLError()
+inline void CheckGLError()
 {
     while (true)
     {
@@ -72,7 +72,7 @@ void OpenGL::SetupOpenGL(GLFWwindow *windowHandle)
     //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     //glDebugMessageCallback(OpenGLMessageCallback, nullptr);		
     //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
-    CheckGLError();
+    //CheckGLError();
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
