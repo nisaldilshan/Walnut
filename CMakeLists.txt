@@ -65,6 +65,7 @@ add_library(walnut-imgui SHARED
 if (USE_OPENGL_RENDERER)
     add_library (walnut-graphics-opengl STATIC
                     Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
+                    Walnut/src/Walnut/GraphicsAPI/OpenGLGraphics.cpp
                     Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
                     Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
                 )

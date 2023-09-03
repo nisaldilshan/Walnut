@@ -1,4 +1,0 @@
-struct GraphicsCommon
-{
-    /* data */
-};

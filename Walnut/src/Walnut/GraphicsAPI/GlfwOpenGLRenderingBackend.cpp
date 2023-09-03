@@ -1,6 +1,7 @@
 #include "GlfwOpenGLRenderingBackend.h"
 
 #include <iostream>
+#include <imgui_impl_opengl3.h>
 
 #include "../RenderingBackend.h"
 #include "OpenGLGraphics.h"
@@ -11,24 +12,9 @@ namespace Walnut
 	void GlfwOpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
 	{
 		m_windowHandle = windowHandle;
-		glfwMakeContextCurrent(windowHandle);
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		gladLoadGL();
-		if (!status)
-		{
-			std::cout << "Failed to initialize Glad!" << std::endl;
-			return;
-		}
-
-		std::cout << "Graphics Info:" << std::endl;
-		std::cout << "\tVendor: " << glGetString(GL_VENDOR) << std::endl;
-		std::cout << "\tRenderer: " << glGetString(GL_RENDERER) << std::endl;
-		std::cout << "\tVersion: " << glGetString(GL_VERSION) << std::endl;
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glEnable(GL_DEPTH_TEST);
+		
+		GraphicsAPI::OpenGL::SetupOpenGL(windowHandle);
+		
 	}
 
 	void GlfwOpenGLRenderingBackend::SetupGraphicsAPI()
@@ -37,9 +23,7 @@ namespace Walnut
 
 	void GlfwOpenGLRenderingBackend::SetupWindow(int width, int height)
 	{
-		int x = 0;
-		int y = 0;
-		glViewport(x, y, width, height);
+		GraphicsAPI::OpenGL::SetupViewport(width, height);
 	}
 
 	bool GlfwOpenGLRenderingBackend::NeedToResizeWindow()
@@ -92,7 +76,8 @@ namespace Walnut
 			// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
 			// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-			ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+			static bool dockspaceOpen = true;
+			ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
 			ImGui::PopStyleVar();
 
 			ImGui::PopStyleVar(2);

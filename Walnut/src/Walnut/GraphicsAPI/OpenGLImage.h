@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <glad/glad.h>
 #include "OpenGLGraphics.h"
 
 namespace GraphicsAPI
@@ -11,6 +12,7 @@ namespace GraphicsAPI
     {
         typedef int VkFormat;
         typedef int VkCommandBuffer;
+        typedef int VkBuffer;
     public:
         OpenGLImage() = default;
         ~OpenGLImage() = default;
@@ -25,6 +27,7 @@ namespace GraphicsAPI
         ImTextureID GetDescriptorSet();
         bool ImageAvailable();
         void ResourceFree();
+        VkBuffer GetStagingBuffer();
     private:
         GLuint m_texture;
         uint32_t m_Width, m_Height;

@@ -12,7 +12,6 @@ void OpenGLImage::CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t he
 {
     m_Width = width;
     m_Height = height;
-    GLenum internalFormat = GL_RGBA8;
     m_DataFormat = GL_RGBA;
 
     glGenTextures(1, &m_texture); // glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
@@ -59,6 +58,11 @@ bool OpenGLImage::ImageAvailable()
 void OpenGLImage::ResourceFree()
 {
     glDeleteTextures(1, &m_texture);
+}
+
+OpenGLImage::VkBuffer OpenGLImage::GetStagingBuffer()
+{
+    return 0;
 }
 
 }
