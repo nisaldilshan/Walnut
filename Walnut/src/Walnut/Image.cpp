@@ -8,7 +8,6 @@
 
 
 #include "Application.h"
-#include <vulkan/vulkan.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -26,17 +25,6 @@ namespace Walnut {
 				case ImageFormat::None:	assert(false);
 			}
 			return 0;
-		}
-		
-		static VkFormat WalnutFormatToVulkanFormat(ImageFormat format)
-		{
-			switch (format)
-			{
-				case ImageFormat::RGBA:    return VK_FORMAT_R8G8B8A8_UNORM;
-				case ImageFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;
-				case ImageFormat::None:	assert(false);
-			}
-			return (VkFormat)0;
 		}
 
 #ifdef USE_OPENGL_RENDERER
@@ -95,6 +83,7 @@ namespace Walnut {
 
 	void Image::AllocateMemory(uint64_t size)
 	{
+		typedef int VkFormat;
 		VkFormat vulkanFormat = Utils::WalnutFormatToVulkanFormat(m_Format);
 
 		// Create the Image
@@ -124,8 +113,6 @@ namespace Walnut {
 	void Image::SetData(const void* data)
 	{
 		size_t upload_size = m_Width * m_Height * Utils::BytesPerPixel(m_Format);
-
-		VkResult err;
 
 		if (!m_rendererBackendImage->GetStagingBuffer())
 		{

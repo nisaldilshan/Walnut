@@ -58,7 +58,7 @@ endif()
 
 
 #### Third Party Libs which are not already built ####
-add_library(walnut-imgui SHARED
+add_library(walnut-imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
 #### WALNUT GRAPHICS ###
@@ -101,10 +101,10 @@ endif()
 
 target_include_directories(walnut PRIVATE "Walnut/src")
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
-if(MSVC)
-    target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
-    target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
-endif()
+# if(MSVC)
+#     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
+#     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
+# endif()
 target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
 if (USE_OPENGL_RENDERER)
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)

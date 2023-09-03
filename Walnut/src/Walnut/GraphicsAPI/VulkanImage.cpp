@@ -2,6 +2,24 @@
 
 #include "VulkanGraphics.h"
 
+namespace Walnut
+{
+namespace Utils
+{
+    VkFormat WalnutFormatToVulkanFormat(ImageFormat format)
+    {
+        switch (format)
+        {
+        case ImageFormat::RGBA: return VK_FORMAT_R8G8B8A8_UNORM;
+        case ImageFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;
+        case ImageFormat::None: assert(false);
+        }
+        return (VkFormat)0;
+    }
+}
+
+}
+
 namespace GraphicsAPI
 {
 

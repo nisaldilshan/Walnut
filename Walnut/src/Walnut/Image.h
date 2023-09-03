@@ -3,6 +3,8 @@
 #include <string>
 #include <memory>
 
+#include "ImageFormat.h"
+
 namespace GraphicsAPI
 {
 #ifdef USE_OPENGL_RENDERER
@@ -13,13 +15,6 @@ namespace GraphicsAPI
 }
 
 namespace Walnut {
-
-	enum class ImageFormat
-	{
-		None = 0,
-		RGBA,
-		RGBA32F
-	};
 
 	class Image
 	{

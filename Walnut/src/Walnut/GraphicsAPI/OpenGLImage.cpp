@@ -1,5 +1,20 @@
 #include "OpenGLImage.h"
 
+#include "../ImageFormat.h"
+
+namespace Walnut
+{
+namespace Utils
+{
+    typedef int VkFormat;
+    VkFormat WalnutFormatToVulkanFormat(ImageFormat format)
+    {
+        return (VkFormat)0;
+    }
+}
+
+}
+
 namespace GraphicsAPI
 {
 
