@@ -1,11 +1,6 @@
 #include "GlfwVulkanRenderingBackend.h"
 #include <iostream>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/html5_webgpu.h>
-#endif
-
 #include "../RenderingBackend.h"
 #include "VulkanGraphics.h"
 
@@ -26,12 +21,8 @@ namespace Walnut
 
     void GlfwVulkanRenderingBackend::SetupGraphicsAPI()
     {
-#ifdef __EMSCRIPTEN__
-        SetupWebGPU(m_extensions, m_extensions_count);
-#else
         // Setup Vulkan
         GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
-#endif
         // Create Window Surface
         GraphicsAPI::Vulkan::AddWindowHandle(m_windowHandle);
     }
