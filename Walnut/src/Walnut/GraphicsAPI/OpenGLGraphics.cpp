@@ -1,7 +1,9 @@
 #include "OpenGLGraphics.h"
 
 #include <iostream>
+#ifndef __EMSCRIPTEN__
 #include <glad/glad.h>
+#endif
 
 namespace GraphicsAPI
 {
@@ -56,6 +58,9 @@ void OpenGL::SetupOpenGL(GLFWwindow *windowHandle)
     GLenum internalFormat = GL_RGBA8;
 
     glfwMakeContextCurrent(windowHandle);
+    
+#ifdef __EMSCRIPTEN__
+#else
     int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     gladLoadGL();
     if (!status)
@@ -63,6 +68,8 @@ void OpenGL::SetupOpenGL(GLFWwindow *windowHandle)
         std::cout << "Failed to initialize Glad!" << std::endl;
         return;
     }
+#endif
+    
     std::cout << "Graphics Info:" << std::endl;
     std::cout << "\tVendor: " << glGetString(GL_VENDOR) << std::endl;
     std::cout << "\tRenderer: " << glGetString(GL_RENDERER) << std::endl;

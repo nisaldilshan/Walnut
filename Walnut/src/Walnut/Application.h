@@ -7,9 +7,6 @@
 #include <memory>
 #include <functional>
 
-#ifdef __EMSCRIPTEN__
-#include <webgpu/webgpu_cpp.h>
-#endif
 
 #include "RenderingBackend.h"
 
@@ -67,10 +64,6 @@ namespace Walnut {
 		std::function<void()> m_MenubarCallback;
 		std::function<void()> m_UIRenderingCallback;
 
-#ifdef __EMSCRIPTEN__
-		wgpu::Device device_;
-    	wgpu::Queue queue_;
-#endif
 	};
 
 	// Implemented by CLIENT

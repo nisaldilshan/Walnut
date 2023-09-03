@@ -2,8 +2,14 @@
 
 #include <imgui_impl_glfw.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/emscripten.h>
+#define GLFW_INCLUDE_ES3
+#else
 #define GLFW_INCLUDE_NONE
-//#define GLFW_INCLUDE_GLEXT
+#endif
+
 #include <GLFW/glfw3.h>
 
 namespace GraphicsAPI
