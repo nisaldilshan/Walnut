@@ -29,6 +29,7 @@ namespace Walnut {
 
 		static Application& Get();
 
+		void MainLoop();
 		void Run();
 		void SetMenubarCallback(const std::function<void()>& menubarCallback);
 		void SetUIRenderingCallback();
@@ -51,7 +52,7 @@ namespace Walnut {
 	private:
 		void Init();
 		void Shutdown();
-	private:
+
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend = nullptr;
 		bool m_Running = false;
