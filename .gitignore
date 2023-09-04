@@ -15,3 +15,4 @@ build
 build-linux
 .vsconan
 .vscode
+.DS_Store

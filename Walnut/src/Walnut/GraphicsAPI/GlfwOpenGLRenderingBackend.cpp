@@ -38,7 +38,11 @@ namespace Walnut
 	void GlfwOpenGLRenderingBackend::ConfigureImGui()
 	{
 		ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
+#ifdef __EMSCRIPTEN__
+		ImGui_ImplOpenGL3_Init("#version 300 es");
+#else
 		ImGui_ImplOpenGL3_Init("#version 410");
+#endif
 	}
 
 	void GlfwOpenGLRenderingBackend::StartImGuiFrame(const std::function<void()> &applicationMenubarCallback, const std::function<void()> &applicationUIRenderingCallback)
