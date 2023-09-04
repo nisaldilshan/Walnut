@@ -12,6 +12,11 @@
 
 #include "RenderingBackend.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/emscripten.h>
+#endif
+
 // Emedded font
 #include "ImGui/Roboto-Regular.embed"
 
@@ -32,6 +37,11 @@ static Walnut::Application* s_Instance = nullptr;
 static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+void EmscriptenMainLoop(void* arg)
+{
+  static_cast<Walnut::Application*>(arg)->MainLoop();
 }
 
 namespace Walnut {
@@ -69,12 +79,17 @@ namespace Walnut {
 
 		if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::OpenGL)
 		{
+#ifdef __EMSCRIPTEN__
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+#else
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // use GLFW_OPENGL_ANY_PROFILE for X11 sessions
+#endif
 
-			// glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API); // GLFW_OPENGL_ANY_PROFILE
+			// glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 			// glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 			// glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		}
@@ -155,61 +170,69 @@ namespace Walnut {
 		g_ApplicationRunning = false;
 	}
 
+	void Application::MainLoop()
+	{
+		// Poll and handle events (inputs, window resize, etc.)
+		// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
+		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+		glfwPollEvents();
+
+		for (auto& layer : m_LayerStack)
+			layer->OnUpdate(m_TimeStep);
+
+		// Resize swap chain?
+		if (m_RenderingBackend->NeedToResizeWindow())
+		{
+			int width, height;
+			glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
+			if (width > 0 && height > 0)
+				m_RenderingBackend->ResizeWindow(width, height);
+		}
+
+		m_RenderingBackend->StartImGuiFrame(m_MenubarCallback, m_UIRenderingCallback);
+
+		// Rendering
+		ImGui::Render();
+		ImDrawData* main_draw_data = ImGui::GetDrawData();
+		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+		m_RenderingBackend->SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
+		if (!main_is_minimized)
+			m_RenderingBackend->FrameRender(main_draw_data);
+
+		// Update and Render additional Platform Windows
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
+		}
+
+		// Present Main Platform Window
+		if (!main_is_minimized)
+			m_RenderingBackend->FramePresent();
+
+		float time = GetTime();
+		m_FrameTime = time - m_LastFrameTime;
+		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
+		m_LastFrameTime = time;
+
+	}
+
 	void Application::Run()
 	{
 		m_Running = true;
-		ImGuiIO& io = ImGui::GetIO();
 
+#ifdef __EMSCRIPTEN__
+    	emscripten_set_main_loop_arg(&EmscriptenMainLoop, this, 0, true);
+#else
 		// Main loop
 		while (!glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && m_Running)
-		{
-			// Poll and handle events (inputs, window resize, etc.)
-			// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-			// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-			// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-			// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-			glfwPollEvents();
-
-			for (auto& layer : m_LayerStack)
-				layer->OnUpdate(m_TimeStep);
-
-			// Resize swap chain?
-			if (m_RenderingBackend->NeedToResizeWindow())
-			{
-				int width, height;
-				glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
-				if (width > 0 && height > 0)
-					m_RenderingBackend->ResizeWindow(width, height);
-			}
-
-			m_RenderingBackend->StartImGuiFrame(m_MenubarCallback, m_UIRenderingCallback);
-
-			// Rendering
-			ImGui::Render();
-			ImDrawData* main_draw_data = ImGui::GetDrawData();
-			const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-			m_RenderingBackend->SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
-			if (!main_is_minimized)
-				m_RenderingBackend->FrameRender(main_draw_data);
-
-			// Update and Render additional Platform Windows
-			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-			{
-				auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
-				glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
-			}
-
-			// Present Main Platform Window
-			if (!main_is_minimized)
-				m_RenderingBackend->FramePresent();
-
-			float time = GetTime();
-			m_FrameTime = time - m_LastFrameTime;
-			m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
-			m_LastFrameTime = time;
-		}
+			MainLoop();
+#endif
 
 	}
 
