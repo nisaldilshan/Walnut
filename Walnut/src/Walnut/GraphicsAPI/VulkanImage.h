@@ -11,8 +11,8 @@ namespace GraphicsAPI
         ~VulkanImage() = default;
 
         size_t CreateUploadBuffer(size_t upload_size);
-        void CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height);
-        void CreateImageView(VkFormat vulkanFormat);
+        void CreateImage(int vulkanFormat, uint32_t width, uint32_t height);
+        void CreateImageView(int vulkanFormat);
         void CopyToImage(VkCommandBuffer command_buffer, uint32_t width, uint32_t height);
         void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
         void CreateSampler();

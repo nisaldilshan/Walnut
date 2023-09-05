@@ -23,7 +23,7 @@ size_t OpenGLImage::CreateUploadBuffer(size_t upload_size)
     return 1;
 }
 
-void OpenGLImage::CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t height)
+void OpenGLImage::CreateImage(int vulkanFormat, uint32_t width, uint32_t height)
 {
     m_Width = width;
     m_Height = height;
@@ -41,7 +41,7 @@ void OpenGLImage::CreateImage(VkFormat vulkanFormat, uint32_t width, uint32_t he
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Linear Filtering
 }
 
-void OpenGLImage::CreateImageView(VkFormat vulkanFormat)
+void OpenGLImage::CreateImageView(int vulkanFormat)
 {
 }
 
