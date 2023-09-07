@@ -53,6 +53,7 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/EntryPoint.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Application.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Image.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/ImageFormat.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Layer.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Random.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Timer.h", dst="include/Walnut", keep_path=False)
