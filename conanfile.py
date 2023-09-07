@@ -24,7 +24,8 @@ class Walnut(ConanFile):
 
     def requirements(self):
         if self.settings.os == 'Macos':
-            self.requires("moltenvk/1.2.2")
+            if self.options.use_opengl == False:
+                self.requires("moltenvk/1.2.2")
         if not self.settings.os == 'Emscripten':
             self.requires("glfw/3.3.8")
             self.requires("glad/0.1.33")
