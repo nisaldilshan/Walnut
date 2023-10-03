@@ -1,6 +1,6 @@
 #include "OpenGLImage.h"
 
-#include "../ImageFormat.h"
+#include "../../ImageFormat.h"
 
 namespace Walnut
 {

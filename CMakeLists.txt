@@ -65,18 +65,18 @@ add_library(walnut-imgui STATIC
 if (USE_OPENGL_RENDERER)
     add_library (walnut-graphics-opengl STATIC
                     Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
-                    Walnut/src/Walnut/GraphicsAPI/OpenGLGraphics.cpp
-                    Walnut/src/Walnut/GraphicsAPI/GlfwOpenGLRenderingBackend.cpp
-                    Walnut/src/Walnut/GraphicsAPI/OpenGLImage.cpp   
+                    Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLGraphics.cpp
+                    Walnut/src/Walnut/GraphicsAPI/OpenGL/GlfwOpenGLRenderingBackend.cpp
+                    Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLImage.cpp   
                 )
 
     target_link_libraries(walnut-graphics-opengl PUBLIC walnut-imgui ${CONAN_LIBS})
 else()
     add_library (walnut-graphics-vulkan SHARED
                     Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
-                    Walnut/src/Walnut/GraphicsAPI/VulkanGraphics.cpp
-                    Walnut/src/Walnut/GraphicsAPI/GlfwVulkanRenderingBackend.cpp
-                    Walnut/src/Walnut/GraphicsAPI/VulkanImage.cpp
+                    Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanGraphics.cpp
+                    Walnut/src/Walnut/GraphicsAPI/Vulkan/GlfwVulkanRenderingBackend.cpp
+                    Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanImage.cpp
                 )
     target_link_libraries(walnut-graphics-vulkan PUBLIC walnut-imgui ${CONAN_LIBS})
     if (NOT APPLE)

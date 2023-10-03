@@ -1,9 +1,9 @@
 #include "Image.h"
 
 #ifdef USE_OPENGL_RENDERER
-#include "GraphicsAPI/OpenGLImage.h"
+#include "GraphicsAPI/OpenGL/OpenGLImage.h"
 #else
-#include "GraphicsAPI/VulkanImage.h"
+#include "GraphicsAPI/Vulkan/VulkanImage.h"
 #endif
 
 
