@@ -12,7 +12,7 @@ namespace Walnut {
 	public:
 		enum class BACKEND
 		{
-			None = 0, Vulkan = 1, OpenGL = 2
+			None = 0, Vulkan = 1, OpenGL = 2, WebGPU = 3
 		};
 		virtual ~RenderingBackend() = default;
 

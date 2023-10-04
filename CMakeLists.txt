@@ -40,13 +40,13 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
-option(USE_OPENGL_RENDERER "USE OPENGL RENDERER" OFF)
+option(RENDERER_BACKEND "USE OPENGL RENDERER" "WEBGPU")
 
-if (USE_OPENGL_RENDERER)
-    find_package (OpenGL REQUIRED)
-else()
-    find_package (Vulkan REQUIRED)
-endif()
+# if (USE_OPENGL_RENDERER)
+#     find_package (OpenGL REQUIRED)
+# else()
+#     find_package (Vulkan REQUIRED)
+# endif()
 #find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets REQUIRED)
 
 ### if QT version is 5
@@ -62,7 +62,7 @@ add_library(walnut-imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
 #### WALNUT GRAPHICS ###
-if (USE_OPENGL_RENDERER)
+if (RENDERER_BACKEND STREQUAL "OPENGL")
     add_library (walnut-graphics-opengl STATIC
                     Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
                     Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLGraphics.cpp
@@ -71,7 +71,7 @@ if (USE_OPENGL_RENDERER)
                 )
 
     target_link_libraries(walnut-graphics-opengl PUBLIC walnut-imgui ${CONAN_LIBS})
-else()
+elseif(RENDERER_BACKEND STREQUAL "VULKAN")
     add_library (walnut-graphics-vulkan SHARED
                     Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
                     Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanGraphics.cpp
@@ -82,6 +82,12 @@ else()
     if (NOT APPLE)
         target_link_libraries(walnut-graphics-vulkan PRIVATE Vulkan::Vulkan)
     endif()
+else()
+    add_library (walnut-graphics-webgpu SHARED
+                    Walnut/src/Walnut/ImGui/ImGuiBuildWGPU.cpp
+                    #Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
+                )
+    target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui ${CONAN_LIBS})
 endif()
 
 #### ENGINE ###
@@ -93,12 +99,6 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/RenderingBackend.cpp
             )
 
-if (USE_OPENGL_RENDERER)
-    add_compile_definitions(USE_OPENGL_RENDERER)
-endif()
-
-#target_compile_definitions(walnut PUBLIC VK_USE_PLATFORM_MACOS_MVK)
-
 target_include_directories(walnut PRIVATE "Walnut/src")
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 # if(MSVC)
@@ -106,10 +106,15 @@ target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 #     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 # endif()
 target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
-if (USE_OPENGL_RENDERER)
+if (RENDERER_BACKEND STREQUAL "OPENGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
-else()
+    target_compile_definitions(walnut PRIVATE RENDERER_BACKEND=1)
+elseif (RENDERER_BACKEND STREQUAL "VULKAN")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
+    target_compile_definitions(walnut PRIVATE RENDERER_BACKEND=2)
+else()
+    target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
+    target_compile_definitions(walnut PRIVATE RENDERER_BACKEND=3)
 endif()
 # if(MSVC)
 #     target_link_libraries(walnut INTERFACE vulkan-1.lib)

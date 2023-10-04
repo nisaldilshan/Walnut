@@ -1,9 +1,12 @@
 #include "Image.h"
 
-#ifdef USE_OPENGL_RENDERER
+#if (RENDERER_BACKEND == 1)
 #include "GraphicsAPI/OpenGL/OpenGLImage.h"
-#else
+#elif (RENDERER_BACKEND == 2)
 #include "GraphicsAPI/Vulkan/VulkanImage.h"
+#elif (RENDERER_BACKEND == 3)
+#include "GraphicsAPI/WebGPU/WebGPUImage.h"
+#else
 #endif
 
 
@@ -27,17 +30,23 @@ namespace Walnut {
 			return 0;
 		}
 
-#ifdef USE_OPENGL_RENDERER
+#if (RENDERER_BACKEND == 1)
 		static std::unique_ptr<GraphicsAPI::OpenGLImage> CreateBackendImage()
 		{
 			return std::make_unique<GraphicsAPI::OpenGLImage>();
 		}
-#else
+#elif (RENDERER_BACKEND == 2)
 		static std::unique_ptr<GraphicsAPI::VulkanImage> CreateBackendImage()
 		{
 			return std::make_unique<GraphicsAPI::VulkanImage>();
 		}
-#endif 
+#elif (RENDERER_BACKEND == 3)
+		static std::unique_ptr<GraphicsAPI::WebGPUImage> CreateBackendImage()
+		{
+			return std::make_unique<GraphicsAPI::WebGPUImage>();
+		}
+#else
+#endif
 
 	}
 

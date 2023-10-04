@@ -7,10 +7,13 @@
 
 namespace GraphicsAPI
 {
-#ifdef USE_OPENGL_RENDERER
-	class OpenGLImage;
+#if (RENDERER_BACKEND == 1)
+class OpenGLImage;
+#elif (RENDERER_BACKEND == 2)
+class VulkanImage;
+#elif (RENDERER_BACKEND == 3)
+class WebGPUImage;
 #else
-	class VulkanImage;
 #endif
 }
 
@@ -38,11 +41,16 @@ namespace Walnut {
 		std::string m_Filepath;
 		uint32_t m_Width = 0, m_Height = 0;
 		ImageFormat m_Format = ImageFormat::None;
-#ifdef USE_OPENGL_RENDERER
+
+#if (RENDERER_BACKEND == 1)
 		std::unique_ptr<GraphicsAPI::OpenGLImage> m_rendererBackendImage;
-#else
+#elif (RENDERER_BACKEND == 2)
 		std::unique_ptr<GraphicsAPI::VulkanImage> m_rendererBackendImage;
+#elif (RENDERER_BACKEND == 3)
+		std::unique_ptr<GraphicsAPI::WebGPUImage> m_rendererBackendImage;
+#else
 #endif
+
 		size_t m_AlignedSize = 0;
 	};
 

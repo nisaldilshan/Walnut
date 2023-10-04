@@ -1,37 +1,35 @@
 #include "RenderingBackend.h"
 #include "GraphicsAPI/Vulkan/GlfwVulkanRenderingBackend.h"
 #include "GraphicsAPI/OpenGL/GlfwOpenGLRenderingBackend.h"
+#include "GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.h"
 
 #include <cassert>
 
 namespace Walnut {
 
-#ifdef USE_OPENGL_RENDERER
+	#if (RENDERER_BACKEND == 1)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::OpenGL;
-#else
+	#elif (RENDERER_BACKEND == 2)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::Vulkan;
-#endif
+	#elif (RENDERER_BACKEND == 3)
+		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::WebGPU;
+	#else
+		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::None;
+	#endif
 
-    std::unique_ptr<RenderingBackend> RenderingBackend::Create()
+	std::unique_ptr<RenderingBackend> RenderingBackend::Create()
     {
 		if (s_backend == RenderingBackend::BACKEND::Vulkan)
 		{
-#ifndef USE_OPENGL_RENDERER
             return std::make_unique<GlfwVulkanRenderingBackend>();
-#else
-			assert(false); 
-			return nullptr;
-#endif
 		}
 		else if (s_backend == RenderingBackend::BACKEND::OpenGL)
 		{
-#ifdef USE_OPENGL_RENDERER
 			return std::make_unique<GlfwOpenGLRenderingBackend>();
-#else
-			assert(false); 
-			return nullptr;
-#endif
-			
+		}
+		else if (s_backend == RenderingBackend::BACKEND::WebGPU)
+		{
+			return std::make_unique<GlfwWebGPURenderingBackend>();
 		}
 		else
 		{
