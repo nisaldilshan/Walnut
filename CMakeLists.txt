@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.16.0)
-set(CMAKE_CXX_STANDARD 17)
+cmake_minimum_required (VERSION 3.22.0)
+set(CMAKE_CXX_STANDARD 23)
 message(STATUS "CMAKE_CXX_STANDARD " + ${CMAKE_CXX_STANDARD})
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -85,7 +85,8 @@ elseif(RENDERER_BACKEND STREQUAL "VULKAN")
 else()
     add_library (walnut-graphics-webgpu SHARED
                     Walnut/src/Walnut/ImGui/ImGuiBuildWGPU.cpp
-                    #Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
+                    Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
+                    Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.cpp
                 )
     target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui ${CONAN_LIBS})
 endif()
