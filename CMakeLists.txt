@@ -89,6 +89,14 @@ else()
                     Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.cpp
                 )
     target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui ${CONAN_LIBS})
+    target_link_libraries(walnut-graphics-webgpu PUBLIC
+        "-framework Metal"
+        "-framework MetalKit"
+        "-framework AppKit"
+        "-framework Foundation"
+        "-framework QuartzCore"
+        "-framework IOSurface"
+        )
 endif()
 
 #### ENGINE ###

@@ -3,6 +3,8 @@
 #include "../../RenderingBackend.h"
 
 #include <dawn/webgpu.h>
+#include <dawn/native/DawnNative.h>
+#include <dawn/dawn_proc.h>
 
 namespace Walnut {
 
@@ -38,7 +40,8 @@ public:
 	void SetClearColor(ImVec4 color) override;
 
 private:
-	WGPUDevice m_wgpu_device;
+	WGPUDevice m_wgpuDevice = nullptr;
+	WGPUTextureFormat m_wgpuPreferredFormat = WGPUTextureFormat_RGBA8Unorm;
 	GLFWwindow* m_windowHandle = nullptr;
 };
 
