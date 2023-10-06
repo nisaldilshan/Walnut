@@ -1,7 +1,6 @@
 #include "GlfwVulkanRenderingBackend.h"
 #include <iostream>
 
-#include "../../RenderingBackend.h"
 #include "VulkanGraphics.h"
 
 namespace Walnut

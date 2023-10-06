@@ -9,10 +9,13 @@ namespace GraphicsAPI
 {
 #if (RENDERER_BACKEND == 1)
 class OpenGLImage;
+typedef OpenGLImage ImageType;
 #elif (RENDERER_BACKEND == 2)
 class VulkanImage;
+typedef VulkanImage ImageType;
 #elif (RENDERER_BACKEND == 3)
 class WebGPUImage;
+typedef WebGPUImage ImageType;
 #else
 #endif
 }
@@ -37,20 +40,11 @@ namespace Walnut {
 	private:
 		void AllocateMemory(uint64_t size);
 		void Release();
-	private:
+
 		std::string m_Filepath;
 		uint32_t m_Width = 0, m_Height = 0;
 		ImageFormat m_Format = ImageFormat::None;
-
-#if (RENDERER_BACKEND == 1)
-		std::unique_ptr<GraphicsAPI::OpenGLImage> m_rendererBackendImage;
-#elif (RENDERER_BACKEND == 2)
-		std::unique_ptr<GraphicsAPI::VulkanImage> m_rendererBackendImage;
-#elif (RENDERER_BACKEND == 3)
-		std::unique_ptr<GraphicsAPI::WebGPUImage> m_rendererBackendImage;
-#else
-#endif
-
+		std::unique_ptr<GraphicsAPI::ImageType> m_rendererBackendImage;
 		size_t m_AlignedSize = 0;
 	};
 

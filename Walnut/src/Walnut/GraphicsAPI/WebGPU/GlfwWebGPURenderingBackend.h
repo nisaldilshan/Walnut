@@ -2,6 +2,8 @@
 
 #include "../../RenderingBackend.h"
 
+#include <dawn/webgpu.h>
+
 namespace Walnut {
 
 class GlfwWebGPURenderingBackend : public RenderingBackend
@@ -36,8 +38,7 @@ public:
 	void SetClearColor(ImVec4 color) override;
 
 private:
-	uint32_t m_extensions_count = 0;
-	const char** m_extensions = nullptr;
+	WGPUDevice m_wgpu_device;
 	GLFWwindow* m_windowHandle = nullptr;
 };
 
