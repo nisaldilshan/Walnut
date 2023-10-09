@@ -42,6 +42,7 @@ public:
 private:
 	WGPUDevice m_wgpuDevice = nullptr;
 	WGPUTextureFormat m_wgpuPreferredFormat = WGPUTextureFormat_RGBA8Unorm;
+	WGPUSwapChain m_swapChain = nullptr;
 	GLFWwindow* m_windowHandle = nullptr;
 };
 

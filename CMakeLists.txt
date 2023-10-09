@@ -56,6 +56,8 @@ option(RENDERER_BACKEND "USE OPENGL RENDERER" "WEBGPU")
 ### if QT version is 6
 #qt_standard_project_setup()
 
+add_subdirectory(vendor/glfw3webgpu)
+
 
 #### Third Party Libs which are not already built ####
 add_library(walnut-imgui STATIC
@@ -88,7 +90,7 @@ else()
                     Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
                     Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.cpp
                 )
-    target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui ${CONAN_LIBS})
+    target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui glfw3webgpu ${CONAN_LIBS})
     target_link_libraries(walnut-graphics-webgpu PUBLIC
         "-framework Metal"
         "-framework MetalKit"
