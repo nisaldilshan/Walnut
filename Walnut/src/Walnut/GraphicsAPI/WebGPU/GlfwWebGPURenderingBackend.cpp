@@ -218,17 +218,17 @@ namespace Walnut
         desc.nextInChain = nullptr;
 
         // 2. create the instance using this descriptor
-        WGPUInstance instance = wgpuCreateInstance(&desc);
+        m_wgpuInstance = wgpuCreateInstance(&desc);
 
         // 3. We can check whether there is actually an instance created
-        if (!instance) {
+        if (!m_wgpuInstance) {
             std::cerr << "Could not initialize WebGPU!" << std::endl;
             return;
         }
 
         // 4. Display the object (WGPUInstance is a simple pointer, it may be
         // copied around without worrying about its size).
-        std::cout << "WGPU instance: " << instance << std::endl;
+        std::cout << "WGPU instance: " << m_wgpuInstance << std::endl;
 
 
         
@@ -236,7 +236,7 @@ namespace Walnut
         std::cout << "Requesting adapter..." << std::endl;
 
         WGPURequestAdapterOptions adapterOpts = {};
-        WGPUAdapter adapter = requestAdapter(instance, &adapterOpts);
+        WGPUAdapter adapter = requestAdapter(m_wgpuInstance, &adapterOpts);
 
         std::cout << "Got adapter: " << adapter << std::endl;
 
@@ -268,13 +268,24 @@ namespace Walnut
 
         inspectDevice(m_wgpuDevice);
 
-        WGPUSurface surface = glfwGetWGPUSurface(instance, m_windowHandle);
+        
+
+    }
+    void GlfwWebGPURenderingBackend::SetupGraphicsAPI()
+    {
+    }
+
+    void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)
+    {
+        WGPUSurface surface = glfwGetWGPUSurface(m_wgpuInstance, m_windowHandle);
         std::cout << "Got surface: " << surface << std::endl;
+
+        ImGui_ImplWGPU_InvalidateDeviceObjects();
 
         WGPUSwapChainDescriptor swapChainDesc = {};
         swapChainDesc.nextInChain = nullptr;
-        swapChainDesc.width = 640;
-        swapChainDesc.height = 480;
+        swapChainDesc.width = width;
+        swapChainDesc.height = height;
         //WGPUTextureFormat swapChainFormat = wgpuSurfaceGetPreferredFormat(surface, adapter); // because Dawn still do not have a implementation for wgpuSurfaceGetPreferredFormat
         WGPUTextureFormat swapChainFormat = m_wgpuPreferredFormat;
         swapChainDesc.format = swapChainFormat;
@@ -282,12 +293,7 @@ namespace Walnut
         m_swapChain = wgpuDeviceCreateSwapChain(m_wgpuDevice, surface, &swapChainDesc);
         std::cout << "Swapchain: " << m_swapChain << std::endl;
 
-    }
-    void GlfwWebGPURenderingBackend::SetupGraphicsAPI()
-    {
-    }
-    void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)
-    {
+        ImGui_ImplWGPU_CreateDeviceObjects();
     }
     bool GlfwWebGPURenderingBackend::NeedToResizeWindow()
     {
@@ -301,22 +307,62 @@ namespace Walnut
         ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
         ImGui_ImplWGPU_Init(m_wgpuDevice, 3, m_wgpuPreferredFormat, WGPUTextureFormat_Undefined);
     }
-    void GlfwWebGPURenderingBackend::StartImGuiFrame(const std::function<void()> &applicationMenubarCallback, const std::function<void()> &applicationUIRenderingCallback)
+
+    void GlfwWebGPURenderingBackend::StartImGuiFrame()
     {
+        // Start the Dear ImGui frame
+		ImGui_ImplWGPU_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
     }
+
     void GlfwWebGPURenderingBackend::UploadFonts()
     {
     }
+
     void GlfwWebGPURenderingBackend::FrameRender(ImDrawData *draw_data)
     {
+        WGPUTextureView nextTexture = wgpuSwapChainGetCurrentTextureView(m_swapChain);
+        if (!nextTexture) {
+            std::cerr << "Cannot acquire next swap chain texture" << std::endl;
+            return;
+        }
+        std::cout << "nextTexture: " << nextTexture << std::endl;
+
+        WGPUCommandEncoderDescriptor enc_desc = {};
+        m_commandEncoder = wgpuDeviceCreateCommandEncoder(m_wgpuDevice, &enc_desc);
+
+        WGPURenderPassColorAttachment color_attachments = {};
+        color_attachments.loadOp = WGPULoadOp_Clear;
+        color_attachments.storeOp = WGPUStoreOp_Store;
+        static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+        color_attachments.clearValue = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+        color_attachments.view = nextTexture;
+
+        WGPURenderPassDescriptor render_pass_desc = {};
+        render_pass_desc.colorAttachmentCount = 1;
+        render_pass_desc.colorAttachments = &color_attachments;
+        render_pass_desc.depthStencilAttachment = nullptr;
+        WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(m_commandEncoder, &render_pass_desc);
+
+        ImGui_ImplWGPU_RenderDrawData(draw_data, pass);
+        wgpuRenderPassEncoderEnd(pass);
     }
+
     void GlfwWebGPURenderingBackend::FramePresent()
     {
+        WGPUCommandBufferDescriptor cmd_buffer_desc = {};
+        WGPUCommandBuffer cmd_buffer = wgpuCommandEncoderFinish(m_commandEncoder, &cmd_buffer_desc);
+        WGPUQueue queue = wgpuDeviceGetQueue(m_wgpuDevice);
+        wgpuQueueSubmit(queue, 1, &cmd_buffer);
+        wgpuSwapChainPresent(m_swapChain);
     }
+
     GLFWwindow *GlfwWebGPURenderingBackend::GetWindowHandle()
     {
-        return nullptr;
+        return m_windowHandle;
     }
+
     void GlfwWebGPURenderingBackend::Shutdown()
     {
     }

@@ -23,7 +23,7 @@ public:
 
 	void ConfigureImGui() override;
 
-	void StartImGuiFrame(const std::function<void()>& applicationMenubarCallback, const std::function<void()>& applicationUIRenderingCallback) override;
+	void StartImGuiFrame() override;
 
 	void UploadFonts() override;
 
@@ -40,9 +40,11 @@ public:
 	void SetClearColor(ImVec4 color) override;
 
 private:
+	WGPUInstance m_wgpuInstance = nullptr;
 	WGPUDevice m_wgpuDevice = nullptr;
 	WGPUTextureFormat m_wgpuPreferredFormat = WGPUTextureFormat_RGBA8Unorm;
 	WGPUSwapChain m_swapChain = nullptr;
+	WGPUCommandEncoder m_commandEncoder = nullptr;
 	GLFWwindow* m_windowHandle = nullptr;
 };
 

@@ -52,6 +52,7 @@ namespace Walnut {
 	private:
 		void Init();
 		void Shutdown();
+		void SetupImGui();
 
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend = nullptr;
