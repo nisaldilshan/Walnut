@@ -10,12 +10,13 @@
 #include <dawn/native/DawnNative.h>
 #include "../../../../../vendor/glfw3webgpu/glfw3webgpu.h"
 
-wgpu::Instance m_wgpuInstance;
-std::unique_ptr<dawn::native::Instance> m_wgpuNativeInstance;
-wgpu::Device m_wgpuDevice;
-WGPUTextureFormat m_wgpuPreferredFormat = WGPUTextureFormat_RGBA8Unorm;
-wgpu::SwapChain m_swapChain;
-wgpu::CommandEncoder m_commandEncoder;
+//wgpu::Instance m_wgpuInstance;
+//std::unique_ptr<dawn::native::Instance> m_wgpuNativeInstance;
+//wgpu::Device m_wgpuDevice;
+//WGPUTextureFormat m_wgpuPreferredFormat = WGPUTextureFormat_BGRA8Unorm;
+//wgpu::SwapChain m_swapChain;
+//wgpu::CommandEncoder m_commandEncoder;
+//wgpu::Queue m_queue;
 
 // Return backend select priority, smaller number means higher priority.
 int GetBackendPriority(wgpu::BackendType t) {
@@ -158,42 +159,43 @@ namespace Walnut
     {
         m_windowHandle = windowHandle;
 
-        m_wgpuNativeInstance = std::make_unique<dawn::native::Instance>();
+        //m_wgpuNativeInstance = std::make_unique<dawn::native::Instance>();
 
-        DawnProcTable procs = dawn::native::GetProcs();
-        dawnProcSetProcs(&procs);
-        m_wgpuInstance = wgpu::Instance(m_wgpuNativeInstance->Get());
+        //DawnProcTable procs = dawn::native::GetProcs();
+        //dawnProcSetProcs(&procs);
+        //m_wgpuInstance = wgpu::Instance(m_wgpuNativeInstance->Get());
 
         // 3. We can check whether there is actually an instance created
-        if (!m_wgpuInstance) {
+        //if (!m_wgpuInstance) 
+        {
             std::cerr << "Could not initialize WebGPU!" << std::endl;
             return;
         }
 
         // 4. Display the object (WGPUInstance is a simple pointer, it may be
         // copied around without worrying about its size).
-        std::cout << "WGPU instance: " << m_wgpuInstance.Get() << std::endl;
+        //std::cout << "WGPU instance: " << m_wgpuInstance.Get() << std::endl;
 
         std::cout << "Requesting adapter..." << std::endl;
 
-        m_wgpuNativeInstance->DiscoverDefaultAdapters();
-        auto adapters = m_wgpuNativeInstance->GetAdapters();
+        //m_wgpuNativeInstance->DiscoverDefaultAdapters();
+        //auto adapters = m_wgpuNativeInstance->GetAdapters();
 
         // Sort adapters by adapterType, 
-        std::sort(adapters.begin(), adapters.end(), [](const dawn::native::Adapter& a, const dawn::native::Adapter& b){
-            wgpu::AdapterProperties pa, pb;
-            a.GetProperties(&pa);
-            b.GetProperties(&pb);
+        // std::sort(adapters.begin(), adapters.end(), [](const dawn::native::Adapter& a, const dawn::native::Adapter& b){
+        //     wgpu::AdapterProperties pa, pb;
+        //     a.GetProperties(&pa);
+        //     b.GetProperties(&pb);
             
-            if (pa.adapterType != pb.adapterType) {
-                // Put GPU adapter (D3D, Vulkan, Metal) at front and CPU adapter at back.
-                return pa.adapterType < pb.adapterType;
-            }
+        //     if (pa.adapterType != pb.adapterType) {
+        //         // Put GPU adapter (D3D, Vulkan, Metal) at front and CPU adapter at back.
+        //         return pa.adapterType < pb.adapterType;
+        //     }
 
-            return GetBackendPriority(pa.backendType) < GetBackendPriority(pb.backendType);
-        });
+        //     return GetBackendPriority(pa.backendType) < GetBackendPriority(pb.backendType);
+        // });
         // Simply pick the first adapter in the sorted list.
-        dawn::native::Adapter backendAdapter = adapters[0];
+        dawn::native::Adapter backendAdapter;// = adapters[0];
 
         std::cout << "Got adapter: " << backendAdapter.Get() << std::endl;
 
@@ -212,22 +214,22 @@ namespace Walnut
         deviceDesc.requiredLimits = nullptr; // we do not require any specific limit
         deviceDesc.defaultQueue.nextInChain = nullptr;
         deviceDesc.defaultQueue.label = "The default queue";
-        m_wgpuDevice = wgpu::Device::Acquire(backendAdapter.CreateDevice(&deviceDesc));
+        //m_wgpuDevice = wgpu::Device::Acquire(backendAdapter.CreateDevice(&deviceDesc));
         //m_wgpuDevice = emscripten_webgpu_get_device();
 
-        std::cout << "Got device: " << m_wgpuDevice.Get() << std::endl;
+        //std::cout << "Got device: " << m_wgpuDevice.Get() << std::endl;
 
         auto onDeviceError = [](WGPUErrorType type, char const* message, void* /* pUserData */) {
             std::cout << "Uncaptured device error: type " << type;
             if (message) std::cout << " (" << message << ")";
             std::cout << std::endl;
         };
-        wgpuDeviceSetUncapturedErrorCallback(m_wgpuDevice.Get(), onDeviceError, nullptr /* pUserData */);
-
-
-        inspectDevice(m_wgpuDevice.Get());
-
+        //wgpuDeviceSetUncapturedErrorCallback(m_wgpuDevice.Get(), onDeviceError, nullptr /* pUserData */);
         
+
+        //inspectDevice(m_wgpuDevice.Get());
+
+        //m_queue = m_wgpuDevice.GetQueue();
 
     }
     void GlfwWebGPURenderingBackend::SetupGraphicsAPI()
@@ -236,23 +238,24 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)
     {
-        WGPUSurface surface = glfwGetWGPUSurface(m_wgpuInstance.Get(), m_windowHandle);
+        WGPUSurface surface;// = glfwGetWGPUSurface(m_wgpuInstance.Get(), m_windowHandle);
         std::cout << "Got surface: " << surface << std::endl;
 
-        ImGui_ImplWGPU_InvalidateDeviceObjects();
+        //ImGui_ImplWGPU_InvalidateDeviceObjects();
 
         wgpu::SwapChainDescriptor swapChainDesc = {};
         swapChainDesc.nextInChain = nullptr;
         swapChainDesc.width = width;
         swapChainDesc.height = height;
+        swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment; //WGPUTextureUsage_RenderAttachment;
         //WGPUTextureFormat swapChainFormat = wgpuSurfaceGetPreferredFormat(surface, adapter); // because Dawn still do not have a implementation for wgpuSurfaceGetPreferredFormat
-        WGPUTextureFormat swapChainFormat = m_wgpuPreferredFormat;
-        swapChainDesc.format = wgpu::TextureFormat::RGBA8Unorm;
+        //WGPUTextureFormat swapChainFormat = m_wgpuPreferredFormat;
+        swapChainDesc.format = wgpu::TextureFormat::BGRA8Unorm;
         swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
-        m_swapChain = m_wgpuDevice.CreateSwapChain(surface, &swapChainDesc);
-        std::cout << "Swapchain: " << m_swapChain.Get() << std::endl;
+        //m_swapChain = m_wgpuDevice.CreateSwapChain(surface, &swapChainDesc);
+        //std::cout << "Swapchain: " << m_swapChain.Get() << std::endl;
 
-        ImGui_ImplWGPU_CreateDeviceObjects();
+        //ImGui_ImplWGPU_CreateDeviceObjects();
     }
     bool GlfwWebGPURenderingBackend::NeedToResizeWindow()
     {
@@ -264,7 +267,7 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::ConfigureImGui()
     {
         ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
-        ImGui_ImplWGPU_Init(m_wgpuDevice.Get(), 3, m_wgpuPreferredFormat, WGPUTextureFormat_Undefined);
+        //ImGui_ImplWGPU_Init(m_wgpuDevice.Get(), 3, WGPUTextureFormat_BGRA8Unorm, WGPUTextureFormat_Undefined);
     }
 
     void GlfwWebGPURenderingBackend::StartImGuiFrame()
@@ -279,43 +282,86 @@ namespace Walnut
     {
     }
 
+    void GUIStuff(wgpu::RenderPassEncoder &renderPass)
+    {
+        // Start the Dear ImGui frame
+        ImGui_ImplWGPU_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Build our UI
+        {
+            static float f = 0.0f;
+            static int counter = 0;
+            static bool show_demo_window = true;
+            static bool show_another_window = false;
+            static ImVec4 clear_color = ImVec4(0.95f, 0.55f, 0.60f, 1.00f);
+
+            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
+            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &show_another_window);
+
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
+
+            if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+                counter++;
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGuiIO &io = ImGui::GetIO();
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
+        }
+
+        // Draw the UI
+        ImGui::EndFrame();
+        // Convert the UI defined above into low-level drawing commands
+        ImGui::Render();
+        // Execute the low-level drawing commands on the WebGPU backend
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), renderPass.Get());
+    }
+
     void GlfwWebGPURenderingBackend::FrameRender(ImDrawData *draw_data)
     {
-        wgpu::TextureView nextTexture = m_swapChain.GetCurrentTextureView();
-        if (!nextTexture) {
+        //wgpu::TextureView nextTexture;// = m_swapChain.GetCurrentTextureView();
+        //if (!nextTexture) 
+        {
             std::cerr << "Cannot acquire next swap chain texture" << std::endl;
             return;
         }
-        std::cout << "nextTexture: " << nextTexture.Get() << std::endl;
+        //std::cout << "nextTexture: " << nextTexture.Get() << std::endl;
 
         wgpu::CommandEncoderDescriptor enc_desc = {};
-        m_commandEncoder = m_wgpuDevice.CreateCommandEncoder(&enc_desc);
+        //m_commandEncoder = m_wgpuDevice.CreateCommandEncoder(&enc_desc);
 
         wgpu::RenderPassColorAttachment color_attachments = {};
         color_attachments.loadOp = wgpu::LoadOp::Clear;
         color_attachments.storeOp = wgpu::StoreOp::Store;
-        static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+        static ImVec4 clear_color = ImVec4(0.95f, 0.55f, 0.60f, 1.00f);
         color_attachments.clearValue = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-        color_attachments.view = nextTexture;
+        //color_attachments.view = nextTexture;
 
         wgpu::RenderPassDescriptor render_pass_desc = {};
         render_pass_desc.colorAttachmentCount = 1;
         render_pass_desc.colorAttachments = &color_attachments;
         render_pass_desc.depthStencilAttachment = nullptr;
-        wgpu::RenderPassEncoder pass = m_commandEncoder.BeginRenderPass(&render_pass_desc);
+        //wgpu::RenderPassEncoder pass = m_commandEncoder.BeginRenderPass(&render_pass_desc);
 
-        ImGui_ImplWGPU_RenderDrawData(draw_data, pass.Get());
-        pass.Draw(3);
-        pass.End();
+        //ImGui_ImplWGPU_RenderDrawData(draw_data, pass.Get());
+        //GUIStuff(pass);
+        //pass.End();
     }
 
     void GlfwWebGPURenderingBackend::FramePresent()
     {
         wgpu::CommandBufferDescriptor cmd_buffer_desc = {};
-        wgpu::CommandBuffer cmd_buffer = m_commandEncoder.Finish(&cmd_buffer_desc);
-        wgpu::Queue queue = m_wgpuDevice.GetQueue();
-        queue.Submit(1, &cmd_buffer);
-        m_swapChain.Present();
+        //wgpu::CommandBuffer cmd_buffer = m_commandEncoder.Finish(&cmd_buffer_desc);
+        //wgpu::Queue queue = m_wgpuDevice.GetQueue();
+        //queue.Submit(1, &cmd_buffer);
+       //m_swapChain.Present();
     }
 
     GLFWwindow *GlfwWebGPURenderingBackend::GetWindowHandle()

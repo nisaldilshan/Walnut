@@ -33,6 +33,9 @@ endif()
 message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
+set(WEBGPU_BACKEND "DAWN")
+add_subdirectory(vendor/webgpu)
+
 set(CONAN_DISABLE_CHECK_COMPILER On)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(KEEP_RPATHS)
@@ -90,7 +93,7 @@ else()
                     Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
                     Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.cpp
                 )
-    target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui glfw3webgpu ${CONAN_LIBS})
+    target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui webgpu glfw3webgpu ${CONAN_LIBS})
     target_link_libraries(walnut-graphics-webgpu PUBLIC
         "-framework Metal"
         "-framework MetalKit"
