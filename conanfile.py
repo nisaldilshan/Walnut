@@ -32,7 +32,7 @@ class Walnut(ConanFile):
         # else:
         #     self.requires("vulkan-headers/1.3.239.0")
         self.requires("glfw/3.3.8")
-        #self.requires("dawn/5899")
+        self.requires("WebGPU/latest@nisaldilshan/testing")
 
     def source(self):
         git = tools.Git()
