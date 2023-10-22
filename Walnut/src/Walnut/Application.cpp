@@ -6,15 +6,8 @@
 
 #include <iostream>
 
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_wgpu.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-
-#include "../../../vendor/glfw3webgpu/glfw3webgpu.h"
-
-#define WEBGPU_CPP_IMPLEMENTATION
-#include <webgpu/webgpu.hpp>
 
 #include "RenderingBackend.h"
 
@@ -58,7 +51,7 @@ namespace Walnut {
 	{
 		s_Instance = this;
 
-		//Init();
+		Init();
 	}
 
 	Application::~Application()
@@ -106,6 +99,7 @@ namespace Walnut {
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+			glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		}
 		else
 		{
@@ -152,7 +146,7 @@ namespace Walnut {
 		}
 
 		// Setup Platform/Renderer backends to work with ImGui
-		//m_RenderingBackend->ConfigureImGui();
+		m_RenderingBackend->ConfigureImGui();
 
 		// Load default font
 		ImFontConfig fontConfig;
@@ -245,6 +239,33 @@ namespace Walnut {
 		ImGui::End();
 	}
 
+	void updateGui() 
+	{
+		static float f = 0.0f;
+		static int counter = 0;
+		static bool show_demo_window = true;
+		static bool show_another_window = false;
+		static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+		ImGui::Begin("Hello, world!");                                // Create a window called "Hello, world!" and append into it.
+
+		ImGui::Text("This is some useful text.");                     // Display some text (you can use a format strings too)
+		ImGui::Checkbox("Demo Window", &show_demo_window);            // Edit bools storing our window open/close state
+		ImGui::Checkbox("Another Window", &show_another_window);
+
+		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);                  // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::ColorEdit3("clear color", (float*)&clear_color);       // Edit 3 floats representing a color
+
+		if (ImGui::Button("Button"))                                  // Buttons return true when clicked (most widgets return true when edited/activated)
+			counter++;
+		ImGui::SameLine();
+		ImGui::Text("counter = %d", counter);
+
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+		ImGui::End();	
+	}
+
 	void Application::MainLoop()
 	{
 		// Poll and handle events (inputs, window resize, etc.)
@@ -266,17 +287,24 @@ namespace Walnut {
 				m_RenderingBackend->ResizeWindow(width, height);
 		}
 
-		// m_RenderingBackend->StartImGuiFrame();
-		// SetupImGui();
-		// ImGui::EndFrame();
+		m_RenderingBackend->StartImGuiFrame();
+		//SetupImGui();
 
-		// // Rendering
-		// ImGui::Render();
-		// ImDrawData* main_draw_data = ImGui::GetDrawData();
-		//const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-		//m_RenderingBackend->SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
-		//if (!main_is_minimized)
-		m_RenderingBackend->FrameRender(nullptr);
+
+		// ############# Testing ###
+		updateGui();
+		//##########################
+
+
+		ImGui::EndFrame();
+
+		// Rendering
+		ImGui::Render();
+		ImDrawData* main_draw_data = ImGui::GetDrawData();
+		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+		m_RenderingBackend->SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
+		if (!main_is_minimized)
+			m_RenderingBackend->FrameRender(main_draw_data);
 
 		// Update and Render additional Platform Windows
 		ImGuiIO& io = ImGui::GetIO();
@@ -289,8 +317,8 @@ namespace Walnut {
 		}
 
 		// Present Main Platform Window
-		//if (!main_is_minimized)
-		m_RenderingBackend->FramePresent();
+		if (!main_is_minimized)
+			m_RenderingBackend->FramePresent();
 
 		float time = GetTime();
 		m_FrameTime = time - m_LastFrameTime;
@@ -299,298 +327,17 @@ namespace Walnut {
 
 	}
 
-	wgpu::Instance m_instance = nullptr;
-	GLFWwindow* m_window = nullptr;
-	wgpu::Surface m_surface = nullptr;
-	wgpu::Device m_device = nullptr;
-	wgpu::TextureFormat m_swapChainFormat = wgpu::TextureFormat::Undefined;
-	wgpu::Queue m_queue = nullptr;
-	wgpu::SwapChain m_swapChain = nullptr;
-	wgpu::TextureFormat m_depthTextureFormat = wgpu::TextureFormat::Depth24Plus;
-	wgpu::Texture m_depthTexture = nullptr;
-	wgpu::TextureView m_depthTextureView = nullptr;
-
-	bool initWindowAndDevice() 
-	{
-		m_instance = createInstance(wgpu::InstanceDescriptor{});
-		if (!m_instance) {
-			std::cerr << "Could not initialize WebGPU!" << std::endl;
-			return false;
-		}
-
-		if (!glfwInit()) {
-			std::cerr << "Could not initialize GLFW!" << std::endl;
-			return false;
-		}
-
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-		m_window = glfwCreateWindow(640, 480, "Learn WebGPU", NULL, NULL);
-		if (!m_window) {
-			std::cerr << "Could not open window!" << std::endl;
-			return false;
-		}
-
-		std::cout << "Requesting adapter..." << std::endl;
-		m_surface = glfwGetWGPUSurface(m_instance, m_window);
-		wgpu::RequestAdapterOptions adapterOpts{};
-		adapterOpts.compatibleSurface = m_surface;
-		wgpu::Adapter adapter = m_instance.requestAdapter(adapterOpts);
-		std::cout << "Got adapter: " << adapter << std::endl;
-
-		wgpu::SupportedLimits supportedLimits;
-		adapter.getLimits(&supportedLimits);
-
-		std::cout << "Requesting device..." << std::endl;
-		wgpu::RequiredLimits requiredLimits = wgpu::Default;
-		requiredLimits.limits.maxVertexAttributes = 4;
-		requiredLimits.limits.maxVertexBuffers = 1;
-
-		struct VertexAttributes {
-			glm::vec3 position;
-			glm::vec3 normal;
-			glm::vec3 color;
-			glm::vec2 uv;
-		};
-		requiredLimits.limits.maxBufferSize = 150000 * sizeof(VertexAttributes);
-		requiredLimits.limits.maxVertexBufferArrayStride = sizeof(VertexAttributes);
-		requiredLimits.limits.minStorageBufferOffsetAlignment = supportedLimits.limits.minStorageBufferOffsetAlignment;
-		requiredLimits.limits.minUniformBufferOffsetAlignment = supportedLimits.limits.minUniformBufferOffsetAlignment;
-		requiredLimits.limits.maxInterStageShaderComponents = 8;
-		requiredLimits.limits.maxBindGroups = 2;
-		//                                    ^ This was a 1
-		requiredLimits.limits.maxUniformBuffersPerShaderStage = 1;
-		requiredLimits.limits.maxUniformBufferBindingSize = 16 * 4 * sizeof(float);
-		// Allow textures up to 2K
-		requiredLimits.limits.maxTextureDimension1D = 2048;
-		requiredLimits.limits.maxTextureDimension2D = 2048;
-		requiredLimits.limits.maxTextureArrayLayers = 1;
-		requiredLimits.limits.maxSampledTexturesPerShaderStage = 1;
-		requiredLimits.limits.maxSamplersPerShaderStage = 1;
-
-		wgpu::DeviceDescriptor deviceDesc;
-		deviceDesc.label = "My Device";
-		deviceDesc.requiredFeaturesCount = 0;
-		deviceDesc.requiredLimits = &requiredLimits;
-		deviceDesc.defaultQueue.label = "The default queue";
-		m_device = adapter.requestDevice(deviceDesc);
-		adapter.release();
-		std::cout << "Got device: " << m_device << std::endl;
-
-		// Add an error callback for more debug info
-		std::unique_ptr<wgpu::ErrorCallback> m_errorCallbackHandle;
-		m_errorCallbackHandle = m_device.setUncapturedErrorCallback([](wgpu::ErrorType type, char const* message) {
-			std::cout << "Device error: type " << type;
-			if (message) std::cout << " (message: " << message << ")";
-			std::cout << std::endl;
-		});
-
-		m_queue = m_device.getQueue();
-
-#ifdef WEBGPU_BACKEND_WGPU
-		m_swapChainFormat = m_surface.getPreferredFormat(adapter);
-#else
-		m_swapChainFormat = wgpu::TextureFormat::BGRA8Unorm;
-#endif
-
-		return m_device != nullptr;
-	}
-
-	bool initSwapChain() {
-		// Get the current size of the window's framebuffer:
-		int width, height;
-		glfwGetFramebufferSize(m_window, &width, &height);
-
-		std::cout << "Creating swapchain..." << std::endl;
-		wgpu::SwapChainDescriptor swapChainDesc;
-		swapChainDesc.width = static_cast<uint32_t>(width);
-		swapChainDesc.height = static_cast<uint32_t>(height);
-		swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		swapChainDesc.format = m_swapChainFormat;
-		swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
-		m_swapChain = m_device.createSwapChain(m_surface, swapChainDesc);
-		std::cout << "Swapchain: " << m_swapChain << std::endl;
-		return m_swapChain != nullptr;
-	}
-
-	bool initDepthBuffer() {
-		// Get the current size of the window's framebuffer:
-		int width, height;
-		glfwGetFramebufferSize(m_window, &width, &height);
-
-		// Create the depth texture
-		wgpu::TextureDescriptor depthTextureDesc;
-		depthTextureDesc.dimension = wgpu::TextureDimension::_2D;
-		depthTextureDesc.format = m_depthTextureFormat;
-		depthTextureDesc.mipLevelCount = 1;
-		depthTextureDesc.sampleCount = 1;
-		depthTextureDesc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
-		depthTextureDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		depthTextureDesc.viewFormatCount = 1;
-		depthTextureDesc.viewFormats = (WGPUTextureFormat*)&m_depthTextureFormat;
-		m_depthTexture = m_device.createTexture(depthTextureDesc);
-		std::cout << "Depth texture: " << m_depthTexture << std::endl;
-
-		// Create the view of the depth texture manipulated by the rasterizer
-		wgpu::TextureViewDescriptor depthTextureViewDesc;
-		depthTextureViewDesc.aspect = wgpu::TextureAspect::DepthOnly;
-		depthTextureViewDesc.baseArrayLayer = 0;
-		depthTextureViewDesc.arrayLayerCount = 1;
-		depthTextureViewDesc.baseMipLevel = 0;
-		depthTextureViewDesc.mipLevelCount = 1;
-		depthTextureViewDesc.dimension = wgpu::TextureViewDimension::_2D;
-		depthTextureViewDesc.format = m_depthTextureFormat;
-		m_depthTextureView = m_depthTexture.createView(depthTextureViewDesc);
-		std::cout << "Depth texture view: " << m_depthTextureView << std::endl;
-
-		return m_depthTextureView != nullptr;
-	}
-
-	void updateGui(wgpu::RenderPassEncoder renderPass) 
-	{
-		// Start the Dear ImGui frame
-		ImGui_ImplWGPU_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-		// Build our UI
-		{
-			static float f = 0.0f;
-			static int counter = 0;
-			static bool show_demo_window = true;
-			static bool show_another_window = false;
-			static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-			ImGui::Begin("Hello, world!");                                // Create a window called "Hello, world!" and append into it.
-
-			ImGui::Text("This is some useful text.");                     // Display some text (you can use a format strings too)
-			ImGui::Checkbox("Demo Window", &show_demo_window);            // Edit bools storing our window open/close state
-			ImGui::Checkbox("Another Window", &show_another_window);
-
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);                  // Edit 1 float using a slider from 0.0f to 1.0f
-			ImGui::ColorEdit3("clear color", (float*)&clear_color);       // Edit 3 floats representing a color
-
-			if (ImGui::Button("Button"))                                  // Buttons return true when clicked (most widgets return true when edited/activated)
-				counter++;
-			ImGui::SameLine();
-			ImGui::Text("counter = %d", counter);
-
-			ImGuiIO& io = ImGui::GetIO();
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-			ImGui::End();
-		}
-
-		// Draw the UI
-		ImGui::EndFrame();
-		// Convert the UI defined above into low-level drawing commands
-		ImGui::Render();
-		// Execute the low-level drawing commands on the WebGPU backend
-		ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), renderPass);
-	}
-
-	void debugMainNew()
-	{
-		initWindowAndDevice();
-		initSwapChain();
-		initDepthBuffer();
-
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); 
-		// (void)io;
-		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-		// //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		// //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-		// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-		// //io.ConfigViewportsNoAutoMerge = true;
-		// //io.ConfigViewportsNoTaskBarIcon = true;
-
-		ImGui_ImplGlfw_InitForOther(m_window, true);
-        ImGui_ImplWGPU_Init(m_device, 3, m_swapChainFormat, m_depthTextureFormat);
-		//ImGui_ImplWGPU_CreateDeviceObjects();
-
-		while (!glfwWindowShouldClose(m_window))
-		{
-			glfwPollEvents();
-
-			wgpu::TextureView nextTexture = m_swapChain.getCurrentTextureView();
-			if (!nextTexture) {
-				std::cerr << "Cannot acquire next swap chain texture" << std::endl;
-				return;
-			}
-
-			wgpu::CommandEncoderDescriptor commandEncoderDesc;
-			commandEncoderDesc.label = "Command Encoder";
-			wgpu::CommandEncoder encoder = m_device.createCommandEncoder(commandEncoderDesc);
-			
-			wgpu::RenderPassDescriptor renderPassDesc{};
-
-			wgpu::RenderPassColorAttachment renderPassColorAttachment{};
-			renderPassColorAttachment.view = nextTexture;
-			renderPassColorAttachment.resolveTarget = nullptr;
-			renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
-			renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
-			renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
-			renderPassDesc.colorAttachmentCount = 1;
-			renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-			wgpu::RenderPassDepthStencilAttachment depthStencilAttachment;
-			depthStencilAttachment.view = m_depthTextureView;
-			depthStencilAttachment.depthClearValue = 1.0f;
-			depthStencilAttachment.depthLoadOp = wgpu::LoadOp::Clear;
-			depthStencilAttachment.depthStoreOp = wgpu::StoreOp::Store;
-			depthStencilAttachment.depthReadOnly = false;
-			depthStencilAttachment.stencilClearValue = 0;
-#ifdef WEBGPU_BACKEND_WGPU
-			depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Clear;
-			depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Store;
-#else
-			depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Undefined;
-			depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Undefined;
-#endif
-			depthStencilAttachment.stencilReadOnly = true;
-
-			renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
-
-			renderPassDesc.timestampWriteCount = 0;
-			renderPassDesc.timestampWrites = nullptr;
-			wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
-
-			updateGui(renderPass);
-
-			renderPass.end();
-	
-			nextTexture.release();
-
-			wgpu::CommandBufferDescriptor cmdBufferDescriptor{};
-			cmdBufferDescriptor.label = "Command buffer";
-			wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
-			m_queue.submit(command);
-
-			m_swapChain.present();
-
-#ifdef WEBGPU_BACKEND_DAWN
-			// Check for pending error callbacks
-			m_device.tick();
-#endif
-		}
-
-		
-	}
-
 	void Application::Run()
 	{
 		m_Running = true;
 
-// #ifdef __EMSCRIPTEN__
-//     	emscripten_set_main_loop_arg(&EmscriptenMainLoop, this, 0, true);
-// #else
-// 		// Main loop
-// 		while (!glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && m_Running)
-// 			MainLoop();
-// #endif
-
-		debugMainNew();
+#ifdef __EMSCRIPTEN__
+    	emscripten_set_main_loop_arg(&EmscriptenMainLoop, this, 0, true);
+#else
+		// Main loop
+		while (!glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && m_Running)
+			MainLoop();
+#endif
 
 	}
 
