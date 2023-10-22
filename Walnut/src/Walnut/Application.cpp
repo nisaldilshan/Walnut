@@ -289,12 +289,7 @@ namespace Walnut {
 		}
 
 		m_RenderingBackend->StartImGuiFrame();
-		//SetupImGui();
-
-
-		// ############# Testing ###
-		updateGui();
-		//##########################
+		SetupImGui();
 
 
 		ImGui::EndFrame();
