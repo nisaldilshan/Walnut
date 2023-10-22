@@ -224,7 +224,10 @@ namespace Walnut
         cmdBufferDescriptor.label = "Command buffer";
         wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
         m_queue.submit(command);
+    }
 
+    void GlfwWebGPURenderingBackend::FramePresent()
+    {
         m_swapChain.present();
 
 #ifdef WEBGPU_BACKEND_WGPU
@@ -232,26 +235,6 @@ namespace Walnut
         // Check for pending error callbacks
         m_device.tick();
 #endif
-        
-    }
-
-    void GlfwWebGPURenderingBackend::FramePresent()
-    {
-//         renderPass.end();
-
-//         nextTexture.release();
-
-//         wgpu::CommandBufferDescriptor cmdBufferDescriptor{};
-//         cmdBufferDescriptor.label = "Command buffer";
-//         wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
-//         m_queue.submit(command);
-
-//         m_swapChain.present();
-
-// #ifdef WEBGPU_BACKEND_DAWN
-//         // Check for pending error callbacks
-//         m_device.tick();
-// #endif
     }
 
     GLFWwindow *GlfwWebGPURenderingBackend::GetWindowHandle()
