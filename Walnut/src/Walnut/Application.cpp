@@ -5,6 +5,7 @@
 //
 
 #include <iostream>
+#include <thread>
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -324,6 +325,8 @@ namespace Walnut {
 		m_FrameTime = time - m_LastFrameTime;
 		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
 		m_LastFrameTime = time;
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
 	}
 
