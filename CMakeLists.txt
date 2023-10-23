@@ -87,6 +87,7 @@ elseif(RENDERER_BACKEND STREQUAL "VULKAN")
 else()
     add_library (walnut-graphics-webgpu SHARED
                     Walnut/src/Walnut/ImGui/ImGuiBuildWGPU.cpp
+                    Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.cpp
                     Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
                     Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.cpp
                 )

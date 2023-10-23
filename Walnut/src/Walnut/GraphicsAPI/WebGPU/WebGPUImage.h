@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "WebGPUGraphics.h"
+
 namespace GraphicsAPI
 {
     class WebGPUImage
@@ -25,7 +27,7 @@ namespace GraphicsAPI
         void ResourceFree();
         VkBuffer GetStagingBuffer();
     private:
-        int m_texture;
+        wgpu::Texture m_texture = nullptr;
         uint32_t m_Width, m_Height;
         uint32_t m_DataFormat;
         void* m_imageBuffer;
