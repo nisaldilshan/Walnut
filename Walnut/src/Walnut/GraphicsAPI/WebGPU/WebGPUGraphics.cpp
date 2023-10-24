@@ -8,6 +8,7 @@ namespace GraphicsAPI
 
     wgpu::Device g_device = nullptr;
     wgpu::Surface g_surface = nullptr;
+	wgpu::Queue g_queue = nullptr;
 
     void WebGPU::CreateSurface(wgpu::Instance instance, GLFWwindow* window)
     {
@@ -62,6 +63,10 @@ namespace GraphicsAPI
 		g_device = adapter.requestDevice(deviceDesc);
 		adapter.release();
 		std::cout << "Got device: " << g_device << std::endl;
+
+		std::cout << "Requesting queue..." << std::endl;
+		g_queue = g_device.getQueue();
+		std::cout << "Got queue: " << g_queue << std::endl;
     }
 
     void WebGPU::FreeGraphicsResources()
@@ -78,5 +83,11 @@ namespace GraphicsAPI
     {
         assert(g_device);
         return g_device;
+    }
+
+    wgpu::Queue WebGPU::GetQueue()
+    {
+		assert(g_queue);
+        return g_queue;
     }
 }

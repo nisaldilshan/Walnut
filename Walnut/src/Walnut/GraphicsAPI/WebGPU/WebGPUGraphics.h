@@ -1,5 +1,6 @@
 #pragma once
 
+#include <imgui_impl_glfw.h>
 #include <webgpu/webgpu.hpp>
 
 class GLFWwindow;
@@ -15,6 +16,7 @@ public:
 	static void FreeGraphicsResources();
     static wgpu::Surface GetSurface();
 	static wgpu::Device GetDevice();
+	static wgpu::Queue GetQueue();
 };
 
 }

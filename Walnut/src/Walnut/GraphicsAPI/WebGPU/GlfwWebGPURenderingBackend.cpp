@@ -10,7 +10,6 @@
 
 wgpu::Instance m_instance = nullptr;
 wgpu::TextureFormat m_swapChainFormat = wgpu::TextureFormat::Undefined;
-wgpu::Queue m_queue = nullptr;
 wgpu::SwapChain m_swapChain = nullptr;
 wgpu::TextureFormat m_depthTextureFormat = wgpu::TextureFormat::Depth24Plus;
 wgpu::Texture m_depthTexture = nullptr;
@@ -45,8 +44,6 @@ namespace Walnut
 			if (message) std::cout << " (message: " << message << ")";
 			std::cout << std::endl;
 		});
-
-		m_queue = device.getQueue();
 
 #ifdef WEBGPU_BACKEND_WGPU
 		m_swapChainFormat = m_surface.getPreferredFormat(adapter);
@@ -179,7 +176,7 @@ namespace Walnut
         wgpu::CommandBufferDescriptor cmdBufferDescriptor{};
         cmdBufferDescriptor.label = "Command buffer";
         wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
-        m_queue.submit(command);
+        GraphicsAPI::WebGPU::GetQueue().submit(command);
     }
 
     void GlfwWebGPURenderingBackend::FramePresent()
