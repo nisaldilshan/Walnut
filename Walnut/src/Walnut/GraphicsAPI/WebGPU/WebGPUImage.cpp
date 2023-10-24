@@ -87,7 +87,7 @@ void WebGPUImage::UploadToBuffer(const void *data, size_t uploadSize, size_t ali
     layout.bytesPerRow = m_width * size_pp;
     layout.rowsPerImage = m_height;
     WGPUExtent3D size = { (uint32_t)m_width, (uint32_t)m_height, 1 };
-    wgpuQueueWriteTexture(WebGPU::GetQueue(), &dst_view, data, (uint32_t)(m_width * size_pp * m_height), &layout, &size);
+    WebGPU::GetQueue().writeTexture(dst_view, data, (uint32_t)(m_width * size_pp * m_height), layout, size);
 }
 
 void WebGPUImage::CreateSampler()
