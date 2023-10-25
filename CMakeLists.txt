@@ -40,7 +40,7 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
-option(RENDERER_BACKEND "USE OPENGL RENDERER" "WEBGPU")
+option(RENDERER "Renderer to be used" "WebGPU")
 
 if (RENDERER STREQUAL "OpenGL")
     find_package (OpenGL REQUIRED)
@@ -65,7 +65,7 @@ add_library(walnut-imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
 #### WALNUT GRAPHICS ###
-if (RENDERER_BACKEND STREQUAL "OPENGL")
+if (RENDERER STREQUAL "OpenGL")
     add_library (walnut-graphics-opengl STATIC
                     Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
                     Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLGraphics.cpp
@@ -74,7 +74,7 @@ if (RENDERER_BACKEND STREQUAL "OPENGL")
                 )
 
     target_link_libraries(walnut-graphics-opengl PUBLIC walnut-imgui ${CONAN_LIBS})
-elseif(RENDERER_BACKEND STREQUAL "VULKAN")
+elseif(RENDERER STREQUAL "Vulkan")
     add_library (walnut-graphics-vulkan SHARED
                     Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
                     Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanGraphics.cpp
@@ -119,10 +119,10 @@ target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 #     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 # endif()
 target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
-if (RENDERER_BACKEND STREQUAL "OPENGL")
+if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
     add_compile_definitions(RENDERER_BACKEND=1)
-elseif (RENDERER_BACKEND STREQUAL "VULKAN")
+elseif (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
     add_compile_definitions(RENDERER_BACKEND=2)
 else()

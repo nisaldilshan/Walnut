@@ -47,7 +47,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::ConfigureRendererBackend(m_windowHandle);
     }
 
-    void GlfwVulkanRenderingBackend::StartImGuiFrame(const std::function<void()> &applicationMenubarCallback, const std::function<void()> &applicationUIRenderingCallback)
+    void GlfwVulkanRenderingBackend::StartImGuiFrame()
     {
 		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
