@@ -26,6 +26,8 @@ class Walnut(ConanFile):
         print("Using rendering backend " + str(self.options.rendering_backend));
         if self.settings.os == 'Macos':
             self.requires("glfw/3.3.8")
+            if self.options.rendering_backend == "OpenGL":
+                self.requires("glad/0.1.33")
             if self.options.rendering_backend == "Vulkan":
                 self.requires("moltenvk/1.2.2")
             elif self.options.rendering_backend == "WebGPU":
