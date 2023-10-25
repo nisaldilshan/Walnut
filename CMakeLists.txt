@@ -42,11 +42,13 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 option(RENDERER_BACKEND "USE OPENGL RENDERER" "WEBGPU")
 
-# if (USE_OPENGL_RENDERER)
-#     find_package (OpenGL REQUIRED)
-# else()
-#     find_package (Vulkan REQUIRED)
-# endif()
+if (RENDERER STREQUAL "OpenGL")
+    find_package (OpenGL REQUIRED)
+elseif(RENDERER STREQUAL "Vulkan")
+    find_package (Vulkan REQUIRED)
+elseif(RENDERER STREQUAL "WebGPU")
+    add_subdirectory(vendor/glfw3webgpu)
+endif()
 #find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets REQUIRED)
 
 ### if QT version is 5
@@ -56,7 +58,6 @@ option(RENDERER_BACKEND "USE OPENGL RENDERER" "WEBGPU")
 ### if QT version is 6
 #qt_standard_project_setup()
 
-add_subdirectory(vendor/glfw3webgpu)
 
 
 #### Third Party Libs which are not already built ####
@@ -138,26 +139,26 @@ if (IS_EMSCRIPTEN)
     set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3")
     #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 endif()
-# if(APPLE)
-#     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-#                         COMMAND rm -f bin/libMoltenVK.dylib
-#                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
-#                         COMMENT "Removing symbolic link libMoltenVK!!!")
-#     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-#                         COMMAND rm -f bin/libvulkan.1.dylib
-#                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
-#                         COMMENT "Removing symbolic link libvulkan.1!!!")
+if(APPLE AND RENDERER STREQUAL "Vulkan")
+    ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
+                        COMMAND rm -f bin/libMoltenVK.dylib
+                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
+                        COMMENT "Removing symbolic link libMoltenVK!!!")
+    ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
+                        COMMAND rm -f bin/libvulkan.1.dylib
+                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
+                        COMMENT "Removing symbolic link libvulkan.1!!!")
 
-#     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-#                         COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libMoltenVK.dylib
-#                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
-#                         COMMENT "Generating symbolic link for libMoltenVK!!!")
+    ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
+                        COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libMoltenVK.dylib
+                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
+                        COMMENT "Generating symbolic link for libMoltenVK!!!")
 
-#     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-#                         COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libvulkan.1.dylib
-#                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
-#                         COMMENT "Generating symbolic link for libvulkan.1!!!")
-# endif()
+    ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
+                        COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libvulkan.1.dylib
+                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
+                        COMMENT "Generating symbolic link for libvulkan.1!!!")
+endif()
 
 
 add_subdirectory(WalnutApp)
