@@ -12,7 +12,7 @@ namespace Walnut {
 	public:
 		enum class BACKEND
 		{
-			None = 0, Vulkan = 1, OpenGL = 2
+			None = 0, Vulkan = 1, OpenGL = 2, WebGPU = 3
 		};
 		virtual ~RenderingBackend() = default;
 
@@ -26,7 +26,7 @@ namespace Walnut {
 		virtual bool NeedToResizeWindow() = 0;
 		virtual void ResizeWindow(int width, int height) = 0;
 		virtual void ConfigureImGui() = 0;
-		virtual void StartImGuiFrame(const std::function<void()>& applicationMenubarCallback, const std::function<void()>& applicationUIRenderingCallback) = 0;
+		virtual void StartImGuiFrame() = 0;
 		virtual void UploadFonts() = 0;
 		virtual void FrameRender(ImDrawData* draw_data) = 0;
 		virtual void FramePresent() = 0;

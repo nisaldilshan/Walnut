@@ -4,7 +4,7 @@
 
 namespace Walnut {
 
-class GlfwVulkanRenderingBackend : public RenderingBackend
+class GlfwWebGPURenderingBackend : public RenderingBackend
 {
 public:
 	void Init(GLFWwindow* windowHandle) override;
@@ -36,8 +36,7 @@ public:
 	void SetClearColor(ImVec4 color) override;
 
 private:
-	uint32_t m_extensions_count = 0;
-	const char** m_extensions = nullptr;
+	
 	GLFWwindow* m_windowHandle = nullptr;
 };
 

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.16.0)
+cmake_minimum_required (VERSION 3.22.0)
 set(CMAKE_CXX_STANDARD 17)
 message(STATUS "CMAKE_CXX_STANDARD " + ${CMAKE_CXX_STANDARD})
 
@@ -40,12 +40,14 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
-option(USE_OPENGL_RENDERER "USE OPENGL RENDERER" OFF)
+option(RENDERER "Renderer to be used" "WebGPU")
 
-if (USE_OPENGL_RENDERER)
+if (RENDERER STREQUAL "OpenGL")
     find_package (OpenGL REQUIRED)
-else()
+elseif(RENDERER STREQUAL "Vulkan")
     find_package (Vulkan REQUIRED)
+elseif(RENDERER STREQUAL "WebGPU")
+    add_subdirectory(vendor/glfw3webgpu)
 endif()
 #find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets REQUIRED)
 
@@ -57,12 +59,13 @@ endif()
 #qt_standard_project_setup()
 
 
+
 #### Third Party Libs which are not already built ####
 add_library(walnut-imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
 #### WALNUT GRAPHICS ###
-if (USE_OPENGL_RENDERER)
+if (RENDERER STREQUAL "OpenGL")
     add_library (walnut-graphics-opengl STATIC
                     Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
                     Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLGraphics.cpp
@@ -71,7 +74,7 @@ if (USE_OPENGL_RENDERER)
                 )
 
     target_link_libraries(walnut-graphics-opengl PUBLIC walnut-imgui ${CONAN_LIBS})
-else()
+elseif(RENDERER STREQUAL "Vulkan")
     add_library (walnut-graphics-vulkan SHARED
                     Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
                     Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanGraphics.cpp
@@ -82,6 +85,22 @@ else()
     if (NOT APPLE)
         target_link_libraries(walnut-graphics-vulkan PRIVATE Vulkan::Vulkan)
     endif()
+else()
+    add_library (walnut-graphics-webgpu SHARED
+                    Walnut/src/Walnut/ImGui/ImGuiBuildWGPU.cpp
+                    Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.cpp
+                    Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
+                    Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.cpp
+                )
+    target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui glfw3webgpu ${CONAN_LIB_DIRS_WEBGPU}/libwebgpu_dawn.dylib)
+    target_link_libraries(walnut-graphics-webgpu PUBLIC
+        "-framework Metal"
+        "-framework MetalKit"
+        "-framework AppKit"
+        "-framework Foundation"
+        "-framework QuartzCore"
+        "-framework IOSurface"
+        )
 endif()
 
 #### ENGINE ###
@@ -93,12 +112,6 @@ add_library (walnut STATIC
                 Walnut/src/Walnut/RenderingBackend.cpp
             )
 
-if (USE_OPENGL_RENDERER)
-    add_compile_definitions(USE_OPENGL_RENDERER)
-endif()
-
-#target_compile_definitions(walnut PUBLIC VK_USE_PLATFORM_MACOS_MVK)
-
 target_include_directories(walnut PRIVATE "Walnut/src")
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 # if(MSVC)
@@ -106,10 +119,15 @@ target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 #     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 # endif()
 target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
-if (USE_OPENGL_RENDERER)
+if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
-else()
+    add_compile_definitions(RENDERER_BACKEND=1)
+elseif (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
+    add_compile_definitions(RENDERER_BACKEND=2)
+else()
+    target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
+    add_compile_definitions(RENDERER_BACKEND=3)
 endif()
 # if(MSVC)
 #     target_link_libraries(walnut INTERFACE vulkan-1.lib)
@@ -121,7 +139,7 @@ if (IS_EMSCRIPTEN)
     set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3")
     #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 endif()
-if(APPLE)
+if(APPLE AND RENDERER STREQUAL "Vulkan")
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
                         COMMAND rm -f bin/libMoltenVK.dylib
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 

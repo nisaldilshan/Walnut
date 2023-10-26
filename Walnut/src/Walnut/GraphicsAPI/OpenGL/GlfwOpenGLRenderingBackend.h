@@ -19,7 +19,7 @@ public:
 
 	void ConfigureImGui() override;
 
-	void StartImGuiFrame(const std::function<void()>& applicationMenubarCallback, const std::function<void()>& applicationUIRenderingCallback) override;
+	void StartImGuiFrame() override;
 
 	void UploadFonts() override;
 
