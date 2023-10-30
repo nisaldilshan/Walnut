@@ -210,9 +210,9 @@ namespace Walnut {
 		// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		static bool dockspaceOpen = true;
+
 		ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
 		ImGui::PopStyleVar();
-
 		ImGui::PopStyleVar(2);
 
 		// Submit the DockSpace
@@ -232,10 +232,8 @@ namespace Walnut {
 			}
 		}
 
-		if (m_UIRenderingCallback)
-			m_UIRenderingCallback();
-		else
-			std::cout << "Error - applicationUIRenderingCallback is not set!" << std::endl;
+		for (auto& layer : m_LayerStack)
+			layer->OnUIRender();
 
 		ImGui::End();
 	}
@@ -344,13 +342,6 @@ namespace Walnut {
 		m_MenubarCallback = menubarCallback; 
     }
 
-    void Application::SetUIRenderingCallback()
-    {
-		m_UIRenderingCallback = [layerStack = m_LayerStack](){
-			for (auto& layer : layerStack)
-				layer->OnUIRender();
-		};
-    }
 
     void Application::Close()
 	{

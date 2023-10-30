@@ -32,7 +32,6 @@ namespace Walnut {
 		void MainLoop();
 		void Run();
 		void SetMenubarCallback(const std::function<void()>& menubarCallback);
-		void SetUIRenderingCallback();
 		
 		template<typename T>
 		void PushLayer()
@@ -64,7 +63,6 @@ namespace Walnut {
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::function<void()> m_MenubarCallback;
-		std::function<void()> m_UIRenderingCallback;
 
 	};
 

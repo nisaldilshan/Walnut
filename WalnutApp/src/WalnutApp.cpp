@@ -96,6 +96,5 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 		}
 	});
 
-	app->SetUIRenderingCallback();
 	return app;
 }
