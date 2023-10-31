@@ -40,67 +40,24 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
-option(RENDERER "Renderer to be used" "WebGPU")
-
-if (RENDERER STREQUAL "OpenGL")
-    find_package (OpenGL REQUIRED)
-elseif(RENDERER STREQUAL "Vulkan")
-    find_package (Vulkan REQUIRED)
-elseif(RENDERER STREQUAL "WebGPU")
-    add_subdirectory(vendor/glfw3webgpu)
-endif()
-#find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets REQUIRED)
-
-### if QT version is 5
-# set(CMAKE_AUTOMOC ON) 
-# set(CMAKE_AUTORCC ON) 
-# set(CMAKE_AUTOUIC ON)
-### if QT version is 6
-#qt_standard_project_setup()
-
-
-
-#### Third Party Libs which are not already built ####
 add_library(walnut-imgui STATIC
                 Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
                 )
+
+option(RENDERER "Renderer to be used" "WebGPU")
+
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
-    add_library (walnut-graphics-opengl STATIC
-                    Walnut/src/Walnut/ImGui/ImGuiBuildOpenGL.cpp
-                    Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLGraphics.cpp
-                    Walnut/src/Walnut/GraphicsAPI/OpenGL/GlfwOpenGLRenderingBackend.cpp
-                    Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLImage.cpp   
-                )
-
-    target_link_libraries(walnut-graphics-opengl PUBLIC walnut-imgui ${CONAN_LIBS})
+    find_package (OpenGL REQUIRED)
+    add_subdirectory(Walnut/src/Walnut/GraphicsAPI/OpenGL)
 elseif(RENDERER STREQUAL "Vulkan")
-    add_library (walnut-graphics-vulkan SHARED
-                    Walnut/src/Walnut/ImGui/ImGuiBuildVulkan.cpp
-                    Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanGraphics.cpp
-                    Walnut/src/Walnut/GraphicsAPI/Vulkan/GlfwVulkanRenderingBackend.cpp
-                    Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanImage.cpp
-                )
-    target_link_libraries(walnut-graphics-vulkan PUBLIC walnut-imgui ${CONAN_LIBS})
-    if (NOT APPLE)
-        target_link_libraries(walnut-graphics-vulkan PRIVATE Vulkan::Vulkan)
-    endif()
+    find_package (Vulkan REQUIRED)
+    add_subdirectory(Walnut/src/Walnut/GraphicsAPI/Vulkan)
+elseif(RENDERER STREQUAL "WebGPU")
+    add_subdirectory(vendor/glfw3webgpu)
+    add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)
 else()
-    add_library (walnut-graphics-webgpu SHARED
-                    Walnut/src/Walnut/ImGui/ImGuiBuildWGPU.cpp
-                    Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.cpp
-                    Walnut/src/Walnut/GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.cpp
-                    Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.cpp
-                )
-    target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui glfw3webgpu ${CONAN_LIB_DIRS_WEBGPU}/libwebgpu_dawn.dylib)
-    target_link_libraries(walnut-graphics-webgpu PUBLIC
-        "-framework Metal"
-        "-framework MetalKit"
-        "-framework AppKit"
-        "-framework Foundation"
-        "-framework QuartzCore"
-        "-framework IOSurface"
-        )
+    message(STATUS "NO RENDERING BACKEND")
 endif()
 
 #### ENGINE ###
