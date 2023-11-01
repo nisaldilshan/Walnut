@@ -11,9 +11,10 @@
 wgpu::Instance m_instance = nullptr;
 wgpu::TextureFormat m_swapChainFormat = wgpu::TextureFormat::Undefined;
 wgpu::SwapChain m_swapChain = nullptr;
-wgpu::TextureFormat m_depthTextureFormat = wgpu::TextureFormat::Depth24Plus;
-wgpu::Texture m_depthTexture = nullptr;
-wgpu::TextureView m_depthTextureView = nullptr;
+
+wgpu::TextureFormat m_depthTextureFormat = wgpu::TextureFormat::Undefined; // was wgpu::TextureFormat::Depth24Plus
+// wgpu::Texture m_depthTexture = nullptr;
+// wgpu::TextureView m_depthTextureView = nullptr;
 
 
 namespace Walnut
@@ -71,32 +72,32 @@ namespace Walnut
             std::cerr << "Could not initialize WebGPU SwapChain!" << std::endl;
 
         // Create the depth texture
-		wgpu::TextureDescriptor depthTextureDesc;
-		depthTextureDesc.dimension = wgpu::TextureDimension::_2D;
-		depthTextureDesc.format = m_depthTextureFormat;
-		depthTextureDesc.mipLevelCount = 1;
-		depthTextureDesc.sampleCount = 1;
-		depthTextureDesc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
-		depthTextureDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		depthTextureDesc.viewFormatCount = 1;
-		depthTextureDesc.viewFormats = (WGPUTextureFormat*)&m_depthTextureFormat;
-		m_depthTexture = GraphicsAPI::WebGPU::GetDevice().createTexture(depthTextureDesc);
-		std::cout << "Depth texture: " << m_depthTexture << std::endl;
+		// wgpu::TextureDescriptor depthTextureDesc;
+		// depthTextureDesc.dimension = wgpu::TextureDimension::_2D;
+		// depthTextureDesc.format = m_depthTextureFormat;
+		// depthTextureDesc.mipLevelCount = 1;
+		// depthTextureDesc.sampleCount = 1;
+		// depthTextureDesc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+		// depthTextureDesc.usage = wgpu::TextureUsage::RenderAttachment;
+		// depthTextureDesc.viewFormatCount = 1;
+		// depthTextureDesc.viewFormats = (WGPUTextureFormat*)&m_depthTextureFormat;
+		// m_depthTexture = GraphicsAPI::WebGPU::GetDevice().createTexture(depthTextureDesc);
+		// std::cout << "Depth texture: " << m_depthTexture << std::endl;
 
 		// Create the view of the depth texture manipulated by the rasterizer
-		wgpu::TextureViewDescriptor depthTextureViewDesc;
-		depthTextureViewDesc.aspect = wgpu::TextureAspect::DepthOnly;
-		depthTextureViewDesc.baseArrayLayer = 0;
-		depthTextureViewDesc.arrayLayerCount = 1;
-		depthTextureViewDesc.baseMipLevel = 0;
-		depthTextureViewDesc.mipLevelCount = 1;
-		depthTextureViewDesc.dimension = wgpu::TextureViewDimension::_2D;
-		depthTextureViewDesc.format = m_depthTextureFormat;
-		m_depthTextureView = m_depthTexture.createView(depthTextureViewDesc);
-		std::cout << "Depth texture view: " << m_depthTextureView << std::endl;
+		// wgpu::TextureViewDescriptor depthTextureViewDesc;
+		// depthTextureViewDesc.aspect = wgpu::TextureAspect::DepthOnly;
+		// depthTextureViewDesc.baseArrayLayer = 0;
+		// depthTextureViewDesc.arrayLayerCount = 1;
+		// depthTextureViewDesc.baseMipLevel = 0;
+		// depthTextureViewDesc.mipLevelCount = 1;
+		// depthTextureViewDesc.dimension = wgpu::TextureViewDimension::_2D;
+		// depthTextureViewDesc.format = m_depthTextureFormat;
+		// m_depthTextureView = m_depthTexture.createView(depthTextureViewDesc);
+		// std::cout << "Depth texture view: " << m_depthTextureView << std::endl;
 
-		if (m_depthTextureView == nullptr)
-            std::cerr << "Could not initialize WebGPU DepthTexture!" << std::endl;
+		// if (m_depthTextureView == nullptr)
+        //     std::cerr << "Could not initialize WebGPU DepthTexture!" << std::endl;
     }
     bool GlfwWebGPURenderingBackend::NeedToResizeWindow()
     {
@@ -145,23 +146,23 @@ namespace Walnut
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
 
-        wgpu::RenderPassDepthStencilAttachment depthStencilAttachment;
-        depthStencilAttachment.view = m_depthTextureView;
-        depthStencilAttachment.depthClearValue = 1.0f;
-        depthStencilAttachment.depthLoadOp = wgpu::LoadOp::Clear;
-        depthStencilAttachment.depthStoreOp = wgpu::StoreOp::Store;
-        depthStencilAttachment.depthReadOnly = false;
-        depthStencilAttachment.stencilClearValue = 0;
-#ifdef WEBGPU_BACKEND_WGPU
-        depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Clear;
-        depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Store;
-#else
-        depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Undefined;
-        depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Undefined;
-#endif
-        depthStencilAttachment.stencilReadOnly = true;
+//         wgpu::RenderPassDepthStencilAttachment depthStencilAttachment;
+//         depthStencilAttachment.view = m_depthTextureView;
+//         depthStencilAttachment.depthClearValue = 1.0f;
+//         depthStencilAttachment.depthLoadOp = wgpu::LoadOp::Clear;
+//         depthStencilAttachment.depthStoreOp = wgpu::StoreOp::Store;
+//         depthStencilAttachment.depthReadOnly = false;
+//         depthStencilAttachment.stencilClearValue = 0;
+// #ifdef WEBGPU_BACKEND_WGPU
+//         depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Clear;
+//         depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Store;
+// #else
+//         depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Undefined;
+//         depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Undefined;
+// #endif
+//         depthStencilAttachment.stencilReadOnly = true;
 
-        renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
+//         renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
 
         renderPassDesc.timestampWriteCount = 0;
         renderPassDesc.timestampWrites = nullptr;
