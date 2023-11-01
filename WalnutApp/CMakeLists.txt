@@ -1,4 +1,6 @@
-add_executable(App src/WalnutApp.cpp)
+add_executable(App 
+        src/WalnutApp.cpp
+        src/SandboxLayer.cpp)
 
 target_include_directories(App PRIVATE ../Walnut/src)
 
