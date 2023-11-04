@@ -20,6 +20,8 @@ public:
 	virtual void OnUpdate(float ts) override
 	{
         Walnut::Timer timer;
+		if (m_viewportWidth == 0 || m_viewportHeight == 0)
+			return;
 
         if (!m_renderer ||
             m_viewportWidth != m_renderer->GetWidth() ||
@@ -27,9 +29,11 @@ public:
         {
 			m_renderer.reset();
 			m_renderer = std::make_shared<Renderer2D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+			m_renderer->Init();
         }
 
-        m_renderer->Render();
+		if (m_renderer)
+       		m_renderer->Render();
 
         m_lastRenderTime = timer.ElapsedMillis();
 	}

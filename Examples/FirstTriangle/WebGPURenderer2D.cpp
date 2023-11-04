@@ -20,19 +20,34 @@ fn fs_main() -> @location(0) vec4f {
 }
 )";
 
-void GraphicsAPI::WebGPURenderer2D::CreateSwapChain(uint32_t width, uint32_t height)
+void GraphicsAPI::WebGPURenderer2D::CreateTextureToRenderInto(uint32_t width, uint32_t height)
 {
-    wgpu::SwapChainDescriptor swapChainDesc;
-	swapChainDesc.width = width;
-	swapChainDesc.height = height;
-	swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment;
-	swapChainDesc.format = WebGPU::GetSwapChainFormat();
-	swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
+    wgpu::TextureDescriptor tex_desc = {};
+    tex_desc.label = "Renderer Final Texture";
+    tex_desc.dimension = WGPUTextureDimension_2D;
+    tex_desc.size.width = width;
+    tex_desc.size.height = height;
+    tex_desc.size.depthOrArrayLayers = 1;
+    tex_desc.sampleCount = 1;
+    tex_desc.format = WGPUTextureFormat_BGRA8Unorm;
+    tex_desc.mipLevelCount = 1;
+    tex_desc.usage = WGPUTextureUsage_CopyDst | WGPUTextureUsage_TextureBinding | WGPUTextureUsage_RenderAttachment;
+    //##
+    tex_desc.viewFormatCount = 1;
+    wgpu::TextureFormat tf = WebGPU::GetSwapChainFormat();
+	tex_desc.viewFormats = (WGPUTextureFormat *)const_cast<wgpu::TextureFormat *>(&tf);
+    //##
+    wgpu::Texture texture = WebGPU::GetDevice().createTexture(tex_desc);
 
-    m_rendererSwapChain = GraphicsAPI::WebGPU::GetDevice().createSwapChain(GraphicsAPI::WebGPU::GetSurface(), swapChainDesc);
-    std::cout << "Swapchain: " << m_rendererSwapChain << std::endl;
-    if (m_rendererSwapChain == nullptr)
-        std::cerr << "Could not initialize Renderer SwapChain!" << std::endl;
+    wgpu::TextureViewDescriptor tex_view_desc = {};
+    tex_view_desc.format = WGPUTextureFormat_BGRA8Unorm;
+    tex_view_desc.dimension = WGPUTextureViewDimension_2D;
+    tex_view_desc.baseMipLevel = 0;
+    tex_view_desc.mipLevelCount = 1;
+    tex_view_desc.baseArrayLayer = 0;
+    tex_view_desc.arrayLayerCount = 1;
+    tex_view_desc.aspect = WGPUTextureAspect_All;
+    m_nextTexture = texture.createView(tex_view_desc);
 }
 
 void GraphicsAPI::WebGPURenderer2D::CreateShaders()
@@ -138,9 +153,8 @@ void GraphicsAPI::WebGPURenderer2D::CreatePipeline()
 
 void GraphicsAPI::WebGPURenderer2D::Render()
 {
-    wgpu::TextureView nextTexture = m_rendererSwapChain.getCurrentTextureView();
-    if (!nextTexture)
-        std::cerr << "Cannot acquire next swap chain texture" << std::endl;
+    if (!m_nextTexture)
+        std::cerr << "Cannot acquire texture to render into" << std::endl;
 
     wgpu::CommandEncoderDescriptor commandEncoderDesc;
     commandEncoderDesc.label = "Renderer Command Encoder";
@@ -149,7 +163,7 @@ void GraphicsAPI::WebGPURenderer2D::Render()
     wgpu::RenderPassDescriptor renderPassDesc;
 
     wgpu::RenderPassColorAttachment renderPassColorAttachment;
-    renderPassColorAttachment.view = nextTexture;
+    renderPassColorAttachment.view = m_nextTexture;
     renderPassColorAttachment.resolveTarget = nullptr;
     renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
     renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
@@ -170,17 +184,14 @@ void GraphicsAPI::WebGPURenderer2D::Render()
 
     renderPass.end();
     
-    nextTexture.release();
 
     wgpu::CommandBufferDescriptor cmdBufferDescriptor;
     cmdBufferDescriptor.label = "Command buffer";
     wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
     GraphicsAPI::WebGPU::GetQueue().submit(command);
-
-    m_rendererSwapChain.present();
 }
 
 ImTextureID GraphicsAPI::WebGPURenderer2D::GetDescriptorSet()
 {
-    return nullptr;
+    return m_nextTexture;
 }
