@@ -8,6 +8,7 @@ namespace GraphicsAPI
 
     wgpu::Device g_device = nullptr;
     wgpu::Surface g_surface = nullptr;
+	wgpu::TextureFormat g_swapChainFormat = wgpu::TextureFormat::Undefined;
 	wgpu::Queue g_queue = nullptr;
 
     void WebGPU::CreateSurface(wgpu::Instance instance, GLFWwindow* window)
@@ -15,6 +16,13 @@ namespace GraphicsAPI
         std::cout << "Requesting surface..." << std::endl;
         g_surface = glfwGetWGPUSurface(instance, window);
         std::cout << "Got surface: " << g_surface << std::endl;
+
+#ifdef WEBGPU_BACKEND_WGPU
+		g_swapChainFormat = m_surface.getPreferredFormat(adapter);
+#else
+		g_swapChainFormat = wgpu::TextureFormat::BGRA8Unorm;
+#endif
+		std::cout << "SwapChain Format: " << g_swapChainFormat << std::endl;
     }
 
     void WebGPU::CreateDevice(wgpu::Instance instance)
@@ -77,6 +85,12 @@ namespace GraphicsAPI
     {
         assert(g_surface);
         return g_surface;
+    }
+
+    wgpu::TextureFormat WebGPU::GetSwapChainFormat()
+    {
+		assert(g_swapChainFormat);
+        return g_swapChainFormat;
     }
 
     wgpu::Device WebGPU::GetDevice()

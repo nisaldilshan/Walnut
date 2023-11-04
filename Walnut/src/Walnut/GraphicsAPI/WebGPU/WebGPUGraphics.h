@@ -15,6 +15,7 @@ public:
 	static void CreateDevice(wgpu::Instance instance);
 	static void FreeGraphicsResources();
     static wgpu::Surface GetSurface();
+	static wgpu::TextureFormat GetSwapChainFormat();
 	static wgpu::Device GetDevice();
 	static wgpu::Queue GetQueue();
 };

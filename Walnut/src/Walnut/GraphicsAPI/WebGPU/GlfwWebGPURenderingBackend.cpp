@@ -9,7 +9,6 @@
 #include "WebGPUGraphics.h"
 
 wgpu::Instance m_instance = nullptr;
-wgpu::TextureFormat m_swapChainFormat = wgpu::TextureFormat::Undefined;
 wgpu::SwapChain m_swapChain = nullptr;
 
 wgpu::TextureFormat m_depthTextureFormat = wgpu::TextureFormat::Undefined; // was wgpu::TextureFormat::Depth24Plus
@@ -46,12 +45,6 @@ namespace Walnut
 			std::cout << std::endl;
 		});
 
-#ifdef WEBGPU_BACKEND_WGPU
-		m_swapChainFormat = m_surface.getPreferredFormat(adapter);
-#else
-		m_swapChainFormat = wgpu::TextureFormat::BGRA8Unorm;
-#endif
-
     }
     void GlfwWebGPURenderingBackend::SetupGraphicsAPI()
     {
@@ -64,7 +57,7 @@ namespace Walnut
 		swapChainDesc.width = static_cast<uint32_t>(width);
 		swapChainDesc.height = static_cast<uint32_t>(height);
 		swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		swapChainDesc.format = m_swapChainFormat;
+		swapChainDesc.format = GraphicsAPI::WebGPU::GetSwapChainFormat();
 		swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
 		m_swapChain = GraphicsAPI::WebGPU::GetDevice().createSwapChain(GraphicsAPI::WebGPU::GetSurface(), swapChainDesc);
 		std::cout << "Swapchain: " << m_swapChain << std::endl;
@@ -109,7 +102,7 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::ConfigureImGui()
     {
         ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
-        ImGui_ImplWGPU_Init(GraphicsAPI::WebGPU::GetDevice(), 3, m_swapChainFormat, m_depthTextureFormat);
+        ImGui_ImplWGPU_Init(GraphicsAPI::WebGPU::GetDevice(), 3, GraphicsAPI::WebGPU::GetSwapChainFormat(), m_depthTextureFormat);
     }
 
     void GlfwWebGPURenderingBackend::StartImGuiFrame()
