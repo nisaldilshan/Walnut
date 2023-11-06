@@ -1,7 +1,7 @@
 add_executable(FirstTriangle 
             main.cpp
-            Renderer2D.cpp
-            WebGPURenderer2D.cpp)
+            ../Common/Renderer2D.cpp
+            ../Common/WebGPURenderer2D.cpp)
 
 target_include_directories(FirstTriangle PRIVATE ../../Walnut/src)
 

@@ -14,7 +14,7 @@ namespace GraphicsAPI
         ~WebGPURenderer2D() = default;
 
         void CreateTextureToRenderInto(uint32_t width, uint32_t height);
-        void CreateShaders();
+        void CreateShaders(const char* shaderSource);
         void CreatePipeline();
         void Render();
         ImTextureID GetDescriptorSet();

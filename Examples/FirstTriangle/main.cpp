@@ -3,7 +3,7 @@
 #include "Walnut/Random.h"
 #include <Walnut/Timer.h>
 
-#include "Renderer2D.h"
+#include "../Common/Renderer2D.h"
 
 class Renderer2DLayer : public Walnut::Layer
 {
@@ -29,6 +29,27 @@ public:
         {
 			m_renderer.reset();
 			m_renderer = std::make_shared<Renderer2D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+
+			const char* shaderSource = R"(
+				@vertex
+				fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4<f32> {
+					var p = vec2f(0.0, 0.0);
+					if (in_vertex_index == 0u) {
+						p = vec2f(-0.5, -0.5);
+					} else if (in_vertex_index == 1u) {
+						p = vec2f(0.5, -0.5);
+					} else {
+						p = vec2f(0.0, 0.5);
+					}
+					return vec4f(p, 0.0, 1.0);
+				}
+
+				@fragment
+				fn fs_main() -> @location(0) vec4f {
+					return vec4f(0.0, 0.4, 1.0, 1.0);
+				}
+			)";
+			m_renderer->SetShader(shaderSource);
 			m_renderer->Init();
         }
 
