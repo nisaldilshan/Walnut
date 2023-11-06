@@ -25,6 +25,11 @@ void Renderer2D::SetShader(const char *shaderSource)
     m_shaderSource = shaderSource;
 }
 
+void Renderer2D::SetBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout)
+{
+    m_rendererBackend->CreateBuffer("vertex", bufferData, bufferLayout);
+}
+
 void *Renderer2D::GetDescriptorSet()
 {
     return m_rendererBackend->GetDescriptorSet();

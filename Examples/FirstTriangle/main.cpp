@@ -50,6 +50,40 @@ public:
 				}
 			)";
 			m_renderer->SetShader(shaderSource);
+
+			// Vertex buffer
+			// There are 2 floats per vertex, one for x and one for y.
+			// But in the end this is just a bunch of floats to the eyes of the GPU,
+			// the *layout* will tell how to interpret this.
+			const std::vector<float> vertexData = {
+				// x0, y0
+				-0.5, -0.5,
+
+				// x1, y1
+				+0.5, -0.5,
+
+				// x2, y2
+				+0.0, +0.5
+			};
+
+			wgpu::VertexBufferLayout vertexBufferLayout;
+			wgpu::VertexAttribute vertexAttrib;
+			// == Per attribute ==
+			// Corresponds to @location(...)
+			vertexAttrib.shaderLocation = 0;
+			// Means vec2f in the shader
+			vertexAttrib.format = wgpu::VertexFormat::Float32x2;
+			// Index of the first element
+			vertexAttrib.offset = 0;
+
+			vertexBufferLayout.attributeCount = 1;
+			vertexBufferLayout.attributes = &vertexAttrib;
+			vertexBufferLayout.arrayStride = 2 * sizeof(float);
+			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
+
+
+			m_renderer->SetBufferData(vertexData, vertexBufferLayout);
+
 			m_renderer->Init();
         }
 

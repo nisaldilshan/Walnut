@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <Walnut/ImageFormat.h>
 
+#include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
+
 namespace GraphicsAPI
 {
 #if (RENDERER_BACKEND == 1)
@@ -27,6 +29,7 @@ public:
 
     void Init();
     void SetShader(const char* shaderSource);
+    void SetBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }

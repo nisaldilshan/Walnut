@@ -1,6 +1,9 @@
 #include "WebGPURenderer2D.h"
 
-void GraphicsAPI::WebGPURenderer2D::CreateTextureToRenderInto(uint32_t width, uint32_t height)
+namespace GraphicsAPI
+{
+
+void WebGPURenderer2D::CreateTextureToRenderInto(uint32_t width, uint32_t height)
 {
     wgpu::TextureDescriptor tex_desc = {};
     tex_desc.label = "Renderer Final Texture";
@@ -30,7 +33,7 @@ void GraphicsAPI::WebGPURenderer2D::CreateTextureToRenderInto(uint32_t width, ui
     m_nextTexture = texture.createView(tex_view_desc);
 }
 
-void GraphicsAPI::WebGPURenderer2D::CreateShaders(const char* shaderSource)
+void WebGPURenderer2D::CreateShaders(const char* shaderSource)
 {
     std::cout << "Creating shader module..." << std::endl;
 
@@ -52,7 +55,7 @@ void GraphicsAPI::WebGPURenderer2D::CreateShaders(const char* shaderSource)
     std::cout << "Shader module: " << m_shaderModule << std::endl;
 }
 
-void GraphicsAPI::WebGPURenderer2D::CreatePipeline()
+void WebGPURenderer2D::CreatePipeline()
 {
     std::cout << "Creating render pipeline..." << std::endl;
 
@@ -127,11 +130,30 @@ void GraphicsAPI::WebGPURenderer2D::CreatePipeline()
 	// Pipeline layout
 	pipelineDesc.layout = nullptr;
 
+    pipelineDesc.vertex.bufferCount = 1;
+    pipelineDesc.vertex.buffers = &m_vertexBufferLayout;
+
+
     m_pipeline = WebGPU::GetDevice().createRenderPipeline(pipelineDesc);
     std::cout << "Render pipeline: " << m_pipeline << std::endl;
 }
 
-void GraphicsAPI::WebGPURenderer2D::Render()
+void WebGPURenderer2D::CreateBuffer(std::string name, const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
+{
+    // Create vertex buffer
+    m_vertexBufferSize = bufferData.size() * sizeof(float);
+    m_vertexBufferLayout = bufferLayout;
+    wgpu::BufferDescriptor bufferDesc;
+    bufferDesc.size = m_vertexBufferSize;
+    bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex;
+    bufferDesc.mappedAtCreation = false;
+    m_vertexBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+
+    // Upload geometry data to the buffer
+    WebGPU::GetQueue().writeBuffer(m_vertexBuffer, 0, bufferData.data(), bufferDesc.size);
+}
+
+void WebGPURenderer2D::Render()
 {
     if (!m_nextTexture)
         std::cerr << "Cannot acquire texture to render into" << std::endl;
@@ -159,6 +181,11 @@ void GraphicsAPI::WebGPURenderer2D::Render()
     // In its overall outline, drawing a triangle is as simple as this:
     // Select which render pipeline to use
     renderPass.setPipeline(m_pipeline);
+
+    // Set vertex buffer while encoding the render pass
+    if (m_vertexBuffer)
+        renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
+
     // Draw 1 instance of a 3-vertices shape
     renderPass.draw(3, 1, 0, 0);
 
@@ -171,7 +198,9 @@ void GraphicsAPI::WebGPURenderer2D::Render()
     GraphicsAPI::WebGPU::GetQueue().submit(command);
 }
 
-ImTextureID GraphicsAPI::WebGPURenderer2D::GetDescriptorSet()
+ImTextureID WebGPURenderer2D::GetDescriptorSet()
 {
     return m_nextTexture;
 }
+
+} // namespace GraphicsAPI
