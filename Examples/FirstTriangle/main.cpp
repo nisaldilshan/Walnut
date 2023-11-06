@@ -31,22 +31,20 @@ public:
 			m_renderer = std::make_shared<Renderer2D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
 
 			const char* shaderSource = R"(
+			// The `@location(0)` attribute means that this input variable is described
+			// by the vertex buffer layout at index 0 in the `pipelineDesc.vertex.buffers`
+			// array.
+			// The type `vec2f` must comply with what we will declare in the layout.
+			// The argument name `in_vertex_position` is up to you, it is only internal to
+			// the shader code!
 				@vertex
-				fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4<f32> {
-					var p = vec2f(0.0, 0.0);
-					if (in_vertex_index == 0u) {
-						p = vec2f(-0.5, -0.5);
-					} else if (in_vertex_index == 1u) {
-						p = vec2f(0.5, -0.5);
-					} else {
-						p = vec2f(0.0, 0.5);
-					}
-					return vec4f(p, 0.0, 1.0);
+				fn vs_main(@location(0) in_vertex_position: vec2f) -> @builtin(position) vec4f {
+					return vec4f(in_vertex_position, 0.0, 1.0);
 				}
 
 				@fragment
 				fn fs_main() -> @location(0) vec4f {
-					return vec4f(0.0, 0.4, 1.0, 1.0);
+					return vec4f(1.0, 0.4, 0.0, 1.0);
 				}
 			)";
 			m_renderer->SetShader(shaderSource);
@@ -57,7 +55,7 @@ public:
 			// the *layout* will tell how to interpret this.
 			const std::vector<float> vertexData = {
 				// x0, y0
-				-0.5, -0.5,
+				-0.5, -0.7,
 
 				// x1, y1
 				+0.5, -0.5,
