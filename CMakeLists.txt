@@ -125,4 +125,4 @@ endif()
 
 
 add_subdirectory(WalnutApp)
-add_subdirectory(Examples/FirstTriangle)
+add_subdirectory(Examples)
