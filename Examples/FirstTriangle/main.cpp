@@ -54,14 +54,17 @@ public:
 			// But in the end this is just a bunch of floats to the eyes of the GPU,
 			// the *layout* will tell how to interpret this.
 			const std::vector<float> vertexData = {
-				// x0, y0
-				-0.5, -0.7,
-
-				// x1, y1
+				-0.5, -0.5,
 				+0.5, -0.5,
+				+0.0, +0.5,
 
-				// x2, y2
-				+0.0, +0.5
+				-0.55f, -0.5,
+				-0.05f, +0.5,
+				-0.55f, +0.5,
+
+				+0.275f, +0.05,
+				+0.5f, +0.5,
+				+0.05f, +0.5
 			};
 
 			wgpu::VertexBufferLayout vertexBufferLayout;

@@ -141,6 +141,7 @@ void WebGPURenderer2D::CreatePipeline()
 void WebGPURenderer2D::CreateBuffer(std::string name, const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
 {
     // Create vertex buffer
+    m_vertexCount = bufferData.size() / 2;
     m_vertexBufferSize = bufferData.size() * sizeof(float);
     m_vertexBufferLayout = bufferLayout;
     wgpu::BufferDescriptor bufferDesc;
@@ -187,7 +188,7 @@ void WebGPURenderer2D::Render()
         renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
 
     // Draw 1 instance of a 3-vertices shape
-    renderPass.draw(3, 1, 0, 0);
+    renderPass.draw(m_vertexCount, 1, 0, 0);
 
     renderPass.end();
     

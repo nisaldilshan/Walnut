@@ -24,6 +24,7 @@ namespace GraphicsAPI
         wgpu::RenderPipeline m_pipeline = nullptr;
         wgpu::TextureView m_nextTexture = nullptr;
 
+        uint32_t m_vertexCount = 0;
         uint64_t m_vertexBufferSize = 0;
         wgpu::Buffer m_vertexBuffer = nullptr;
         wgpu::VertexBufferLayout m_vertexBufferLayout;
