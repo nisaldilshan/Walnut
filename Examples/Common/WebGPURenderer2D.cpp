@@ -55,6 +55,12 @@ void WebGPURenderer2D::CreateShaders(const char* shaderSource)
     std::cout << "Shader module: " << m_shaderModule << std::endl;
 }
 
+void WebGPURenderer2D::CreateStandaloneShader(const char *shaderSource, uint32_t vertexShaderCallCount)
+{
+    CreateShaders(shaderSource);
+    m_vertexCount = vertexShaderCallCount;
+}
+
 void WebGPURenderer2D::CreatePipeline()
 {
     std::cout << "Creating render pipeline..." << std::endl;
@@ -62,10 +68,16 @@ void WebGPURenderer2D::CreatePipeline()
     wgpu::RenderPipelineDescriptor pipelineDesc;
 
     // Vertex fetch
-	// (We don't use any input buffer so far)
-    pipelineDesc.vertex.bufferCount = 0;
-    pipelineDesc.vertex.buffers = nullptr;
-
+    if (m_vertexBufferSize > 0)
+    {
+        pipelineDesc.vertex.bufferCount = 1;
+        pipelineDesc.vertex.buffers = &m_vertexBufferLayout;
+    }
+    else
+    {
+        pipelineDesc.vertex.bufferCount = 0;
+        pipelineDesc.vertex.buffers = nullptr;
+    }
     // Vertex shader
     pipelineDesc.vertex.module = m_shaderModule;
 	pipelineDesc.vertex.entryPoint = "vs_main";
@@ -130,9 +142,6 @@ void WebGPURenderer2D::CreatePipeline()
 	// Pipeline layout
 	pipelineDesc.layout = nullptr;
 
-    pipelineDesc.vertex.bufferCount = 1;
-    pipelineDesc.vertex.buffers = &m_vertexBufferLayout;
-
 
     m_pipeline = WebGPU::GetDevice().createRenderPipeline(pipelineDesc);
     std::cout << "Render pipeline: " << m_pipeline << std::endl;
@@ -140,7 +149,7 @@ void WebGPURenderer2D::CreatePipeline()
 
 void WebGPURenderer2D::CreateBuffer(std::string name, const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
 {
-    // Create vertex buffer
+    std::cout << "Creating vertex buffer..." << std::endl;
     m_vertexCount = bufferData.size() / 2;
     m_vertexBufferSize = bufferData.size() * sizeof(float);
     m_vertexBufferLayout = bufferLayout;
@@ -152,6 +161,7 @@ void WebGPURenderer2D::CreateBuffer(std::string name, const std::vector<float> &
 
     // Upload geometry data to the buffer
     WebGPU::GetQueue().writeBuffer(m_vertexBuffer, 0, bufferData.data(), bufferDesc.size);
+    std::cout << "Vertex buffer: " << m_vertexBuffer << std::endl;
 }
 
 void WebGPURenderer2D::Render()

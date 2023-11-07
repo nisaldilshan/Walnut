@@ -15,6 +15,7 @@ namespace GraphicsAPI
 
         void CreateTextureToRenderInto(uint32_t width, uint32_t height);
         void CreateShaders(const char* shaderSource);
+        void CreateStandaloneShader(const char *shaderSource, uint32_t vertexShaderCallCount);
         void CreatePipeline();
         void CreateBuffer(std::string name, const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
         void Render();

@@ -29,6 +29,7 @@ public:
 
     void Init();
     void SetShader(const char* shaderSource);
+    void SetStandaloneShader(const char* shaderSource, uint32_t vertexShaderCallCount);
     void SetBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }

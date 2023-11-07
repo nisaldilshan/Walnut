@@ -16,13 +16,17 @@ Renderer2D::~Renderer2D()
 
 void Renderer2D::Init()
 {
-    m_rendererBackend->CreateShaders(m_shaderSource);
     m_rendererBackend->CreatePipeline();
 }
 
 void Renderer2D::SetShader(const char *shaderSource)
 {
-    m_shaderSource = shaderSource;
+    m_rendererBackend->CreateShaders(shaderSource);
+}
+
+void Renderer2D::SetStandaloneShader(const char *shaderSource, uint32_t vertexShaderCallCount)
+{
+    m_rendererBackend->CreateStandaloneShader(shaderSource, vertexShaderCallCount);
 }
 
 void Renderer2D::SetBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout)
