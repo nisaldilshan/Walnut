@@ -1,0 +1,60 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FirstTriangle",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/FirstTriangle",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "VertexBuffers",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/VertexBuffers",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "App Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/App",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "(lldb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/App",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "environment": [{
+                "name": "DYLD_LIBRARY_PATH",
+                "value": "${workspaceFolder}/build/lib"
+            }],
+            "externalConsole": false,
+            "MIMode": "lldb",
+        }
+
+    ]
+}
