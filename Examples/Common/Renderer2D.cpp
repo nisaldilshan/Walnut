@@ -29,9 +29,13 @@ void Renderer2D::SetStandaloneShader(const char *shaderSource, uint32_t vertexSh
     m_rendererBackend->CreateStandaloneShader(shaderSource, vertexShaderCallCount);
 }
 
-void Renderer2D::SetBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout)
+void Renderer2D::SetVertexBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout)
 {
-    m_rendererBackend->CreateBuffer("vertex", bufferData, bufferLayout);
+    m_rendererBackend->CreateVertexBuffer(bufferData, bufferLayout);
+}
+
+void Renderer2D::SetIndexBufferData(const std::vector<float> &bufferData)
+{
 }
 
 void *Renderer2D::GetDescriptorSet()

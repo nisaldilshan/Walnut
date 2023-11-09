@@ -83,7 +83,7 @@ public:
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
-			m_renderer->SetBufferData(vertexData, vertexBufferLayout);
+			m_renderer->SetVertexBufferData(vertexData, vertexBufferLayout);
 
 			m_renderer->Init();
         }

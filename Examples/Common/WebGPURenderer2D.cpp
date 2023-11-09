@@ -147,7 +147,7 @@ void WebGPURenderer2D::CreatePipeline()
     std::cout << "Render pipeline: " << m_pipeline << std::endl;
 }
 
-void WebGPURenderer2D::CreateBuffer(std::string name, const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
+void WebGPURenderer2D::CreateVertexBuffer(const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
 {
     std::cout << "Creating vertex buffer..." << std::endl;
     m_vertexCount = bufferData.size() / (bufferLayout.arrayStride / sizeof(float));
