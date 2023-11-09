@@ -159,9 +159,25 @@ void WebGPURenderer2D::CreateVertexBuffer(const std::vector<float> &bufferData, 
     bufferDesc.mappedAtCreation = false;
     m_vertexBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 
-    // Upload geometry data to the buffer
+    // Upload vertex data to the buffer
     WebGPU::GetQueue().writeBuffer(m_vertexBuffer, 0, bufferData.data(), bufferDesc.size);
     std::cout << "Vertex buffer: " << m_vertexBuffer << std::endl;
+}
+
+void WebGPURenderer2D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData)
+{
+    std::cout << "Creating vertex buffer..." << std::endl;
+
+    m_indexCount = bufferData.size();
+
+    wgpu::BufferDescriptor bufferDesc;
+    bufferDesc.size = bufferData.size() * sizeof(uint16_t);
+    bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Index;
+    m_indexBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+
+    // Upload index data to the buffer
+    WebGPU::GetQueue().writeBuffer(m_indexBuffer, 0, bufferData.data(), bufferDesc.size);
+    std::cout << "Index buffer: " << m_indexBuffer << std::endl;
 }
 
 void WebGPURenderer2D::Render()
@@ -197,12 +213,16 @@ void WebGPURenderer2D::Render()
     if (m_vertexBuffer)
         renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
 
-    // Draw 1 instance of a 3-vertices shape
-    renderPass.draw(m_vertexCount, 1, 0, 0);
+    if (m_indexCount > 0)
+    {
+        renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
+        renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
+    }
+    else
+        renderPass.draw(m_vertexCount, 1, 0, 0);
 
     renderPass.end();
     
-
     wgpu::CommandBufferDescriptor cmdBufferDescriptor;
     cmdBufferDescriptor.label = "Command buffer";
     wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);

@@ -70,21 +70,13 @@ public:
 			m_renderer->SetShader(shaderSource);
 
 			// Vertex buffer
-			// There are 2 floats per vertex, one for x and one for y.
-			// But in the end this is just a bunch of floats to the eyes of the GPU,
-			// the *layout* will tell how to interpret this.
+			// The de-duplicated list of point positions
 			std::vector<float> vertexData = {
-				// x0,  y0,  r0,  g0,  b0
-				-0.5, -0.5, 1.0, 0.0, 0.0,
-
-				// x1,  y1,  r1,  g1,  b1
-				+0.5, -0.5, 0.0, 1.0, 0.0,
-
-				// ...
-				+0.0,   +0.5, 0.0, 0.0, 1.0,
-				-0.55f, -0.5, 1.0, 1.0, 0.0,
-				-0.05f, +0.5, 1.0, 0.0, 1.0,
-				-0.55f, +0.5, 0.0, 1.0, 1.0
+				// x,   y,     r,   g,   b
+				-0.5, -0.5,   1.0, 0.0, 0.0,
+				+0.5, -0.5,   0.0, 1.0, 0.0,
+				+0.5, +0.5,   0.0, 0.0, 1.0,
+				-0.5, +0.5,   1.0, 1.0, 0.0
 			};
 
 			// Vertex fetch
@@ -110,6 +102,14 @@ public:
 
 
 			m_renderer->SetVertexBufferData(vertexData, vertexBufferLayout);
+
+			// Index Buffer
+			// This is a list of indices referencing positions in the pointData
+			std::vector<uint16_t> indexData = {
+				0, 1, 2, // Triangle #0
+				0, 2, 3  // Triangle #1
+			};
+			m_renderer->SetIndexBufferData(indexData);
 
 			m_renderer->Init();
         }

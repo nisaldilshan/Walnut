@@ -34,8 +34,9 @@ void Renderer2D::SetVertexBufferData(const std::vector<float>& bufferData, wgpu:
     m_rendererBackend->CreateVertexBuffer(bufferData, bufferLayout);
 }
 
-void Renderer2D::SetIndexBufferData(const std::vector<float> &bufferData)
+void Renderer2D::SetIndexBufferData(const std::vector<uint16_t>& bufferData)
 {
+    m_rendererBackend->CreateIndexBuffer(bufferData);
 }
 
 void *Renderer2D::GetDescriptorSet()
