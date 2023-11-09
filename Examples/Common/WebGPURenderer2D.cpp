@@ -150,7 +150,7 @@ void WebGPURenderer2D::CreatePipeline()
 void WebGPURenderer2D::CreateBuffer(std::string name, const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
 {
     std::cout << "Creating vertex buffer..." << std::endl;
-    m_vertexCount = bufferData.size() / 2;
+    m_vertexCount = bufferData.size() / (bufferLayout.arrayStride / sizeof(float));
     m_vertexBufferSize = bufferData.size() * sizeof(float);
     m_vertexBufferLayout = bufferLayout;
     wgpu::BufferDescriptor bufferDesc;
