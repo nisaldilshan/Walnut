@@ -16,15 +16,16 @@ Renderer2D::~Renderer2D()
 
 void Renderer2D::Init()
 {
+    m_rendererBackend->CreateBindGroup();
     m_rendererBackend->CreatePipeline();
 }
 
-void Renderer2D::SetShader(const char *shaderSource)
+void Renderer2D::SetShader(const char* shaderSource)
 {
     m_rendererBackend->CreateShaders(shaderSource);
 }
 
-void Renderer2D::SetStandaloneShader(const char *shaderSource, uint32_t vertexShaderCallCount)
+void Renderer2D::SetStandaloneShader(const char* shaderSource, uint32_t vertexShaderCallCount)
 {
     m_rendererBackend->CreateStandaloneShader(shaderSource, vertexShaderCallCount);
 }
@@ -39,7 +40,17 @@ void Renderer2D::SetIndexBufferData(const std::vector<uint16_t>& bufferData)
     m_rendererBackend->CreateIndexBuffer(bufferData);
 }
 
-void *Renderer2D::GetDescriptorSet()
+void Renderer2D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry)
+{
+    m_rendererBackend->SetBindGroupLayoutEntry(bindGroupLayoutEntry);
+}
+
+void Renderer2D::SetUniformBufferData(const std::vector<float>& bufferData)
+{
+    m_rendererBackend->CreateUniformBuffer(bufferData);
+}
+
+void* Renderer2D::GetDescriptorSet()
 {
     return m_rendererBackend->GetDescriptorSet();
 }

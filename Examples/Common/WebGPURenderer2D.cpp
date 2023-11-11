@@ -140,8 +140,10 @@ void WebGPURenderer2D::CreatePipeline()
 	pipelineDesc.multisample.alphaToCoverageEnabled = false;
 
 	// Pipeline layout
-	pipelineDesc.layout = nullptr;
-
+    if (m_pipelineLayout)
+	    pipelineDesc.layout = m_pipelineLayout;
+    else
+        pipelineDesc.layout = nullptr;
 
     m_pipeline = WebGPU::GetDevice().createRenderPipeline(pipelineDesc);
     std::cout << "Render pipeline: " << m_pipeline << std::endl;
@@ -182,6 +184,67 @@ void WebGPURenderer2D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData
     std::cout << "Index buffer: " << m_indexBuffer << std::endl;
 }
 
+void WebGPURenderer2D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry)
+{
+    // Create a bind group layout
+	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
+	bindGroupLayoutDesc.entryCount = 1;
+	bindGroupLayoutDesc.entries = &bindGroupLayoutEntry;
+	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
+}
+
+void WebGPURenderer2D::CreateBindGroup()
+{
+    if (m_bindGroupLayout)
+    {
+        // Create the pipeline layout
+        wgpu::PipelineLayoutDescriptor pipelineLayoutDesc;
+        pipelineLayoutDesc.bindGroupLayoutCount = 1;
+        pipelineLayoutDesc.bindGroupLayouts = (WGPUBindGroupLayout*)&m_bindGroupLayout;
+        m_pipelineLayout = WebGPU::GetDevice().createPipelineLayout(pipelineLayoutDesc);
+
+
+
+        // Create a binding
+        wgpu::BindGroupEntry binding;
+        // The index of the binding (the entries in bindGroupDesc can be in any order)
+        binding.binding = 0;
+        // The buffer it is actually bound to
+        binding.buffer = m_uniformBuffer;
+        // We can specify an offset within the buffer, so that a single buffer can hold
+        // multiple uniform blocks.
+        binding.offset = 0;
+        // And we specify again the size of the buffer.
+        binding.size = sizeof(float);
+
+
+        // A bind group contains one or multiple bindings
+        wgpu::BindGroupDescriptor bindGroupDesc;
+        bindGroupDesc.layout = m_bindGroupLayout;
+        // There must be as many bindings as declared in the layout!
+        bindGroupDesc.entryCount = 1; // TODO: Nisal - use bindGroupLayoutDesc.entryCount
+        bindGroupDesc.entries = &binding;
+        m_bindGroup = WebGPU::GetDevice().createBindGroup(bindGroupDesc);
+    }
+}
+
+void WebGPURenderer2D::CreateUniformBuffer(const std::vector<float> &bufferData)
+{
+    // Create uniform buffer
+    if (!m_uniformBuffer)
+    {
+        // The buffer will only contain 1 float with the value of uTime
+        wgpu::BufferDescriptor bufferDesc;
+        bufferDesc.size = sizeof(float);
+        // Make sure to flag the buffer as BufferUsage::Uniform
+        bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
+        bufferDesc.mappedAtCreation = false;
+        m_uniformBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+    }
+
+	WebGPU::GetQueue().writeBuffer(m_uniformBuffer, 0, &bufferData[0], sizeof(float));
+}
+
 void WebGPURenderer2D::Render()
 {
     if (!m_nextTexture)
@@ -214,6 +277,10 @@ void WebGPURenderer2D::Render()
     // Set vertex buffer while encoding the render pass
     if (m_vertexBuffer)
         renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
+
+    // Set binding group
+    if (m_bindGroup)
+        renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
 
     if (m_indexCount > 0)
     {

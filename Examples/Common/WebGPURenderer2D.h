@@ -19,6 +19,9 @@ namespace GraphicsAPI
         void CreatePipeline();
         void CreateVertexBuffer(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
+        void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
+        void CreateBindGroup();
+        void CreateUniformBuffer(const std::vector<float>& bufferData);
         void Render();
         ImTextureID GetDescriptorSet();
     private:
@@ -33,6 +36,11 @@ namespace GraphicsAPI
 
         uint32_t m_indexCount = 0;
         wgpu::Buffer m_indexBuffer = nullptr;
+
+        wgpu::BindGroupLayout m_bindGroupLayout = nullptr;
+        wgpu::PipelineLayout m_pipelineLayout = nullptr;
+        wgpu::Buffer m_uniformBuffer = nullptr;
+        wgpu::BindGroup m_bindGroup = nullptr;
 
         uint32_t m_width, m_height;
     };
