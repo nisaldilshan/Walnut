@@ -157,6 +157,7 @@ void WebGPURenderer2D::CreateVertexBuffer(const std::vector<float> &bufferData, 
     bufferDesc.size = m_vertexBufferSize;
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex;
     bufferDesc.mappedAtCreation = false;
+    bufferDesc.label = "Vertex Buffer";
     m_vertexBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 
     // Upload vertex data to the buffer
@@ -171,8 +172,9 @@ void WebGPURenderer2D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData
     m_indexCount = bufferData.size();
 
     wgpu::BufferDescriptor bufferDesc;
-    bufferDesc.size = bufferData.size() * sizeof(uint16_t);
+    bufferDesc.size = bufferData.size() * sizeof(float);
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Index;
+    bufferDesc.label = "Index Buffer";
     m_indexBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 
     // Upload index data to the buffer
