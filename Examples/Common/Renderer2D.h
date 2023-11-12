@@ -36,7 +36,7 @@ public:
     void SetIndexBufferData(const std::vector<uint16_t>& bufferData);
     void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
     void CreateUniformBuffer();
-    void SetUniformBufferData(const MyUniforms& bufferData, uint64_t bufferOffset);
+    void SetUniformBufferData(const MyUniforms& bufferData, uint32_t uniformIndex);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }

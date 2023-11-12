@@ -56,6 +56,7 @@ namespace GraphicsAPI
 		//                                    ^ This was a 1
 		requiredLimits.limits.maxUniformBuffersPerShaderStage = 1;
 		requiredLimits.limits.maxUniformBufferBindingSize = 16 * 4 * sizeof(float);
+		requiredLimits.limits.maxDynamicUniformBuffersPerPipelineLayout = 1;
 		// Allow textures up to 2K
 		requiredLimits.limits.maxTextureDimension1D = 2048;
 		requiredLimits.limits.maxTextureDimension2D = 2048;

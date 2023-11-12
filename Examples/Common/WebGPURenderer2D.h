@@ -24,10 +24,17 @@ namespace GraphicsAPI
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
         void CreateBindGroup();
         void CreateUniformBuffer();
-        void SetUniformData(const MyUniforms& bufferData, uint64_t bufferOffset);
+        void SetUniformData(const MyUniforms& bufferData, uint32_t uniformIndex);
+        void SimpleRender();
         void Render();
+        void RenderIndexed();
         ImTextureID GetDescriptorSet();
+
     private:
+        wgpu::RenderPassEncoder BeginRenderPass();
+        void EndRenderPass(wgpu::RenderPassEncoder renderPass);
+        void SubmitCommandBuffer();
+
         wgpu::ShaderModule m_shaderModule = nullptr;
         wgpu::RenderPipeline m_pipeline = nullptr;
         wgpu::TextureView m_nextTexture = nullptr;
@@ -44,6 +51,8 @@ namespace GraphicsAPI
         wgpu::PipelineLayout m_pipelineLayout = nullptr;
         wgpu::Buffer m_uniformBuffer = nullptr;
         wgpu::BindGroup m_bindGroup = nullptr;
+
+        wgpu::CommandEncoder m_currentCommandEncoder = nullptr;
 
         uint32_t m_width, m_height;
     };

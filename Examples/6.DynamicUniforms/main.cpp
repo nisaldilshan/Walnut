@@ -132,20 +132,33 @@ public:
 			bGLayoutEntry.visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
 			bGLayoutEntry.buffer.type = wgpu::BufferBindingType::Uniform;
 			bGLayoutEntry.buffer.minBindingSize = sizeof(MyUniforms);
+			// Make this binding dynamic so we can offset it between draw calls
+			bGLayoutEntry.buffer.hasDynamicOffset = true;
 
 			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
 
 			m_renderer->CreateUniformBuffer();
 
-			m_renderer->Init();
+			m_renderer->Init();	
         }
 
 		if (m_renderer)
 		{
 			// Update uniform buffer
-			m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
+			// m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
+			// m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
+			// m_renderer->SetUniformBufferData(m_uniformData, 0);
+
+			// Upload first value
+			m_uniformData.time = 1.0f;
 			m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
 			m_renderer->SetUniformBufferData(m_uniformData, 0);
+
+			// Upload second value
+			m_uniformData.time = 1.1f;
+			m_uniformData.color = { 1.0f, 1.0f, 1.0f, 0.7f };
+			m_renderer->SetUniformBufferData(m_uniformData, 1);
+			//                               				^^^^^^^^^^^^^ beware of the non-null offset!
 
 			m_renderer->Render();
 		}

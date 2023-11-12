@@ -228,24 +228,53 @@ void WebGPURenderer2D::CreateBindGroup()
     }
 }
 
+uint32_t getOffset(uint32_t uniformIndex)
+{
+    if (uniformIndex == 0)
+        return 0;
+    
+    /** Round 'value' up to the next multiplier of 'step' */
+    auto ceilToNextMultiple = [](uint32_t value, uint32_t step) -> uint32_t
+    {
+        uint32_t divide_and_ceil = value / step + (value % step == 0 ? 0 : 1);
+        return step * divide_and_ceil;
+    };
+    // Get device limits
+    wgpu::SupportedLimits deviceSupportedLimits;
+    WebGPU::GetDevice().getLimits(&deviceSupportedLimits);
+    wgpu::Limits deviceLimits = deviceSupportedLimits.limits;
+
+    // Create uniform buffer
+    // Subtility
+    uint32_t uniformStride = ceilToNextMultiple(
+        (uint32_t)sizeof(MyUniforms),
+        (uint32_t)deviceLimits.minUniformBufferOffsetAlignment
+    );
+
+    return uniformStride * uniformIndex;
+}
+
 void WebGPURenderer2D::CreateUniformBuffer()
 {
     // Create uniform buffer
     // The buffer will only contain 1 float with the value of uTime
     wgpu::BufferDescriptor bufferDesc;
-    bufferDesc.size = sizeof(MyUniforms);
+    bufferDesc.size = sizeof(MyUniforms) + getOffset(1);
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     bufferDesc.mappedAtCreation = false;
     m_uniformBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 }
 
-void WebGPURenderer2D::SetUniformData(const MyUniforms& bufferData, uint64_t bufferOffset)
+void WebGPURenderer2D::SetUniformData(const MyUniforms& bufferData, uint32_t uniformIndex)
 {
     if (m_uniformBuffer)
     {
-        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, time), &bufferData.time, sizeof(MyUniforms::time));
-        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, color), &bufferData.color, sizeof(MyUniforms::color));
+        // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, time), &bufferData.time, sizeof(MyUniforms::time));
+        // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, color), &bufferData.color, sizeof(MyUniforms::color));
+
+        auto offset = getOffset(uniformIndex);
+        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offset, &bufferData, sizeof(MyUniforms));
     }
     else
     {
@@ -253,15 +282,92 @@ void WebGPURenderer2D::SetUniformData(const MyUniforms& bufferData, uint64_t buf
     }
 }
 
+void WebGPURenderer2D::SimpleRender()
+{
+    wgpu::RenderPassEncoder renderPass = BeginRenderPass();
+
+    // In its overall outline, drawing a triangle is as simple as this:
+    // Select which render pipeline to use
+    renderPass.setPipeline(m_pipeline);
+
+    renderPass.draw(m_vertexCount, 1, 0, 0);
+
+    EndRenderPass(renderPass);
+    SubmitCommandBuffer();
+}
+
 void WebGPURenderer2D::Render()
+{
+    wgpu::RenderPassEncoder renderPass = BeginRenderPass();
+
+    // In its overall outline, drawing a triangle is as simple as this:
+    // Select which render pipeline to use
+    renderPass.setPipeline(m_pipeline);
+
+    // Set vertex buffer while encoding the render pass
+    renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
+
+    // Set binding group
+    if (m_bindGroup)
+        renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
+
+    if (m_indexCount > 0)
+    {
+        renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
+        renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
+    }
+    else
+        renderPass.draw(m_vertexCount, 1, 0, 0);
+
+    EndRenderPass(renderPass);
+    SubmitCommandBuffer();
+}
+
+void WebGPURenderer2D::RenderIndexed()
+{
+    wgpu::RenderPassEncoder renderPass = BeginRenderPass();
+
+    // In its overall outline, drawing a triangle is as simple as this:
+    // Select which render pipeline to use
+    renderPass.setPipeline(m_pipeline);
+
+    // Set vertex buffer while encoding the render pass
+    renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
+    // Set index buffer while encoding the render pass
+    renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
+
+    uint32_t dynamicOffset = 0;
+
+    // 1.
+    // Set binding group
+    dynamicOffset = 0 * getOffset(1);
+    renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
+    renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
+
+    // 2.
+    // Set binding group with a different uniform offset
+    dynamicOffset = 1 * getOffset(1);
+    renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
+    renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
+
+    EndRenderPass(renderPass);
+    SubmitCommandBuffer();
+}
+
+ImTextureID WebGPURenderer2D::GetDescriptorSet()
+{
+    return m_nextTexture;
+}
+
+wgpu::RenderPassEncoder WebGPURenderer2D::BeginRenderPass()
 {
     if (!m_nextTexture)
         std::cerr << "Cannot acquire texture to render into" << std::endl;
 
     wgpu::CommandEncoderDescriptor commandEncoderDesc;
     commandEncoderDesc.label = "Renderer Command Encoder";
-    wgpu::CommandEncoder encoder = WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
-    
+    m_currentCommandEncoder = WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
+
     wgpu::RenderPassDescriptor renderPassDesc;
 
     wgpu::RenderPassColorAttachment renderPassColorAttachment;
@@ -276,39 +382,21 @@ void WebGPURenderer2D::Render()
     renderPassDesc.depthStencilAttachment = nullptr;
     renderPassDesc.timestampWriteCount = 0;
     renderPassDesc.timestampWrites = nullptr;
-    wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
-    // In its overall outline, drawing a triangle is as simple as this:
-    // Select which render pipeline to use
-    renderPass.setPipeline(m_pipeline);
-
-    // Set vertex buffer while encoding the render pass
-    if (m_vertexBuffer)
-        renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
-
-    // Set binding group
-    if (m_bindGroup)
-        renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
-
-    if (m_indexCount > 0)
-    {
-        renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
-        renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
-    }
-    else
-        renderPass.draw(m_vertexCount, 1, 0, 0);
-
-    renderPass.end();
-    
-    wgpu::CommandBufferDescriptor cmdBufferDescriptor;
-    cmdBufferDescriptor.label = "Command buffer";
-    wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
-    GraphicsAPI::WebGPU::GetQueue().submit(command);
+    return m_currentCommandEncoder.beginRenderPass(renderPassDesc);
 }
 
-ImTextureID WebGPURenderer2D::GetDescriptorSet()
+void WebGPURenderer2D::EndRenderPass(wgpu::RenderPassEncoder renderPass)
 {
-    return m_nextTexture;
+    renderPass.end();
+}
+
+void WebGPURenderer2D::SubmitCommandBuffer()
+{
+    wgpu::CommandBufferDescriptor cmdBufferDescriptor;
+    cmdBufferDescriptor.label = "Command buffer";
+    wgpu::CommandBuffer commands = m_currentCommandEncoder.finish(cmdBufferDescriptor);
+    GraphicsAPI::WebGPU::GetQueue().submit(commands);
 }
 
 } // namespace GraphicsAPI

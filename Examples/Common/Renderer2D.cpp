@@ -50,9 +50,9 @@ void Renderer2D::CreateUniformBuffer()
     m_rendererBackend->CreateUniformBuffer();
 }
 
-void Renderer2D::SetUniformBufferData(const MyUniforms& bufferData, uint64_t bufferOffset)
+void Renderer2D::SetUniformBufferData(const MyUniforms& bufferData, uint32_t uniformIndex)
 {
-    m_rendererBackend->SetUniformData(bufferData, bufferOffset);
+    m_rendererBackend->SetUniformData(bufferData, uniformIndex);
 }
 
 void* Renderer2D::GetDescriptorSet()
@@ -62,5 +62,5 @@ void* Renderer2D::GetDescriptorSet()
 
 void Renderer2D::Render()
 {
-    m_rendererBackend->Render();
+    m_rendererBackend->RenderIndexed();
 }
