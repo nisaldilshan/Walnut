@@ -65,6 +65,18 @@
             },
         },
         {
+            "name": "DynamicUniforms",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/DynamicUniforms",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
             "name": "App Launch",
             "type": "lldb",
             "request": "launch",

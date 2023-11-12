@@ -3,4 +3,5 @@ add_subdirectory(2.VertexBuffers)
 add_subdirectory(3.VertexAttributes)
 add_subdirectory(4.IndexBuffers)
 add_subdirectory(5.UniformBuffers)
+add_subdirectory(6.DynamicUniforms)
 
