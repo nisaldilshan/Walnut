@@ -5,6 +5,8 @@
 
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
+#include "Uniform.h"
+
 namespace GraphicsAPI
 {
     class WebGPURenderer2D
@@ -21,7 +23,8 @@ namespace GraphicsAPI
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
         void CreateBindGroup();
-        void CreateUniformBuffer(const std::vector<float>& bufferData);
+        void CreateUniformBuffer();
+        void SetUniformData(const MyUniforms& bufferData, uint64_t bufferOffset);
         void Render();
         ImTextureID GetDescriptorSet();
     private:

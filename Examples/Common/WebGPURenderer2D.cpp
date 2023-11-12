@@ -215,7 +215,7 @@ void WebGPURenderer2D::CreateBindGroup()
         // multiple uniform blocks.
         binding.offset = 0;
         // And we specify again the size of the buffer.
-        binding.size = sizeof(float);
+        binding.size = sizeof(MyUniforms);
 
 
         // A bind group contains one or multiple bindings
@@ -228,21 +228,29 @@ void WebGPURenderer2D::CreateBindGroup()
     }
 }
 
-void WebGPURenderer2D::CreateUniformBuffer(const std::vector<float> &bufferData)
+void WebGPURenderer2D::CreateUniformBuffer()
 {
     // Create uniform buffer
-    if (!m_uniformBuffer)
-    {
-        // The buffer will only contain 1 float with the value of uTime
-        wgpu::BufferDescriptor bufferDesc;
-        bufferDesc.size = sizeof(float);
-        // Make sure to flag the buffer as BufferUsage::Uniform
-        bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
-        bufferDesc.mappedAtCreation = false;
-        m_uniformBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
-    }
+    // The buffer will only contain 1 float with the value of uTime
+    wgpu::BufferDescriptor bufferDesc;
+    bufferDesc.size = sizeof(MyUniforms);
+    // Make sure to flag the buffer as BufferUsage::Uniform
+    bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
+    bufferDesc.mappedAtCreation = false;
+    m_uniformBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+}
 
-	WebGPU::GetQueue().writeBuffer(m_uniformBuffer, 0, &bufferData[0], sizeof(float));
+void WebGPURenderer2D::SetUniformData(const MyUniforms& bufferData, uint64_t bufferOffset)
+{
+    if (m_uniformBuffer)
+    {
+        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, time), &bufferData.time, sizeof(MyUniforms::time));
+        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, color), &bufferData.color, sizeof(MyUniforms::color));
+    }
+    else
+    {
+        assert(false);
+    }
 }
 
 void WebGPURenderer2D::Render()

@@ -45,9 +45,14 @@ void Renderer2D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLay
     m_rendererBackend->SetBindGroupLayoutEntry(bindGroupLayoutEntry);
 }
 
-void Renderer2D::SetUniformBufferData(const std::vector<float>& bufferData)
+void Renderer2D::CreateUniformBuffer()
 {
-    m_rendererBackend->CreateUniformBuffer(bufferData);
+    m_rendererBackend->CreateUniformBuffer();
+}
+
+void Renderer2D::SetUniformBufferData(const MyUniforms& bufferData, uint64_t bufferOffset)
+{
+    m_rendererBackend->SetUniformData(bufferData, bufferOffset);
 }
 
 void* Renderer2D::GetDescriptorSet()

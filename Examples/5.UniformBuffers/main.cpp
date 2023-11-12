@@ -33,11 +33,6 @@ public:
 			m_renderer = std::make_shared<Renderer2D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
 
 			const char* shaderSource = R"(
-			// Variable in the *uniform* address space
-			// The memory location of the uniform is given by a pair of a *bind group* and
-			// a *binding*.
-			@group(0) @binding(0) var<uniform> uTime: f32;
-
 			/**
 			 * A structure with fields labeled with vertex attribute locations can be used
 			 * as input to the entry point of a shader.
@@ -61,13 +56,23 @@ public:
 				@location(0) color: vec3f,
 			};
 
+			/**
+			 * A structure holding the value of our uniforms
+			 */
+			struct MyUniforms {
+				color: vec4f,
+				time: f32,
+			};
+
+			// Instead of the simple uTime variable, our uniform variable is a struct
+			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
+
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
 				var out: VertexOutput;
 				let ratio = 640.0 / 480.0;
-				// We move the scene depending on the time
 				var offset = vec2f(-0.6875, -0.463);
-				offset += 0.3 * vec2f(cos(uTime), sin(uTime));
+				offset += 0.3 * vec2f(cos(uMyUniforms.time), sin(uMyUniforms.time));
 				out.position = vec4f(in.position.x + offset.x, (in.position.y + offset.y) * ratio, 0.0, 1.0);
 				out.color = in.color; // forward to the fragment shader
 				return out;
@@ -125,24 +130,20 @@ public:
 			// The stage that needs to access this resource
 			bGLayoutEntry.visibility = wgpu::ShaderStage::Vertex;
 			bGLayoutEntry.buffer.type = wgpu::BufferBindingType::Uniform;
-			bGLayoutEntry.buffer.minBindingSize = sizeof(float);
+			bGLayoutEntry.buffer.minBindingSize = sizeof(MyUniforms);
 
 			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
 
-			std::vector<float> uniformData = { 1.0f };
-			m_renderer->SetUniformBufferData(uniformData);
+			m_renderer->CreateUniformBuffer();
 
 			m_renderer->Init();
         }
 
-		std::vector<float> uniformData;
-		uniformData.resize(1, 1.0f);
-
 		if (m_renderer)
 		{
 			// Update uniform buffer
-			uniformData[0] = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
-			m_renderer->SetUniformBufferData(uniformData);
+			m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
+			m_renderer->SetUniformBufferData(m_uniformData, 0);
 
 			m_renderer->Render();
 		}
@@ -174,6 +175,8 @@ private:
     uint32_t m_viewportWidth = 0;
     uint32_t m_viewportHeight = 0;
     float m_lastRenderTime = 0.0f;
+
+	MyUniforms m_uniformData;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)

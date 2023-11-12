@@ -6,6 +6,8 @@
 
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
+#include "Uniform.h"
+
 namespace GraphicsAPI
 {
 #if (RENDERER_BACKEND == 1)
@@ -33,7 +35,8 @@ public:
     void SetVertexBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
     void SetIndexBufferData(const std::vector<uint16_t>& bufferData);
     void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
-    void SetUniformBufferData(const std::vector<float>& bufferData);
+    void CreateUniformBuffer();
+    void SetUniformBufferData(const MyUniforms& bufferData, uint64_t bufferOffset);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
