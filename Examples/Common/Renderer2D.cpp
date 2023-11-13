@@ -60,7 +60,17 @@ void* Renderer2D::GetDescriptorSet()
     return m_rendererBackend->GetDescriptorSet();
 }
 
+void Renderer2D::SimpleRender()
+{
+    m_rendererBackend->SimpleRender();
+}
+
 void Renderer2D::Render()
+{
+    m_rendererBackend->Render();
+}
+
+void Renderer2D::RenderIndexed()
 {
     m_rendererBackend->RenderIndexed();
 }

@@ -40,9 +40,11 @@ public:
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
+    void SimpleRender();
     void Render();
+    void RenderIndexed();
+
 private:
-    
     uint32_t m_Width = 0, m_Height = 0;
     std::unique_ptr<GraphicsAPI::WebGPURenderer2D> m_rendererBackend;
     const char* m_shaderSource = nullptr;
