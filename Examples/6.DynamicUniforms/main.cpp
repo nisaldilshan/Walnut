@@ -160,7 +160,7 @@ public:
 			m_renderer->SetUniformBufferData(m_uniformData, 1);
 			//                               				^^^^^^^^^^^^^ beware of the non-null offset!
 
-			m_renderer->Render();
+			m_renderer->RenderIndexed();
 		}
        		
 

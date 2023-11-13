@@ -284,73 +284,61 @@ void WebGPURenderer2D::SetUniformData(const MyUniforms& bufferData, uint32_t uni
 
 void WebGPURenderer2D::SimpleRender()
 {
-    wgpu::RenderPassEncoder renderPass = BeginRenderPass();
+    BeginRenderPass();
 
-    // In its overall outline, drawing a triangle is as simple as this:
-    // Select which render pipeline to use
-    renderPass.setPipeline(m_pipeline);
+    m_renderPass.draw(m_vertexCount, 1, 0, 0);
 
-    renderPass.draw(m_vertexCount, 1, 0, 0);
-
-    EndRenderPass(renderPass);
+    EndRenderPass();
     SubmitCommandBuffer();
 }
 
 void WebGPURenderer2D::Render()
 {
-    wgpu::RenderPassEncoder renderPass = BeginRenderPass();
-
-    // In its overall outline, drawing a triangle is as simple as this:
-    // Select which render pipeline to use
-    renderPass.setPipeline(m_pipeline);
+    BeginRenderPass();
 
     // Set vertex buffer while encoding the render pass
-    renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
+    m_renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
 
     // Set binding group
     if (m_bindGroup)
-        renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
+        m_renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
 
     if (m_indexCount > 0)
     {
-        renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
-        renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
+        m_renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
+        m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
     }
     else
-        renderPass.draw(m_vertexCount, 1, 0, 0);
+        m_renderPass.draw(m_vertexCount, 1, 0, 0);
 
-    EndRenderPass(renderPass);
+    EndRenderPass();
     SubmitCommandBuffer();
 }
 
 void WebGPURenderer2D::RenderIndexed()
 {
-    wgpu::RenderPassEncoder renderPass = BeginRenderPass();
-
-    // In its overall outline, drawing a triangle is as simple as this:
-    // Select which render pipeline to use
-    renderPass.setPipeline(m_pipeline);
+    BeginRenderPass();
 
     // Set vertex buffer while encoding the render pass
-    renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
+    m_renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
     // Set index buffer while encoding the render pass
-    renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
+    m_renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
 
     uint32_t dynamicOffset = 0;
 
     // 1.
     // Set binding group
     dynamicOffset = 0 * getOffset(1);
-    renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
-    renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
+    m_renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
+    m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
 
     // 2.
     // Set binding group with a different uniform offset
     dynamicOffset = 1 * getOffset(1);
-    renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
-    renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
+    m_renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
+    m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
 
-    EndRenderPass(renderPass);
+    EndRenderPass();
     SubmitCommandBuffer();
 }
 
@@ -359,7 +347,7 @@ ImTextureID WebGPURenderer2D::GetDescriptorSet()
     return m_nextTexture;
 }
 
-wgpu::RenderPassEncoder WebGPURenderer2D::BeginRenderPass()
+void WebGPURenderer2D::BeginRenderPass()
 {
     if (!m_nextTexture)
         std::cerr << "Cannot acquire texture to render into" << std::endl;
@@ -383,12 +371,16 @@ wgpu::RenderPassEncoder WebGPURenderer2D::BeginRenderPass()
     renderPassDesc.timestampWriteCount = 0;
     renderPassDesc.timestampWrites = nullptr;
 
-    return m_currentCommandEncoder.beginRenderPass(renderPassDesc);
+    m_renderPass = m_currentCommandEncoder.beginRenderPass(renderPassDesc);
+
+    // In its overall outline, drawing a triangle is as simple as this:
+    // Select which render pipeline to use
+    m_renderPass.setPipeline(m_pipeline);
 }
 
-void WebGPURenderer2D::EndRenderPass(wgpu::RenderPassEncoder renderPass)
+void WebGPURenderer2D::EndRenderPass()
 {
-    renderPass.end();
+    m_renderPass.end();
 }
 
 void WebGPURenderer2D::SubmitCommandBuffer()

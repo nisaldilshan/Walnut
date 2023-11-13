@@ -31,8 +31,8 @@ namespace GraphicsAPI
         ImTextureID GetDescriptorSet();
 
     private:
-        wgpu::RenderPassEncoder BeginRenderPass();
-        void EndRenderPass(wgpu::RenderPassEncoder renderPass);
+        void BeginRenderPass();
+        void EndRenderPass();
         void SubmitCommandBuffer();
 
         wgpu::ShaderModule m_shaderModule = nullptr;
@@ -53,6 +53,7 @@ namespace GraphicsAPI
         wgpu::BindGroup m_bindGroup = nullptr;
 
         wgpu::CommandEncoder m_currentCommandEncoder = nullptr;
+        wgpu::RenderPassEncoder m_renderPass = nullptr;
 
         uint32_t m_width, m_height;
     };

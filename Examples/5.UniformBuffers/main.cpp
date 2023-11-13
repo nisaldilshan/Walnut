@@ -145,7 +145,7 @@ public:
 			m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
 			m_renderer->SetUniformBufferData(m_uniformData, 0);
 
-			m_renderer->Render();
+			m_renderer->RenderIndexed();
 		}
        		
 
