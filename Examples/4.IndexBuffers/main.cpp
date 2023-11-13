@@ -115,7 +115,12 @@ public:
         }
 
 		if (m_renderer)
-       		m_renderer->RenderIndexed();
+		{
+			m_renderer->BeginRenderPass();
+			m_renderer->RenderIndexed();
+			m_renderer->EndRenderPass();
+		}
+       		
 
         m_lastRenderTime = timer.ElapsedMillis();
 	}

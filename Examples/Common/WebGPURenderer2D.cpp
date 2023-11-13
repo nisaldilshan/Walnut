@@ -307,8 +307,6 @@ void WebGPURenderer2D::Render()
 
 void WebGPURenderer2D::RenderIndexed()
 {
-    BeginRenderPass();
-
     // Set vertex buffer while encoding the render pass
     m_renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
     // Set index buffer while encoding the render pass
@@ -327,8 +325,6 @@ void WebGPURenderer2D::RenderIndexed()
     dynamicOffset = 1 * getOffset(1);
     m_renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
     m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
-
-    EndRenderPass();
 }
 
 ImTextureID WebGPURenderer2D::GetDescriptorSet()

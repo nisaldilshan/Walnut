@@ -144,6 +144,8 @@ public:
 
 		if (m_renderer)
 		{
+			m_renderer->BeginRenderPass();
+
 			// Update uniform buffer
 			// m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
 			// m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
@@ -161,6 +163,7 @@ public:
 			//                               				^^^^^^^^^^^^^ beware of the non-null offset!
 
 			m_renderer->RenderIndexed();
+			m_renderer->EndRenderPass();
 		}
        		
 
