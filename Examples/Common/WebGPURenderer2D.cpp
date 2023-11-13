@@ -254,12 +254,13 @@ uint32_t getOffset(uint32_t uniformIndex)
     return uniformStride * uniformIndex;
 }
 
-void WebGPURenderer2D::CreateUniformBuffer()
+void WebGPURenderer2D::CreateUniformBuffer(size_t dynamicOffsetCount)
 {
+    m_dynamicOffsetCount = dynamicOffsetCount;
     // Create uniform buffer
     // The buffer will only contain 1 float with the value of uTime
     wgpu::BufferDescriptor bufferDesc;
-    bufferDesc.size = sizeof(MyUniforms) + getOffset(1);
+    bufferDesc.size = sizeof(MyUniforms) + getOffset(m_dynamicOffsetCount);
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     bufferDesc.mappedAtCreation = false;
@@ -305,25 +306,16 @@ void WebGPURenderer2D::Render()
         m_renderPass.draw(m_vertexCount, 1, 0, 0);
 }
 
-void WebGPURenderer2D::RenderIndexed()
+void WebGPURenderer2D::RenderIndexed(uint32_t uniformIndex)
 {
     // Set vertex buffer while encoding the render pass
     m_renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
     // Set index buffer while encoding the render pass
     m_renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
 
-    uint32_t dynamicOffset = 0;
-
-    // 1.
     // Set binding group
-    dynamicOffset = 0 * getOffset(1);
-    m_renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
-    m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
-
-    // 2.
-    // Set binding group with a different uniform offset
-    dynamicOffset = 1 * getOffset(1);
-    m_renderPass.setBindGroup(0, m_bindGroup, 1, &dynamicOffset);
+    uint32_t dynamicOffset = uniformIndex * getOffset(1);
+    m_renderPass.setBindGroup(0, m_bindGroup, m_dynamicOffsetCount, &dynamicOffset);
     m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
 }
 

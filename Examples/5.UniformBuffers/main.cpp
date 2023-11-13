@@ -134,7 +134,7 @@ public:
 
 			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
 
-			m_renderer->CreateUniformBuffer();
+			m_renderer->CreateUniformBuffer(0);
 
 			m_renderer->Init();
         }
@@ -146,7 +146,7 @@ public:
 			m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
 			m_renderer->SetUniformBufferData(m_uniformData, 0);
 
-			m_renderer->RenderIndexed();
+			m_renderer->RenderIndexed(0);
 			m_renderer->EndRenderPass();
 		}
        		

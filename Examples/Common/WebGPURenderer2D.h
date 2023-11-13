@@ -23,11 +23,11 @@ namespace GraphicsAPI
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
         void CreateBindGroup();
-        void CreateUniformBuffer();
+        void CreateUniformBuffer(size_t dynamicOffsetCount);
         void SetUniformData(const MyUniforms& bufferData, uint32_t uniformIndex);
         void SimpleRender();
         void Render();
-        void RenderIndexed();
+        void RenderIndexed(uint32_t uniformIndex);
         ImTextureID GetDescriptorSet();
         void BeginRenderPass();
         void EndRenderPass();
@@ -51,6 +51,7 @@ namespace GraphicsAPI
         wgpu::PipelineLayout m_pipelineLayout = nullptr;
         wgpu::Buffer m_uniformBuffer = nullptr;
         wgpu::BindGroup m_bindGroup = nullptr;
+        size_t m_dynamicOffsetCount = 0;
 
         wgpu::CommandEncoder m_currentCommandEncoder = nullptr;
         wgpu::RenderPassEncoder m_renderPass = nullptr;
