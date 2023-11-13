@@ -289,8 +289,6 @@ void WebGPURenderer2D::SimpleRender()
 
 void WebGPURenderer2D::Render()
 {
-    BeginRenderPass();
-
     // Set vertex buffer while encoding the render pass
     m_renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
 
@@ -305,8 +303,6 @@ void WebGPURenderer2D::Render()
     }
     else
         m_renderPass.draw(m_vertexCount, 1, 0, 0);
-
-    EndRenderPass();
 }
 
 void WebGPURenderer2D::RenderIndexed()
