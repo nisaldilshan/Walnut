@@ -54,7 +54,11 @@ public:
         }
 
 		if (m_renderer)
+		{
+			m_renderer->BeginRenderPass();
        		m_renderer->SimpleRender();
+			m_renderer->EndRenderPass();
+		}
 
         m_lastRenderTime = timer.ElapsedMillis();
 	}

@@ -74,3 +74,13 @@ void Renderer2D::RenderIndexed()
 {
     m_rendererBackend->RenderIndexed();
 }
+
+void Renderer2D::BeginRenderPass()
+{
+    m_rendererBackend->BeginRenderPass();
+}
+
+void Renderer2D::EndRenderPass()
+{
+    m_rendererBackend->EndRenderPass();
+}

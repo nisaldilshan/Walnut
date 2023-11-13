@@ -29,10 +29,10 @@ namespace GraphicsAPI
         void Render();
         void RenderIndexed();
         ImTextureID GetDescriptorSet();
-
-    private:
         void BeginRenderPass();
         void EndRenderPass();
+        
+    private:
         void SubmitCommandBuffer();
 
         wgpu::ShaderModule m_shaderModule = nullptr;

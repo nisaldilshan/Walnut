@@ -43,6 +43,8 @@ public:
     void SimpleRender();
     void Render();
     void RenderIndexed();
+    void BeginRenderPass();
+    void EndRenderPass();
 
 private:
     uint32_t m_Width = 0, m_Height = 0;

@@ -284,12 +284,7 @@ void WebGPURenderer2D::SetUniformData(const MyUniforms& bufferData, uint32_t uni
 
 void WebGPURenderer2D::SimpleRender()
 {
-    BeginRenderPass();
-
     m_renderPass.draw(m_vertexCount, 1, 0, 0);
-
-    EndRenderPass();
-    SubmitCommandBuffer();
 }
 
 void WebGPURenderer2D::Render()
@@ -312,7 +307,6 @@ void WebGPURenderer2D::Render()
         m_renderPass.draw(m_vertexCount, 1, 0, 0);
 
     EndRenderPass();
-    SubmitCommandBuffer();
 }
 
 void WebGPURenderer2D::RenderIndexed()
@@ -339,7 +333,6 @@ void WebGPURenderer2D::RenderIndexed()
     m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
 
     EndRenderPass();
-    SubmitCommandBuffer();
 }
 
 ImTextureID WebGPURenderer2D::GetDescriptorSet()
@@ -381,6 +374,7 @@ void WebGPURenderer2D::BeginRenderPass()
 void WebGPURenderer2D::EndRenderPass()
 {
     m_renderPass.end();
+    SubmitCommandBuffer();
 }
 
 void WebGPURenderer2D::SubmitCommandBuffer()
