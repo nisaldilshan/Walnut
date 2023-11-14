@@ -7,12 +7,11 @@
 #include <memory>
 #include <functional>
 
-
-#include "RenderingBackend.h"
-
 struct GLFWwindow;
 
 namespace Walnut {
+
+	class RenderingBackend;
 
 	struct ApplicationSpecification
 	{
@@ -54,7 +53,7 @@ namespace Walnut {
 		void SetupImGui();
 
 		ApplicationSpecification m_Specification;
-		std::unique_ptr<RenderingBackend> m_RenderingBackend = nullptr;
+		std::unique_ptr<RenderingBackend> m_RenderingBackend;
 		bool m_Running = false;
 
 		float m_TimeStep = 0.0f;
