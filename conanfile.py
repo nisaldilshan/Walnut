@@ -89,5 +89,6 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
-        self.copy(pattern="*.a", dst="lib", keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", keep_path=False)
+        self.copy(pattern="*.dll", dst="lib", keep_path=False)
         self.copy(pattern="*.so", dst="lib", keep_path=False)
