@@ -81,9 +81,13 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/Random.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Timer.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/RenderingBackend.h", dst="include/Walnut", keep_path=False)
+        # imgui_header = str(self.deps_cpp_info["imgui"].include_paths[0]) + "/imgui_impl_glfw.h"
+        # print("logs " + imgui_header);
+        # self.copy(pattern="/Users/nisal/.conan/data/imgui/latest/nisaldilshan/docking/package/5c91a8b3216ac0ed6c294940851231d60f21ef32/include/imgui_impl_glfw.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/Input.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/KeyCodes.h", dst="include/Walnut/Input", keep_path=False)
-        self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/VulkanImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
-        self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/OpenGLImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/OpenGL/OpenGLImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
         self.copy(pattern="*.a", dst="lib", keep_path=False)
         self.copy(pattern="*.so", dst="lib", keep_path=False)
