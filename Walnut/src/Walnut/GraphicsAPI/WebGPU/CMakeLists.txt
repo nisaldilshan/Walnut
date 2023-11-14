@@ -13,3 +13,4 @@ target_link_libraries(walnut-graphics-webgpu PUBLIC
     "-framework QuartzCore"
     "-framework IOSurface"
 )
+target_link_libraries(walnut-graphics-webgpu PUBLIC ${CONAN_LIBS}) # this line was added to export glfw, imgui stuff to the application level
