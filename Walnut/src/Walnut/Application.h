@@ -7,6 +7,8 @@
 #include <memory>
 #include <functional>
 
+extern bool g_ApplicationRunning;
+
 struct GLFWwindow;
 
 namespace Walnut {

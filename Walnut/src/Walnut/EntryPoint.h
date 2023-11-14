@@ -1,15 +1,13 @@
 #pragma once
 
-Walnut::Application* Walnut::CreateApplication(int argc, char** argv);
-//bool g_ApplicationRunning = true;
 
 namespace Walnut {
 
 	int Main(int argc, char** argv)
 	{
-		while (true) // g_ApplicationRunning
+		while (g_ApplicationRunning) // This is an extern variable in Application.h
 		{
-			Walnut::Application* app = Walnut::CreateApplication(argc, argv);
+			Walnut::Application* app = Walnut::CreateApplication(argc, argv); // This is a function declared in Application.h
 			app->Run();
 			delete app;
 		}
