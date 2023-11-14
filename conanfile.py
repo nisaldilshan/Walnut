@@ -28,18 +28,26 @@ class Walnut(ConanFile):
             self.requires("glfw/3.3.8")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
-            if self.options.rendering_backend == "Vulkan":
+            elif self.options.rendering_backend == "Vulkan":
                 self.requires("moltenvk/1.2.2")
             elif self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest@nisaldilshan/testing")
-        elif self.settings.os == 'Emscripten':
-            if self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Linux':
             self.requires("glfw/3.3.8")
             if self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-headers/1.3.239.0")
             elif self.options.rendering_backend == "WebGPU":
+                self.requires("WebGPU/latest@nisaldilshan/testing")
+        elif self.settings.os == 'Windows':
+            self.requires("glfw/3.3.8")
+            if self.options.rendering_backend == "OpenGL":
+                self.requires("glad/0.1.33")
+            elif self.options.rendering_backend == "Vulkan":
+                self.requires("vulkan-headers/1.3.239.0")
+            elif self.options.rendering_backend == "WebGPU":
+                self.requires("WebGPU/latest@nisaldilshan/testing")
+        elif self.settings.os == 'Emscripten':
+            if self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         else:
             logging.critical("Unsupported Platform : " + self.settings.os)
