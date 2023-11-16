@@ -62,7 +62,7 @@ endif()
 
 #### ENGINE ###
 if(MSVC)
-add_library (walnut SHARED
+add_library (walnut STATIC
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
