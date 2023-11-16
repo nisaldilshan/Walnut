@@ -40,10 +40,6 @@ conan_basic_setup(KEEP_RPATHS)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
-add_library(walnut-imgui STATIC
-                Walnut/src/Walnut/ImGui/ImGuiBuild.cpp
-                )
-
 option(RENDERER "Renderer to be used" "WebGPU")
 
 #### WALNUT GRAPHICS ###
@@ -85,8 +81,7 @@ target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 #     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
 #     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 # endif()
-target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
-target_link_libraries(walnut PRIVATE walnut-imgui)
+#target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
 if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
     add_compile_definitions(RENDERER_BACKEND=1)
