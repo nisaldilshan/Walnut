@@ -39,6 +39,7 @@ conan_basic_setup(KEEP_RPATHS)
 
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 
 option(RENDERER "Renderer to be used" "WebGPU")
 
