@@ -69,6 +69,7 @@ add_library (walnut SHARED
                 Walnut/src/Walnut/RenderingBackend.cpp
             )
 
+target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 # if(MSVC)

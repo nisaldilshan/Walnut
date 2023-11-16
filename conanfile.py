@@ -1,3 +1,5 @@
+from conan.errors import ConanInvalidSystemRequirements
+from conan.errors import ConanInvalidConfiguration
 from conans import ConanFile, CMake, tools
 
 class Walnut(ConanFile):
@@ -39,18 +41,19 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Windows':
+            self.short_paths=True
             self.requires("glfw/3.3.8")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
-                self.requires("vulkan-headers/1.3.239.0")
+                raise ConanInvalidConfiguration("Vulkan renderer is not implemented in Windows")
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Emscripten':
             if self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         else:
-            logging.critical("Unsupported Platform : " + self.settings.os)
+            raise ConanInvalidSystemRequirements("Unsupported Platform")
 
     def source(self):
         git = tools.Git()
