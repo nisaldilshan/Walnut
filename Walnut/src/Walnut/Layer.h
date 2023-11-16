@@ -1,8 +1,10 @@
 #pragma once
 
+#include "ExportConfig.h"
+
 namespace Walnut {
 
-	class Layer
+	class Walnut_API Layer
 	{
 	public:
 		virtual ~Layer() = default;

@@ -5,9 +5,11 @@
 
 #include <imgui_impl_glfw.h>
 
+#include "ExportConfig.h"
+
 namespace Walnut {
 
-	class RenderingBackend
+	class Walnut_API RenderingBackend
 	{
 	public:
 		enum class BACKEND
