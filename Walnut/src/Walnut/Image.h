@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "ImageFormat.h"
+#include "ExportConfig.h"
 
 namespace GraphicsAPI
 {
@@ -22,7 +23,7 @@ typedef WebGPUImage ImageType;
 
 namespace Walnut {
 
-	class Image
+	class Walnut_API Image
 	{
 	public:
 		Image(std::string_view path);

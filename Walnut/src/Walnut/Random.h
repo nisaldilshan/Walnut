@@ -4,9 +4,11 @@
 
 #include <glm/glm.hpp>
 
+#include "ExportConfig.h"
+
 namespace Walnut {
 
-	class Random
+	class Walnut_API Random
 	{
 	public:
 		static void Init()

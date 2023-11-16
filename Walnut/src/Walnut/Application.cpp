@@ -20,7 +20,7 @@
 // Emedded font
 #include "ImGui/Roboto-Regular.embed"
 
-bool g_ApplicationRunning = true;
+Walnut_API bool g_ApplicationRunning = true;
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.

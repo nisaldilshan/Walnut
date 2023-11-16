@@ -7,7 +7,9 @@
 #include <memory>
 #include <functional>
 
-extern bool g_ApplicationRunning;
+#include "ExportConfig.h"
+
+Walnut_API extern bool g_ApplicationRunning;
 
 struct GLFWwindow;
 
@@ -22,7 +24,7 @@ namespace Walnut {
 		uint32_t Height = 900;
 	};
 
-	class Application
+	class Walnut_API Application
 	{
 	public:
 		Application(const ApplicationSpecification& applicationSpecification = ApplicationSpecification());
