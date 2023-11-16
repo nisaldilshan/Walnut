@@ -62,7 +62,7 @@ endif()
 
 #### ENGINE ###
 if(MSVC)
-add_library (walnut STATIC
+add_library (walnut SHARED
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
@@ -85,16 +85,16 @@ target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
 #     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
 #     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
 # endif()
-target_link_libraries(walnut INTERFACE ${CONAN_LIBS})
-target_link_libraries(walnut INTERFACE walnut-imgui)
+target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
+target_link_libraries(walnut PRIVATE walnut-imgui)
 if (RENDERER STREQUAL "OpenGL")
-    target_link_libraries(walnut INTERFACE walnut-graphics-opengl)
+    target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
     add_compile_definitions(RENDERER_BACKEND=1)
 elseif (RENDERER STREQUAL "Vulkan")
-    target_link_libraries(walnut INTERFACE walnut-graphics-vulkan)
+    target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
     add_compile_definitions(RENDERER_BACKEND=2)
 else()
-    target_link_libraries(walnut INTERFACE walnut-graphics-webgpu)
+    target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
     add_compile_definitions(RENDERER_BACKEND=3)
 endif()
 # if(MSVC)

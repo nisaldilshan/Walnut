@@ -84,6 +84,7 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/Random.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Timer.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/RenderingBackend.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/ExportConfig.h", dst="include/Walnut", keep_path=False)
         # imgui_header = str(self.deps_cpp_info["imgui"].include_paths[0]) + "/imgui_impl_glfw.h"
         # print("logs " + imgui_header);
         # self.copy(pattern="/Users/nisal/.conan/data/imgui/latest/nisaldilshan/docking/package/5c91a8b3216ac0ed6c294940851231d60f21ef32/include/imgui_impl_glfw.h", dst="include/Walnut", keep_path=False)

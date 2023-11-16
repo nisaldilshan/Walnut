@@ -5,4 +5,4 @@ add_library (walnut-graphics-opengl STATIC
                     OpenGLImage.cpp   
                 )
 
-target_link_libraries(walnut-graphics-opengl PUBLIC walnut-imgui ${CONAN_LIBS})
+target_link_libraries(walnut-graphics-opengl PRIVATE walnut-imgui ${CONAN_LIBS})
