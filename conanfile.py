@@ -68,11 +68,11 @@ class Walnut(ConanFile):
 
     def package_info(self):
         if self.options.rendering_backend == "OpenGL":
-            self.cpp_info.libs = ["walnut", "walnut-imgui", "walnut-graphics-opengl"]
+            self.cpp_info.libs = ["walnut", "walnut-graphics-opengl"]
         elif self.options.rendering_backend == "Vulkan":
-            self.cpp_info.libs = ["walnut", "walnut-imgui", "walnut-graphics-vulkan"]
+            self.cpp_info.libs = ["walnut", "walnut-graphics-vulkan"]
         else:
-            self.cpp_info.libs = ["walnut", "walnut-imgui", "walnut-graphics-webgpu"]
+            self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu"]
 
 
     def package(self):
