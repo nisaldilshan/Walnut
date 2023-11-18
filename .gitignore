@@ -16,3 +16,6 @@ build-linux
 .vsconan
 .vscode
 .DS_Store
+
+cmake-build-debug-visual-studio
+.idea
