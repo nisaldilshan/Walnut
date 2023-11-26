@@ -38,7 +38,7 @@ public:
 			 * as input to the entry point of a shader.
 			 */
 			struct VertexInput {
-				@location(0) position: vec2f,
+				@location(0) position: vec3f,
 				@location(1) color: vec3f,
 			};
 
@@ -71,10 +71,22 @@ public:
 			fn vs_main(in: VertexInput) -> VertexOutput {
 				var out: VertexOutput;
 				let ratio = 640.0 / 480.0;
-				var offset = vec2f(-0.6875, -0.463);
-				offset += 0.3 * vec2f(cos(uMyUniforms.time), sin(uMyUniforms.time));
-				out.position = vec4f(in.position.x + offset.x, (in.position.y + offset.y) * ratio, 0.0, 1.0);
-				out.color = in.color; // forward to the fragment shader
+				var offset = vec2f(0.0);
+
+				let angle = uMyUniforms.time; // you can multiply it go rotate faster
+
+				// Rotate the position around the X axis by "mixing" a bit of Y and Z in
+				// the original Y and Z.
+				let alpha = cos(angle);
+				let beta = sin(angle);
+				var position = vec3f(
+					in.position.x,
+					alpha * in.position.y + beta * in.position.z,
+					alpha * in.position.z - beta * in.position.y,
+				);
+				out.position = vec4f(position.x, position.y * ratio, 0.0, 1.0);
+				
+				out.color = in.color;
 				return out;
 			}
 
@@ -91,7 +103,7 @@ public:
 			//
 			std::vector<float> vertexData;
 			std::vector<uint16_t> indexData;
-			auto success = Geometry::loadGeometry(RESOURCE_DIR "/webgpu.txt", vertexData, indexData);
+			auto success = Geometry::load3DGeometry(RESOURCE_DIR "/webgpu.txt", vertexData, indexData, 3);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
@@ -105,19 +117,19 @@ public:
 
 			// Position attribute
 			vertexAttribs[0].shaderLocation = 0;
-			vertexAttribs[0].format = wgpu::VertexFormat::Float32x2;
+			vertexAttribs[0].format = wgpu::VertexFormat::Float32x3;
 			vertexAttribs[0].offset = 0;
 
 			// Color attribute
 			vertexAttribs[1].shaderLocation = 1;
 			vertexAttribs[1].format = wgpu::VertexFormat::Float32x3; // different type!
-			vertexAttribs[1].offset = 2 * sizeof(float); // non null offset!
+			vertexAttribs[1].offset = 3 * sizeof(float); // non null offset!
 
 			wgpu::VertexBufferLayout vertexBufferLayout;
 			vertexBufferLayout.attributeCount = (uint32_t)vertexAttribs.size();
 			vertexBufferLayout.attributes = vertexAttribs.data();
 			// stride
-			vertexBufferLayout.arrayStride = 5 * sizeof(float);
+			vertexBufferLayout.arrayStride = 6 * sizeof(float);
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 

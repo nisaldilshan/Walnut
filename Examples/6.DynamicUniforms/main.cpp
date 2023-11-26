@@ -91,7 +91,7 @@ public:
 			//
 			std::vector<float> vertexData;
 			std::vector<uint16_t> indexData;
-			auto success = Geometry::loadGeometry(RESOURCE_DIR "/webgpu.txt", vertexData, indexData);
+			auto success = Geometry::load2DGeometry(RESOURCE_DIR "/webgpu.txt", vertexData, indexData);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
