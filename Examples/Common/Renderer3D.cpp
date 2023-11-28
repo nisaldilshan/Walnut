@@ -18,6 +18,7 @@ void Renderer3D::Init()
 {
     m_rendererBackend->CreateBindGroup();
     m_rendererBackend->CreatePipeline();
+    m_rendererBackend->CreateDepthTexture();
 }
 
 void Renderer3D::SetShader(const char* shaderSource)

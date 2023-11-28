@@ -24,6 +24,7 @@ namespace GraphicsAPI
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
         void CreateBindGroup();
         void CreateUniformBuffer(size_t dynamicOffsetCount);
+        void CreateDepthTexture();
         void SetUniformData(const MyUniforms& bufferData, uint32_t uniformIndex);
         void SimpleRender();
         void Render();
@@ -31,6 +32,7 @@ namespace GraphicsAPI
         ImTextureID GetDescriptorSet();
         void BeginRenderPass();
         void EndRenderPass();
+        void Reset();
         
     private:
         void SubmitCommandBuffer();
@@ -55,6 +57,10 @@ namespace GraphicsAPI
 
         wgpu::CommandEncoder m_currentCommandEncoder = nullptr;
         wgpu::RenderPassEncoder m_renderPass = nullptr;
+
+        wgpu::TextureFormat m_depthTextureFormat =  wgpu::TextureFormat::Undefined;
+        wgpu::Texture m_depthTexture = nullptr;
+        wgpu::TextureView m_depthTextureView = nullptr;
 
         uint32_t m_width, m_height;
     };

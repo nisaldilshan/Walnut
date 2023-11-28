@@ -5,11 +5,13 @@ namespace GraphicsAPI
 
 void WebGPURenderer3D::CreateTextureToRenderInto(uint32_t width, uint32_t height)
 {
+    m_width = width;
+    m_height = height;
     wgpu::TextureDescriptor tex_desc = {};
     tex_desc.label = "Renderer Final Texture";
     tex_desc.dimension = WGPUTextureDimension_2D;
-    tex_desc.size.width = width;
-    tex_desc.size.height = height;
+    tex_desc.size.width = m_width;
+    tex_desc.size.height = m_height;
     tex_desc.size.depthOrArrayLayers = 1;
     tex_desc.sampleCount = 1;
     tex_desc.format = WGPUTextureFormat_BGRA8Unorm;
@@ -128,8 +130,20 @@ void WebGPURenderer3D::CreatePipeline()
 	fragmentState.targetCount = 1;
 	fragmentState.targets = &colorTarget;
 	
-	// Depth and stencil tests are not used here
-	pipelineDesc.depthStencil = nullptr;
+	// We setup a depth buffer state for the render pipeline
+	wgpu::DepthStencilState depthStencilState = wgpu::Default;
+	// Keep a fragment only if its depth is lower than the previously blended one
+	depthStencilState.depthCompare = wgpu::CompareFunction::Less;
+    // Each time a fragment is blended into the target, we update the value of the Z-buffer
+	depthStencilState.depthWriteEnabled = true;
+	// Store the format in a variable as later parts of the code depend on it
+	m_depthTextureFormat = wgpu::TextureFormat::Depth24Plus;
+	depthStencilState.format = m_depthTextureFormat;
+	// Deactivate the stencil alltogether
+	depthStencilState.stencilReadMask = 0;
+	depthStencilState.stencilWriteMask = 0;
+
+    pipelineDesc.depthStencil = &depthStencilState;
 
     // Multi-sampling
 	// Samples per pixel
@@ -344,7 +358,30 @@ void WebGPURenderer3D::BeginRenderPass()
     renderPassDesc.colorAttachmentCount = 1;
     renderPassDesc.colorAttachments = &renderPassColorAttachment;
 
-    renderPassDesc.depthStencilAttachment = nullptr;
+    // We now add a depth/stencil attachment:
+    wgpu::RenderPassDepthStencilAttachment depthStencilAttachment;
+    // The view of the depth texture
+    depthStencilAttachment.view = m_depthTextureView;
+    // The initial value of the depth buffer, meaning "far"
+    depthStencilAttachment.depthClearValue = 1.0f;
+    // Operation settings comparable to the color attachment
+    depthStencilAttachment.depthLoadOp = wgpu::LoadOp::Clear;
+    depthStencilAttachment.depthStoreOp = wgpu::StoreOp::Store;
+    // we could turn off writing to the depth buffer globally here
+    depthStencilAttachment.depthReadOnly = false;
+
+    // Stencil setup, mandatory but unused
+    depthStencilAttachment.stencilClearValue = 0;
+#ifdef WEBGPU_BACKEND_WGPU
+    depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Clear;
+    depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Store;
+#else
+    depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Undefined;
+    depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Undefined;
+#endif
+    depthStencilAttachment.stencilReadOnly = true;
+
+    renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
     renderPassDesc.timestampWriteCount = 0;
     renderPassDesc.timestampWrites = nullptr;
 
@@ -361,12 +398,53 @@ void WebGPURenderer3D::EndRenderPass()
     SubmitCommandBuffer();
 }
 
+void WebGPURenderer3D::Reset()
+{
+    m_vertexBuffer.destroy();
+	m_vertexBuffer.release();
+	m_indexBuffer.destroy();
+	m_indexBuffer.release();
+
+    // Destroy the depth texture and its view
+	m_depthTextureView.release();
+	m_depthTexture.destroy();
+	m_depthTexture.release();
+}
+
 void WebGPURenderer3D::SubmitCommandBuffer()
 {
     wgpu::CommandBufferDescriptor cmdBufferDescriptor;
     cmdBufferDescriptor.label = "Command buffer";
     wgpu::CommandBuffer commands = m_currentCommandEncoder.finish(cmdBufferDescriptor);
     GraphicsAPI::WebGPU::GetQueue().submit(commands);
+}
+
+void WebGPURenderer3D::CreateDepthTexture()
+{
+    // Create the depth texture
+	wgpu::TextureDescriptor depthTextureDesc;
+	depthTextureDesc.dimension = wgpu::TextureDimension::_2D;
+	depthTextureDesc.format = m_depthTextureFormat;
+	depthTextureDesc.mipLevelCount = 1;
+	depthTextureDesc.sampleCount = 1;
+	depthTextureDesc.size = {m_width, m_height, 1};
+	depthTextureDesc.usage = wgpu::TextureUsage::RenderAttachment;
+	depthTextureDesc.viewFormatCount = 1;
+	depthTextureDesc.viewFormats = (WGPUTextureFormat*)&m_depthTextureFormat;
+	m_depthTexture = WebGPU::GetDevice().createTexture(depthTextureDesc);
+	std::cout << "Depth texture: " << m_depthTexture << std::endl;
+
+	// Create the view of the depth texture manipulated by the rasterizer
+	wgpu::TextureViewDescriptor depthTextureViewDesc;
+	depthTextureViewDesc.aspect = wgpu::TextureAspect::DepthOnly;
+	depthTextureViewDesc.baseArrayLayer = 0;
+	depthTextureViewDesc.arrayLayerCount = 1;
+	depthTextureViewDesc.baseMipLevel = 0;
+	depthTextureViewDesc.mipLevelCount = 1;
+	depthTextureViewDesc.dimension = wgpu::TextureViewDimension::_2D;
+	depthTextureViewDesc.format = m_depthTextureFormat;
+	m_depthTextureView = m_depthTexture.createView(depthTextureViewDesc);
+	std::cout << "Depth texture view: " << m_depthTextureView << std::endl;
 }
 
 } // namespace GraphicsAPI
