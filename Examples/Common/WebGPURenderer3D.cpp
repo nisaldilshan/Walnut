@@ -207,6 +207,17 @@ void WebGPURenderer3D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGr
 	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
 }
 
+void WebGPURenderer3D::SetSizeOfUniform(uint32_t sizeOfUniform)
+{
+    assert(sizeOfUniform > 0);
+    m_sizeOfUniform = sizeOfUniform;
+
+    // Get device limits
+    wgpu::SupportedLimits deviceSupportedLimits;
+    WebGPU::GetDevice().getLimits(&deviceSupportedLimits);
+    m_deviceLimits = deviceSupportedLimits.limits;
+}
+
 void WebGPURenderer3D::CreateBindGroup()
 {
     if (m_bindGroupLayout)
@@ -216,8 +227,6 @@ void WebGPURenderer3D::CreateBindGroup()
         pipelineLayoutDesc.bindGroupLayoutCount = 1;
         pipelineLayoutDesc.bindGroupLayouts = (WGPUBindGroupLayout*)&m_bindGroupLayout;
         m_pipelineLayout = WebGPU::GetDevice().createPipelineLayout(pipelineLayoutDesc);
-
-
 
         // Create a binding
         wgpu::BindGroupEntry binding;
@@ -229,7 +238,8 @@ void WebGPURenderer3D::CreateBindGroup()
         // multiple uniform blocks.
         binding.offset = 0;
         // And we specify again the size of the buffer.
-        binding.size = sizeof(MyUniforms);
+        assert(m_sizeOfUniform > 0);
+        binding.size = m_sizeOfUniform;
 
 
         // A bind group contains one or multiple bindings
@@ -242,7 +252,7 @@ void WebGPURenderer3D::CreateBindGroup()
     }
 }
 
-uint32_t getOffset(uint32_t uniformIndex)
+uint32_t WebGPURenderer3D::GetOffset(uint32_t uniformIndex)
 {
     if (uniformIndex == 0)
         return 0;
@@ -253,16 +263,13 @@ uint32_t getOffset(uint32_t uniformIndex)
         uint32_t divide_and_ceil = value / step + (value % step == 0 ? 0 : 1);
         return step * divide_and_ceil;
     };
-    // Get device limits
-    wgpu::SupportedLimits deviceSupportedLimits;
-    WebGPU::GetDevice().getLimits(&deviceSupportedLimits);
-    wgpu::Limits deviceLimits = deviceSupportedLimits.limits;
 
     // Create uniform buffer
     // Subtility
+    assert(m_sizeOfUniform > 0);
     uint32_t uniformStride = ceilToNextMultiple(
-        (uint32_t)sizeof(MyUniforms),
-        (uint32_t)deviceLimits.minUniformBufferOffsetAlignment
+        (uint32_t)m_sizeOfUniform,
+        (uint32_t)m_deviceLimits.minUniformBufferOffsetAlignment
     );
 
     return uniformStride * uniformIndex;
@@ -270,26 +277,28 @@ uint32_t getOffset(uint32_t uniformIndex)
 
 void WebGPURenderer3D::CreateUniformBuffer(size_t dynamicOffsetCount)
 {
+    assert(m_sizeOfUniform > 0);
     m_dynamicOffsetCount = dynamicOffsetCount;
     // Create uniform buffer
     // The buffer will only contain 1 float with the value of uTime
     wgpu::BufferDescriptor bufferDesc;
-    bufferDesc.size = sizeof(MyUniforms) + getOffset(m_dynamicOffsetCount);
+    bufferDesc.size = m_sizeOfUniform + GetOffset(m_dynamicOffsetCount);
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     bufferDesc.mappedAtCreation = false;
     m_uniformBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 }
 
-void WebGPURenderer3D::SetUniformData(const MyUniforms& bufferData, uint32_t uniformIndex)
+void WebGPURenderer3D::SetUniformData(const void* bufferData, uint32_t uniformIndex)
 {
     if (m_uniformBuffer)
     {
         // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, time), &bufferData.time, sizeof(MyUniforms::time));
         // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, color), &bufferData.color, sizeof(MyUniforms::color));
 
-        auto offset = getOffset(uniformIndex);
-        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offset, &bufferData, sizeof(MyUniforms));
+        auto offset = GetOffset(uniformIndex);
+        assert(m_sizeOfUniform > 0);
+        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offset, bufferData, m_sizeOfUniform);
     }
     else
     {
@@ -328,7 +337,7 @@ void WebGPURenderer3D::RenderIndexed(uint32_t uniformIndex)
     m_renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
 
     // Set binding group
-    uint32_t dynamicOffset = uniformIndex * getOffset(1);
+    uint32_t dynamicOffset = uniformIndex * GetOffset(1);
     m_renderPass.setBindGroup(0, m_bindGroup, m_dynamicOffsetCount, &dynamicOffset);
     m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
 }
