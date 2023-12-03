@@ -7,6 +7,16 @@
 #include "../Common/Geometry.h"
 #include <GLFW/glfw3.h>
 
+struct MyUniforms {
+	// We add transform matrices
+    // mat4x4 projectionMatrix;
+    // mat4x4 viewMatrix;
+    // mat4x4 modelMatrix;
+    std::array<float, 4> color;
+    float time;
+    float _pad[3];
+};
+
 class Renderer2DLayer : public Walnut::Layer
 {
 public:

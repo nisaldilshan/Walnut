@@ -45,12 +45,17 @@ void Renderer2D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLay
     m_rendererBackend->SetBindGroupLayoutEntry(bindGroupLayoutEntry);
 }
 
+void Renderer2D::SetSizeOfUniform(uint32_t sizeOfUniform)
+{
+    m_rendererBackend->SetSizeOfUniform(sizeOfUniform);
+}
+
 void Renderer2D::CreateUniformBuffer(size_t dynamicOffsetCount)
 {
     m_rendererBackend->CreateUniformBuffer(dynamicOffsetCount);
 }
 
-void Renderer2D::SetUniformBufferData(const MyUniforms& bufferData, uint32_t uniformIndex)
+void Renderer2D::SetUniformBufferData(const void* bufferData, uint32_t uniformIndex)
 {
     m_rendererBackend->SetUniformData(bufferData, uniformIndex);
 }

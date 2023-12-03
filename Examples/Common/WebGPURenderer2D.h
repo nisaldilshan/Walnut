@@ -5,8 +5,6 @@
 
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
-#include "Uniform.h"
-
 namespace GraphicsAPI
 {
     class WebGPURenderer2D
@@ -22,9 +20,10 @@ namespace GraphicsAPI
         void CreateVertexBuffer(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
+        void SetSizeOfUniform(uint32_t sizeOfUniform);
         void CreateBindGroup();
         void CreateUniformBuffer(size_t dynamicOffsetCount);
-        void SetUniformData(const MyUniforms& bufferData, uint32_t uniformIndex);
+        void SetUniformData(const void* bufferData, uint32_t uniformIndex);
         void SimpleRender();
         void Render();
         void RenderIndexed(uint32_t uniformIndex);
@@ -34,6 +33,7 @@ namespace GraphicsAPI
         
     private:
         void SubmitCommandBuffer();
+        uint32_t GetOffset(uint32_t uniformIndex);
 
         wgpu::ShaderModule m_shaderModule = nullptr;
         wgpu::RenderPipeline m_pipeline = nullptr;
@@ -52,9 +52,11 @@ namespace GraphicsAPI
         wgpu::Buffer m_uniformBuffer = nullptr;
         wgpu::BindGroup m_bindGroup = nullptr;
         size_t m_dynamicOffsetCount = 0;
+        uint32_t m_sizeOfUniform = 0;
 
         wgpu::CommandEncoder m_currentCommandEncoder = nullptr;
         wgpu::RenderPassEncoder m_renderPass = nullptr;
+        wgpu::Limits m_deviceLimits;
 
         uint32_t m_width, m_height;
     };

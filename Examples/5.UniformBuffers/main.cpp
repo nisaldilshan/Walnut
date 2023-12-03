@@ -7,6 +7,22 @@
 #include "../Common/Geometry.h"
 #include <GLFW/glfw3.h>
 
+/**
+ * The same structure as in the shader, replicated in C++
+ */
+struct MyUniforms {
+	// offset = 0 * sizeof(vec4f) -> OK
+	std::array<float, 4> color;
+
+	// offset = 16 = 4 * sizeof(f32) -> OK
+	float time;
+
+	// Add padding to make sure the struct is host-shareable
+	float _pad[3];
+};
+// Have the compiler check byte alignment
+static_assert(sizeof(MyUniforms) % 16 == 0);
+
 class Renderer2DLayer : public Walnut::Layer
 {
 public:
@@ -132,6 +148,7 @@ public:
 			bGLayoutEntry.buffer.type = wgpu::BufferBindingType::Uniform;
 			bGLayoutEntry.buffer.minBindingSize = sizeof(MyUniforms);
 
+			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
 
 			m_renderer->CreateUniformBuffer(0);
@@ -144,7 +161,7 @@ public:
 			m_renderer->BeginRenderPass();
 			// Update uniform buffer
 			m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
-			m_renderer->SetUniformBufferData(m_uniformData, 0);
+			m_renderer->SetUniformBufferData(&m_uniformData, 0);
 
 			m_renderer->RenderIndexed(0);
 			m_renderer->EndRenderPass();

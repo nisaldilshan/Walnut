@@ -6,8 +6,6 @@
 
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
-#include "Uniform.h"
-
 namespace GraphicsAPI
 {
 #if (RENDERER_BACKEND == 1)

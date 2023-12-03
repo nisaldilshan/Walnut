@@ -7,6 +7,22 @@
 #include "../Common/Geometry.h"
 #include <GLFW/glfw3.h>
 
+/**
+ * The same structure as in the shader, replicated in C++
+ */
+struct MyUniforms {
+	// offset = 0 * sizeof(vec4f) -> OK
+	std::array<float, 4> color;
+
+	// offset = 16 = 4 * sizeof(f32) -> OK
+	float time;
+
+	// Add padding to make sure the struct is host-shareable
+	float _pad[3];
+};
+// Have the compiler check byte alignment
+static_assert(sizeof(MyUniforms) % 16 == 0);
+
 class Renderer2DLayer : public Walnut::Layer
 {
 public:
@@ -135,6 +151,7 @@ public:
 			// Make this binding dynamic so we can offset it between draw calls
 			bGLayoutEntry.buffer.hasDynamicOffset = true;
 
+			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
 
 			m_renderer->CreateUniformBuffer(1);
@@ -149,12 +166,12 @@ public:
 			// Upload first value
 			m_uniformData.time = static_cast<float>(glfwGetTime()) * 0.95f; // glfwGetTime returns a double
 			m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
-			m_renderer->SetUniformBufferData(m_uniformData, 0);
+			m_renderer->SetUniformBufferData(&m_uniformData, 0);
 
 			// Upload second value
 			m_uniformData.time = static_cast<float>(glfwGetTime()) * 1.05f; // glfwGetTime returns a double
 			m_uniformData.color = { 1.0f, 1.0f, 1.0f, 0.7f };
-			m_renderer->SetUniformBufferData(m_uniformData, 1);
+			m_renderer->SetUniformBufferData(&m_uniformData, 1);
 			//                               				^^^^^^^^^^^^^ beware of the non-null offset!
 
 			m_renderer->RenderIndexed(0);
