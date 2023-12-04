@@ -45,7 +45,6 @@ option(RENDERER "Renderer to be used" "WebGPU")
 
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
-    find_package (OpenGL REQUIRED)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/OpenGL)
 elseif(RENDERER STREQUAL "Vulkan")
     find_package (Vulkan REQUIRED)
