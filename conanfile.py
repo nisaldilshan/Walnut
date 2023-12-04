@@ -36,7 +36,9 @@ class Walnut(ConanFile):
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Linux':
             self.requires("glfw/3.3.8")
-            if self.options.rendering_backend == "Vulkan":
+            if self.options.rendering_backend == "OpenGL":
+                self.requires("glad/0.1.33")
+            elif self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-headers/1.3.239.0")
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
