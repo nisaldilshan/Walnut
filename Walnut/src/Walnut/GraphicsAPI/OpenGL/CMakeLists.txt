@@ -1,5 +1,5 @@
 add_library (walnut-graphics-opengl STATIC
-                    ../../ImGui/ImGuiBuildOpenGL.cpp
+                    ImGuiBuildOpenGL.cpp
                     OpenGLGraphics.cpp
                     GlfwOpenGLRenderingBackend.cpp
                     OpenGLImage.cpp   
