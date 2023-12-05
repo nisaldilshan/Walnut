@@ -68,6 +68,17 @@ public:
 
 			const pi = 3.14159265359;
 
+			// Build a perspective projection matrix
+			fn makePerspectiveProj(ratio: f32, near: f32, far: f32, focalLength: f32) -> mat4x4f {
+				let divides = 1.0 / (far - near);
+				return transpose(mat4x4f(
+					focalLength,         0.0,              0.0,               0.0,
+						0.0,     focalLength * ratio,      0.0,               0.0,
+						0.0,             0.0,         far * divides, -far * near * divides,
+						0.0,             0.0,              1.0,               0.0,
+				));
+			}
+
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
 				var out: VertexOutput;
@@ -113,12 +124,23 @@ public:
 					0.0,  0.0, 0.0, 1.0,
 				));
 
+				// Move the view point
+				let focalPoint = vec3f(0.0, 0.0, -2.0);
+				let T2 = transpose(mat4x4f(
+					1.0,  0.0, 0.0, -focalPoint.x,
+					0.0,  1.0, 0.0, -focalPoint.y,
+					0.0,  0.0, 1.0, -focalPoint.z,
+					0.0,  0.0, 0.0,     1.0,
+				));
+
 				// Compose and apply rotations
 				// (S then T then R1 then R2, remember this reads backwards)
 				let homogeneous_position = vec4f(in.position, 1.0);
-				let position = (R2 * R1 * T * S * homogeneous_position).xyz;
+				let viewspace_position = T2 * R2 * R1 * T * S * homogeneous_position;
 
-				out.position = vec4<f32>(position.x, position.y * ratio, position.z * 0.5 + 0.5, 1.0);
+				// Perspective projection
+				let P = makePerspectiveProj(ratio, 0.01 /* near */, 100.0 /* far */, 2.0 /* focalLength */);
+				out.position = P * viewspace_position;
 
 				out.color = in.color;
 				return out;
