@@ -7,11 +7,13 @@
 #include "../Common/Geometry.h"
 #include <GLFW/glfw3.h>
 
+#include <glm/ext.hpp>
+
 struct MyUniforms {
 	// We add transform matrices
-    // mat4x4 projectionMatrix;
-    // mat4x4 viewMatrix;
-    // mat4x4 modelMatrix;
+    // glm::mat4x4 projectionMatrix;
+    // glm::mat4x4 viewMatrix;
+    // glm::mat4x4 modelMatrix;
     std::array<float, 4> color;
     float time;
     float _pad[3];
@@ -43,26 +45,13 @@ public:
 			m_renderer = std::make_shared<Renderer3D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
 
 			const char* shaderSource = R"(
-			/**
-			 * A structure with fields labeled with vertex attribute locations can be used
-			 * as input to the entry point of a shader.
-			 */
 			struct VertexInput {
 				@location(0) position: vec3f,
 				@location(1) color: vec3f,
 			};
 
-			/**
-			 * A structure with fields labeled with builtins and locations can also be used
-			 * as *output* of the vertex shader, which is also the input of the fragment
-			 * shader.
-			 */
 			struct VertexOutput {
 				@builtin(position) position: vec4f,
-				// The location here does not refer to a vertex attribute, it just means
-				// that this field must be handled by the rasterizer.
-				// (It can also refer to another field of another struct that would be used
-				// as input to the fragment shader.)
 				@location(0) color: vec3f,
 			};
 
@@ -77,25 +66,60 @@ public:
 			// Instead of the simple uTime variable, our uniform variable is a struct
 			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
 
+			const pi = 3.14159265359;
+
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
 				var out: VertexOutput;
 				let ratio = 640.0 / 480.0;
 				var offset = vec2f(0.0);
 
-				let angle = uMyUniforms.time; // you can multiply it go rotate faster
+				// Scale the object
+				let S = transpose(mat4x4f(
+					0.3,  0.0, 0.0, 0.0,
+					0.0,  0.3, 0.0, 0.0,
+					0.0,  0.0, 0.3, 0.0,
+					0.0,  0.0, 0.0, 1.0,
+				));
 
-				// Rotate the position around the X axis by "mixing" a bit of Y and Z in
-				// the original Y and Z.
-				let alpha = cos(angle);
-				let beta = sin(angle);
-				var position = vec3f(
-					in.position.x,
-					alpha * in.position.y + beta * in.position.z,
-					alpha * in.position.z - beta * in.position.y,
-				);
-				out.position = vec4f(position.x, position.y * ratio, position.z * 0.5 + 0.5, 1.0);
-				
+				// Translate the object
+				let T = transpose(mat4x4f(
+					1.0,  0.0, 0.0, 0.5,
+					0.0,  1.0, 0.0, 0.0,
+					0.0,  0.0, 1.0, 0.0,
+					0.0,  0.0, 0.0, 1.0,
+				));
+
+				// Rotate the model in the XY plane
+				let angle1 = uMyUniforms.time;
+				let c1 = cos(angle1);
+				let s1 = sin(angle1);
+				let R1 = transpose(mat4x4f(
+					c1,  s1, 0.0, 0.0,
+					-s1,  c1, 0.0, 0.0,
+					0.0, 0.0, 1.0, 0.0,
+					0.0,  0.0, 0.0, 1.0,
+				));
+
+				// Tilt the view point in the YZ plane
+				// by three 8th of turn (1 turn = 2 pi)
+				let angle2 = 3.0 * pi / 4.0;
+				let c2 = cos(angle2);
+				let s2 = sin(angle2);
+				let R2 = transpose(mat4x4f(
+					1.0, 0.0, 0.0, 0.0,
+					0.0,  c2,  s2, 0.0,
+					0.0, -s2,  c2, 0.0,
+					0.0,  0.0, 0.0, 1.0,
+				));
+
+				// Compose and apply rotations
+				// (S then T then R1 then R2, remember this reads backwards)
+				let homogeneous_position = vec4f(in.position, 1.0);
+				let position = (R2 * R1 * T * S * homogeneous_position).xyz;
+
+				out.position = vec4<f32>(position.x, position.y * ratio, position.z * 0.5 + 0.5, 1.0);
+
 				out.color = in.color;
 				return out;
 			}
@@ -169,16 +193,60 @@ public:
 		{
 			m_renderer->BeginRenderPass();
 
+			float time = static_cast<float>(glfwGetTime());
+
 			// Upload first value
-			m_uniformData.time = static_cast<float>(glfwGetTime()) * 0.95f; // glfwGetTime returns a double
+
+			// float angle1 = 2.0f;
+			// constexpr float PI = 3.14159265358979323846f;
+			// float angle2 = 3.0f * PI / 4.0f;
+			// glm::vec3 focalPoint(0.0, 0.0, -2.0);
+
+			// // Option B:
+			// glm::mat4x4 S = glm::scale(glm::mat4x4(1.0), glm::vec3(0.3f));
+			// glm::mat4x4 T1 = glm::translate(glm::mat4x4(1.0), glm::vec3(0.5, 0.0, 0.0));
+			// glm::mat4x4 R1 = glm::rotate(glm::mat4x4(1.0), angle1, glm::vec3(0.0, 0.0, 1.0));
+			// m_uniformData.modelMatrix = R1 * T1 * S;
+
+			// glm::mat4x4 R2 = glm::rotate(glm::mat4x4(1.0), -angle2, glm::vec3(1.0, 0.0, 0.0));
+			// glm::mat4x4 T2 = glm::translate(glm::mat4x4(1.0), -focalPoint);
+			// m_uniformData.viewMatrix = T2 * R2;
+			//
+
+			// Option C:
+			// glm::mat4x4 M(1.0);
+			// M = glm::rotate(M, angle1, glm::vec3(0.0, 0.0, 1.0));
+			// M = glm::translate(M, glm::vec3(0.5, 0.0, 0.0));
+			// M = glm::scale(M, glm::vec3(0.3f));
+			// m_uniformData.modelMatrix = M;
+
+			// glm::mat4x4 V(1.0);
+			// V = glm::translate(V, -focalPoint);
+			// V = glm::rotate(V, -angle2, glm::vec3(1.0, 0.0, 0.0));
+			// m_uniformData.viewMatrix = V;
+			//
+			
+			// float focalLength = 2.0;
+			// float fov = 2 * glm::atan(1 / focalLength);
+			// float ratio = m_viewportWidth / m_viewportHeight;
+			// float near = 0.01f;
+			// float far = 100.0f;
+			// m_uniformData.projectionMatrix = glm::perspective(fov, ratio, near, far);
+
+			// angle1 = time;
+			// R1 = glm::rotate(glm::mat4x4(1.0), angle1, glm::vec3(0.0, 0.0, 1.0));
+			// m_uniformData.modelMatrix = R1 * T1 * S;
+
+			m_uniformData.time = time * 0.95f; // glfwGetTime returns a double
 			m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
 			m_renderer->SetUniformBufferData(&m_uniformData, 0);
+			////
 
 			// Upload second value
-			m_uniformData.time = static_cast<float>(glfwGetTime()) * 1.05f; // glfwGetTime returns a double
+			m_uniformData.time = time * 1.05f; // glfwGetTime returns a double
 			m_uniformData.color = { 1.0f, 1.0f, 1.0f, 0.7f };
 			m_renderer->SetUniformBufferData(&m_uniformData, 1);
-			//                               				^^^^^^^^^^^^^ beware of the non-null offset!
+			////                         				^^^^^^^^^^^^^ beware of the non-null offset!
 
 			m_renderer->RenderIndexed(0);
 			m_renderer->RenderIndexed(1);
