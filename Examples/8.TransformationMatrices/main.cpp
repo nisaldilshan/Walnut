@@ -1,3 +1,4 @@
+#define DAWN_DEBUG_BREAK_ON_ERROR 1
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Random.h"
@@ -11,9 +12,9 @@
 
 struct MyUniforms {
 	// We add transform matrices
-    // glm::mat4x4 projectionMatrix;
-    // glm::mat4x4 viewMatrix;
-    // glm::mat4x4 modelMatrix;
+    glm::mat4x4 projectionMatrix;
+    glm::mat4x4 viewMatrix;
+    glm::mat4x4 modelMatrix;
     std::array<float, 4> color;
     float time;
     float _pad[3];
@@ -59,6 +60,9 @@ public:
 			 * A structure holding the value of our uniforms
 			 */
 			struct MyUniforms {
+				projectionMatrix: mat4x4f,
+				viewMatrix: mat4x4f,
+				modelMatrix: mat4x4f,
 				color: vec4f,
 				time: f32,
 			};
@@ -78,9 +82,31 @@ public:
 						0.0,             0.0,              1.0,               0.0,
 				));
 			}
+			/**
+			 * Option X: Use matrices that have been precomputed and stored in the uniform buffer
+			 * (recommended)
+			 */
+			fn vs_main_optionX(in: VertexInput) -> VertexOutput {
+				var out: VertexOutput;
+				let ratio = 640.0 / 480.0;
 
-			@vertex
-			fn vs_main(in: VertexInput) -> VertexOutput {
+				let modelMat = uMyUniforms.modelMatrix;
+				let viewMat = uMyUniforms.viewMatrix;
+				let viewspace_position = viewMat * modelMat * vec4f(in.position, 1.0);
+
+				// Perspective projection
+				let P = makePerspectiveProj(ratio, 0.01 /* near */, 100.0 /* far */, 2.0 /* focalLength */);
+				out.position = P * viewspace_position;
+
+				out.color = in.color;
+				return out;
+			}
+
+			/**
+			 * Option A: Rebuild the matrices for each vertex
+			 * (not recommended)
+			 */
+			fn vs_main_optionA(in: VertexInput) -> VertexOutput {
 				var out: VertexOutput;
 				let ratio = 640.0 / 480.0;
 				var offset = vec2f(0.0);
@@ -144,6 +170,24 @@ public:
 
 				out.color = in.color;
 				return out;
+			}
+
+			/**
+			 * Option B: Use matrices that have been precomputed and stored in the uniform buffer
+			 * (recommended)
+			 */
+			fn vs_main_optionB(in: VertexInput) -> VertexOutput {
+				var out: VertexOutput;
+				out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * uMyUniforms.modelMatrix * vec4f(in.position, 1.0);
+				out.color = in.color;
+				return out;
+			}
+
+			@vertex
+			fn vs_main(in: VertexInput) -> VertexOutput {
+				//return vs_main_optionA(in);
+				//return vs_main_optionB(in);
+				return vs_main_optionX(in);
 			}
 
 			@fragment
@@ -219,34 +263,15 @@ public:
 
 			// Upload first value
 
-			// float angle1 = 2.0f;
-			// constexpr float PI = 3.14159265358979323846f;
-			// float angle2 = 3.0f * PI / 4.0f;
-			// glm::vec3 focalPoint(0.0, 0.0, -2.0);
+			float angle1 = 2.0f;
+			constexpr float PI = 3.14159265358979323846f;
+			float angle2 = 3.0f * PI / 4.0f;
+			glm::vec3 focalPoint(0.0, 0.0, -2.0);			
 
-			// // Option B:
-			// glm::mat4x4 S = glm::scale(glm::mat4x4(1.0), glm::vec3(0.3f));
-			// glm::mat4x4 T1 = glm::translate(glm::mat4x4(1.0), glm::vec3(0.5, 0.0, 0.0));
-			// glm::mat4x4 R1 = glm::rotate(glm::mat4x4(1.0), angle1, glm::vec3(0.0, 0.0, 1.0));
-			// m_uniformData.modelMatrix = R1 * T1 * S;
-
-			// glm::mat4x4 R2 = glm::rotate(glm::mat4x4(1.0), -angle2, glm::vec3(1.0, 0.0, 0.0));
-			// glm::mat4x4 T2 = glm::translate(glm::mat4x4(1.0), -focalPoint);
-			// m_uniformData.viewMatrix = T2 * R2;
-			//
-
-			// Option C:
-			// glm::mat4x4 M(1.0);
-			// M = glm::rotate(M, angle1, glm::vec3(0.0, 0.0, 1.0));
-			// M = glm::translate(M, glm::vec3(0.5, 0.0, 0.0));
-			// M = glm::scale(M, glm::vec3(0.3f));
-			// m_uniformData.modelMatrix = M;
-
-			// glm::mat4x4 V(1.0);
-			// V = glm::translate(V, -focalPoint);
-			// V = glm::rotate(V, -angle2, glm::vec3(1.0, 0.0, 0.0));
-			// m_uniformData.viewMatrix = V;
-			//
+			glm::mat4x4 V(1.0);
+			V = glm::translate(V, -focalPoint);
+			V = glm::rotate(V, -angle2, glm::vec3(1.0, 0.0, 0.0));
+			m_uniformData.viewMatrix = V;
 			
 			// float focalLength = 2.0;
 			// float fov = 2 * glm::atan(1 / focalLength);
@@ -255,17 +280,27 @@ public:
 			// float far = 100.0f;
 			// m_uniformData.projectionMatrix = glm::perspective(fov, ratio, near, far);
 
-			// angle1 = time;
-			// R1 = glm::rotate(glm::mat4x4(1.0), angle1, glm::vec3(0.0, 0.0, 1.0));
-			// m_uniformData.modelMatrix = R1 * T1 * S;
+			glm::mat4x4 M1(1.0);
+			angle1 = time * 0.9f;
+			M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
+			M1 = glm::translate(M1, glm::vec3(0.5, 0.0, 0.0));
+			M1 = glm::scale(M1, glm::vec3(0.3f));
+			m_uniformData.modelMatrix = M1;
 
-			m_uniformData.time = time * 0.95f; // glfwGetTime returns a double
+			m_uniformData.time = time; // glfwGetTime returns a double
 			m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
 			m_renderer->SetUniformBufferData(&m_uniformData, 0);
 			////
 
 			// Upload second value
-			m_uniformData.time = time * 1.05f; // glfwGetTime returns a double
+			glm::mat4x4 M2(1.0);
+			angle1 = time * 1.1f;
+			M2 = glm::rotate(M2, angle1, glm::vec3(0.0, 0.0, 1.0));
+			M2 = glm::translate(M2, glm::vec3(0.5, 0.0, 0.0));
+			M2 = glm::scale(M2, glm::vec3(0.3f));
+			m_uniformData.modelMatrix = M2;
+
+			m_uniformData.time = time; // glfwGetTime returns a double
 			m_uniformData.color = { 1.0f, 1.0f, 1.0f, 0.7f };
 			m_renderer->SetUniformBufferData(&m_uniformData, 1);
 			////                         				^^^^^^^^^^^^^ beware of the non-null offset!
