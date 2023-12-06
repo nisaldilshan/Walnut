@@ -20,6 +20,18 @@ struct MyUniforms {
     float _pad[3];
 };
 
+glm::mat4x4 makePerspectiveProj(float ratio, float near, float far, float focalLength)
+{
+	float divides = 1.0f / (far - near);
+	float aaa[16] = {
+		focalLength,         0.0,              0.0,               0.0,
+			0.0,     focalLength * ratio,      0.0,               0.0,
+			0.0,             0.0,         far * divides, -far * near * divides,
+			0.0,             0.0,              1.0,               0.0,
+	};
+	return glm::transpose(glm::make_mat4(aaa));
+}
+
 class Renderer2DLayer : public Walnut::Layer
 {
 public:
@@ -81,25 +93,6 @@ public:
 						0.0,             0.0,         far * divides, -far * near * divides,
 						0.0,             0.0,              1.0,               0.0,
 				));
-			}
-			/**
-			 * Option X: Use matrices that have been precomputed and stored in the uniform buffer
-			 * (recommended)
-			 */
-			fn vs_main_optionX(in: VertexInput) -> VertexOutput {
-				var out: VertexOutput;
-				let ratio = 640.0 / 480.0;
-
-				let modelMat = uMyUniforms.modelMatrix;
-				let viewMat = uMyUniforms.viewMatrix;
-				let viewspace_position = viewMat * modelMat * vec4f(in.position, 1.0);
-
-				// Perspective projection
-				let P = makePerspectiveProj(ratio, 0.01 /* near */, 100.0 /* far */, 2.0 /* focalLength */);
-				out.position = P * viewspace_position;
-
-				out.color = in.color;
-				return out;
 			}
 
 			/**
@@ -186,8 +179,7 @@ public:
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
 				//return vs_main_optionA(in);
-				//return vs_main_optionB(in);
-				return vs_main_optionX(in);
+				return vs_main_optionB(in);
 			}
 
 			@fragment
@@ -279,6 +271,7 @@ public:
 			// float near = 0.01f;
 			// float far = 100.0f;
 			// m_uniformData.projectionMatrix = glm::perspective(fov, ratio, near, far);
+			m_uniformData.projectionMatrix = makePerspectiveProj(640.0 / 480.0, 0.01, 100.0, 2.0);
 
 			glm::mat4x4 M1(1.0);
 			angle1 = time * 0.9f;
