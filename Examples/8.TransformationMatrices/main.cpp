@@ -1,4 +1,5 @@
 #define DAWN_DEBUG_BREAK_ON_ERROR 1
+
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Random.h"
@@ -8,7 +9,7 @@
 #include "../Common/Geometry.h"
 #include <GLFW/glfw3.h>
 
-#include <glm/ext.hpp>
+#include <Walnut/GLM/GLM.h>
 
 struct MyUniforms {
 	// We add transform matrices
@@ -265,13 +266,13 @@ public:
 			V = glm::rotate(V, -angle2, glm::vec3(1.0, 0.0, 0.0));
 			m_uniformData.viewMatrix = V;
 			
-			// float focalLength = 2.0;
-			// float fov = 2 * glm::atan(1 / focalLength);
-			// float ratio = m_viewportWidth / m_viewportHeight;
-			// float near = 0.01f;
-			// float far = 100.0f;
-			// m_uniformData.projectionMatrix = glm::perspective(fov, ratio, near, far);
-			m_uniformData.projectionMatrix = makePerspectiveProj(640.0 / 480.0, 0.01, 100.0, 2.0);
+			float focalLength = 2.0;
+			float fov = 2 * glm::atan(1 / focalLength);
+			float ratio = m_viewportWidth / m_viewportHeight;
+			float near = 0.01f;
+			float far = 100.0f;
+			m_uniformData.projectionMatrix = glm::perspective(fov, ratio, near, far);
+			//m_uniformData.projectionMatrix = makePerspectiveProj(m_viewportWidth / m_viewportHeight, 0.01, 100.0, 2.0);
 
 			glm::mat4x4 M1(1.0);
 			angle1 = time * 0.9f;

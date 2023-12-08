@@ -2,7 +2,7 @@
 
 #include "KeyCodes.h"
 
-#include <glm/glm.hpp>
+#include <Walnut/GLM/GLM.h>
 
 namespace Walnut {
 

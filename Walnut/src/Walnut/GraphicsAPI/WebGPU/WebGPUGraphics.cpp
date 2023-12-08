@@ -1,6 +1,6 @@
 #include "WebGPUGraphics.h"
 
-#include <glm/glm.hpp>
+#include "../../GLM/GLM.h"
 #include "../../../../../vendor/glfw3webgpu/glfw3webgpu.h"
 
 namespace GraphicsAPI

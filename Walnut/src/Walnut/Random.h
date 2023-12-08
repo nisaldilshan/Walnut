@@ -2,7 +2,7 @@
 
 #include <random>
 
-#include <glm/glm.hpp>
+#include <Walnut/GLM/GLM.h>
 
 #include "ExportConfig.h"
 
