@@ -163,11 +163,11 @@ void WebGPURenderer3D::CreatePipeline()
     std::cout << "Render pipeline: " << m_pipeline << std::endl;
 }
 
-void WebGPURenderer3D::CreateVertexBuffer(const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
+void WebGPURenderer3D::CreateVertexBuffer(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout)
 {
     std::cout << "Creating vertex buffer..." << std::endl;
-    m_vertexCount = bufferData.size() / (bufferLayout.arrayStride / sizeof(float));
-    m_vertexBufferSize = bufferData.size() * sizeof(float);
+    m_vertexCount = bufferLength / bufferLayout.arrayStride;
+    m_vertexBufferSize = bufferLength;
     m_vertexBufferLayout = bufferLayout;
     wgpu::BufferDescriptor bufferDesc;
     bufferDesc.size = m_vertexBufferSize;
@@ -177,7 +177,7 @@ void WebGPURenderer3D::CreateVertexBuffer(const std::vector<float> &bufferData, 
     m_vertexBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 
     // Upload vertex data to the buffer
-    WebGPU::GetQueue().writeBuffer(m_vertexBuffer, 0, bufferData.data(), bufferDesc.size);
+    WebGPU::GetQueue().writeBuffer(m_vertexBuffer, 0, bufferData, bufferDesc.size);
     std::cout << "Vertex buffer: " << m_vertexBuffer << std::endl;
 }
 
@@ -311,14 +311,17 @@ void WebGPURenderer3D::SimpleRender()
     m_renderPass.draw(m_vertexCount, 1, 0, 0);
 }
 
-void WebGPURenderer3D::Render()
+void WebGPURenderer3D::Render(uint32_t uniformIndex)
 {
     // Set vertex buffer while encoding the render pass
     m_renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
 
     // Set binding group
     if (m_bindGroup)
-        m_renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
+    {
+        uint32_t dynamicOffset = uniformIndex * GetOffset(1);
+        m_renderPass.setBindGroup(0, m_bindGroup, m_dynamicOffsetCount, &dynamicOffset);
+    }
 
     if (m_indexCount > 0)
     {
@@ -331,6 +334,7 @@ void WebGPURenderer3D::Render()
 
 void WebGPURenderer3D::RenderIndexed(uint32_t uniformIndex)
 {
+    assert(m_indexBuffer);
     // Set vertex buffer while encoding the render pass
     m_renderPass.setVertexBuffer(0, m_vertexBuffer, 0, m_vertexBufferSize);
     // Set index buffer while encoding the render pass

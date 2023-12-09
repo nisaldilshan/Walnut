@@ -31,9 +31,9 @@ void Renderer3D::SetStandaloneShader(const char* shaderSource, uint32_t vertexSh
     m_rendererBackend->CreateStandaloneShader(shaderSource, vertexShaderCallCount);
 }
 
-void Renderer3D::SetVertexBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout)
+void Renderer3D::SetVertexBufferData(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout)
 {
-    m_rendererBackend->CreateVertexBuffer(bufferData, bufferLayout);
+    m_rendererBackend->CreateVertexBuffer(bufferData, bufferLength, bufferLayout);
 }
 
 void Renderer3D::SetIndexBufferData(const std::vector<uint16_t>& bufferData)
@@ -71,9 +71,9 @@ void Renderer3D::SimpleRender()
     m_rendererBackend->SimpleRender();
 }
 
-void Renderer3D::Render()
+void Renderer3D::Render(uint32_t uniformIndex)
 {
-    m_rendererBackend->Render();
+    m_rendererBackend->Render(uniformIndex);
 }
 
 void Renderer3D::RenderIndexed(uint32_t uniformIndex)

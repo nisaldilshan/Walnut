@@ -9,7 +9,7 @@ class Walnut(ConanFile):
     homepage = "https://github.com/TheCherno/Walnut"
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
     settings = "os", "compiler", "build_type", "arch"
-    requires = ("stb/20200203", "imgui/latest@nisaldilshan/docking", "glm/0.9.9.8")
+    requires = ("stb/20200203", "imgui/latest@nisaldilshan/docking", "glm/0.9.9.8", "tinyobjloader/2.0.0-rc10")
     generators = "cmake"
     build_policy = "missing"
     options = {

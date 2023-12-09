@@ -126,9 +126,8 @@ public:
 			m_renderer->SetShader(shaderSource);
 
 			//
-			std::vector<float> vertexData;
-			std::vector<uint16_t> indexData;
-			auto success = Geometry::load3DGeometry(RESOURCE_DIR "/webgpu.txt", vertexData, indexData, 6);
+			std::vector<VertexAttributes> vertexData;
+			bool success = Geometry::loadGeometryFromObj<VertexAttributes>(RESOURCE_DIR "/pyramid.obj", vertexData);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
@@ -163,8 +162,7 @@ public:
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
-			m_renderer->SetVertexBufferData(vertexData, vertexBufferLayout);
-			m_renderer->SetIndexBufferData(indexData);
+			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * sizeof(VertexAttributes), vertexBufferLayout);
 
 			// Create binding layout (don't forget to = Default)
 			wgpu::BindGroupLayoutEntry bGLayoutEntry = wgpu::Default;
@@ -236,8 +234,8 @@ public:
 			m_renderer->SetUniformBufferData(&m_uniformData, 1);
 			////                         				^^^^^^^^^^^^^ beware of the non-null offset!
 
-			m_renderer->RenderIndexed(0);
-			m_renderer->RenderIndexed(1);
+			m_renderer->Render(0);
+			m_renderer->Render(1);
 			m_renderer->EndRenderPass();
 		}
        		
