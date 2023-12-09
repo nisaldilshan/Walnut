@@ -46,7 +46,8 @@ namespace GraphicsAPI
 			glm::vec3 normal;
 			glm::vec3 color;
 			glm::vec2 uv;
-		};
+		}; // This structure is defined just to get an idea about max values. You may define the actual VertexAttributes struct in your application.
+		// TODO : use the same VertexAttributes structure in here and in the application.
 		requiredLimits.limits.maxBufferSize = 150000 * sizeof(VertexAttributes);
 		requiredLimits.limits.maxVertexBufferArrayStride = sizeof(VertexAttributes);
 		requiredLimits.limits.minStorageBufferOffsetAlignment = supportedLimits.limits.minStorageBufferOffsetAlignment;

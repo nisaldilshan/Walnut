@@ -11,6 +11,16 @@
 
 #include <Walnut/GLM/GLM.h>
 
+/**
+ * A structure that describes the data layout in the vertex buffer
+ * We do not instantiate it but use it in `sizeof` and `offsetof`
+ */
+struct VertexAttributes {
+	glm::vec3 position;
+	glm::vec3 normal;
+	glm::vec3 color;
+};
+
 struct MyUniforms {
 	// We add transform matrices
     glm::mat4x4 projectionMatrix;
@@ -61,12 +71,14 @@ public:
 			const char* shaderSource = R"(
 			struct VertexInput {
 				@location(0) position: vec3f,
-				@location(1) color: vec3f,
+				@location(1) normal: vec3f,
+				@location(2) color: vec3f,
 			};
 
 			struct VertexOutput {
 				@builtin(position) position: vec4f,
 				@location(0) color: vec3f,
+				@location(1) normal: vec3f,
 			};
 
 			/**
@@ -83,109 +95,29 @@ public:
 			// Instead of the simple uTime variable, our uniform variable is a struct
 			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
 
-			const pi = 3.14159265359;
-
-			// Build a perspective projection matrix
-			fn makePerspectiveProj(ratio: f32, near: f32, far: f32, focalLength: f32) -> mat4x4f {
-				let divides = 1.0 / (far - near);
-				return transpose(mat4x4f(
-					focalLength,         0.0,              0.0,               0.0,
-						0.0,     focalLength * ratio,      0.0,               0.0,
-						0.0,             0.0,         far * divides, -far * near * divides,
-						0.0,             0.0,              1.0,               0.0,
-				));
-			}
-
-			/**
-			 * Option A: Rebuild the matrices for each vertex
-			 * (not recommended)
-			 */
-			fn vs_main_optionA(in: VertexInput) -> VertexOutput {
-				var out: VertexOutput;
-				let ratio = 640.0 / 480.0;
-				var offset = vec2f(0.0);
-
-				// Scale the object
-				let S = transpose(mat4x4f(
-					0.3,  0.0, 0.0, 0.0,
-					0.0,  0.3, 0.0, 0.0,
-					0.0,  0.0, 0.3, 0.0,
-					0.0,  0.0, 0.0, 1.0,
-				));
-
-				// Translate the object
-				let T = transpose(mat4x4f(
-					1.0,  0.0, 0.0, 0.5,
-					0.0,  1.0, 0.0, 0.0,
-					0.0,  0.0, 1.0, 0.0,
-					0.0,  0.0, 0.0, 1.0,
-				));
-
-				// Rotate the model in the XY plane
-				let angle1 = uMyUniforms.time;
-				let c1 = cos(angle1);
-				let s1 = sin(angle1);
-				let R1 = transpose(mat4x4f(
-					c1,  s1, 0.0, 0.0,
-					-s1,  c1, 0.0, 0.0,
-					0.0, 0.0, 1.0, 0.0,
-					0.0,  0.0, 0.0, 1.0,
-				));
-
-				// Tilt the view point in the YZ plane
-				// by three 8th of turn (1 turn = 2 pi)
-				let angle2 = 3.0 * pi / 4.0;
-				let c2 = cos(angle2);
-				let s2 = sin(angle2);
-				let R2 = transpose(mat4x4f(
-					1.0, 0.0, 0.0, 0.0,
-					0.0,  c2,  s2, 0.0,
-					0.0, -s2,  c2, 0.0,
-					0.0,  0.0, 0.0, 1.0,
-				));
-
-				// Move the view point
-				let focalPoint = vec3f(0.0, 0.0, -2.0);
-				let T2 = transpose(mat4x4f(
-					1.0,  0.0, 0.0, -focalPoint.x,
-					0.0,  1.0, 0.0, -focalPoint.y,
-					0.0,  0.0, 1.0, -focalPoint.z,
-					0.0,  0.0, 0.0,     1.0,
-				));
-
-				// Compose and apply rotations
-				// (S then T then R1 then R2, remember this reads backwards)
-				let homogeneous_position = vec4f(in.position, 1.0);
-				let viewspace_position = T2 * R2 * R1 * T * S * homogeneous_position;
-
-				// Perspective projection
-				let P = makePerspectiveProj(ratio, 0.01 /* near */, 100.0 /* far */, 2.0 /* focalLength */);
-				out.position = P * viewspace_position;
-
-				out.color = in.color;
-				return out;
-			}
-
-			/**
-			 * Option B: Use matrices that have been precomputed and stored in the uniform buffer
-			 * (recommended)
-			 */
-			fn vs_main_optionB(in: VertexInput) -> VertexOutput {
-				var out: VertexOutput;
-				out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * uMyUniforms.modelMatrix * vec4f(in.position, 1.0);
-				out.color = in.color;
-				return out;
-			}
-
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
-				//return vs_main_optionA(in);
-				return vs_main_optionB(in);
+				var out: VertexOutput;
+				out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * uMyUniforms.modelMatrix * vec4f(in.position, 1.0);
+				// Forward the normal
+				out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
+				out.color = in.color;
+				return out;
 			}
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				let color = in.color * uMyUniforms.color.rgb;
+				let normal = normalize(in.normal);
+
+				let lightColor1 = vec3f(1.0, 0.9, 0.6);
+				let lightColor2 = vec3f(0.6, 0.9, 1.0);
+				let lightDirection1 = vec3f(0.5, -0.9, 0.1);
+				let lightDirection2 = vec3f(0.2, 0.4, 0.3);
+				let shading1 = max(0.0, dot(lightDirection1, normal));
+				let shading2 = max(0.0, dot(lightDirection2, normal));
+				let shading = shading1 * lightColor1 + shading2 * lightColor2;
+				let color = in.color * shading;
+
 				// Gamma-correction
 				let corrected_color = pow(color, vec3f(2.2));
 				return vec4f(corrected_color, uMyUniforms.color.a);
@@ -196,7 +128,7 @@ public:
 			//
 			std::vector<float> vertexData;
 			std::vector<uint16_t> indexData;
-			auto success = Geometry::load3DGeometry(RESOURCE_DIR "/webgpu.txt", vertexData, indexData, 3);
+			auto success = Geometry::load3DGeometry(RESOURCE_DIR "/webgpu.txt", vertexData, indexData, 6);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
@@ -206,23 +138,28 @@ public:
 
 			// Vertex fetch
 			// We now have 2 attributes
-			std::vector<wgpu::VertexAttribute> vertexAttribs(2);
+			std::vector<wgpu::VertexAttribute> vertexAttribs(3);
 
 			// Position attribute
 			vertexAttribs[0].shaderLocation = 0;
 			vertexAttribs[0].format = wgpu::VertexFormat::Float32x3;
 			vertexAttribs[0].offset = 0;
 
-			// Color attribute
+			// Normal attribute
 			vertexAttribs[1].shaderLocation = 1;
-			vertexAttribs[1].format = wgpu::VertexFormat::Float32x3; // different type!
-			vertexAttribs[1].offset = 3 * sizeof(float); // non null offset!
+			vertexAttribs[1].format = wgpu::VertexFormat::Float32x3;
+			vertexAttribs[1].offset = offsetof(VertexAttributes, normal);
+
+			// Color attribute
+			vertexAttribs[2].shaderLocation = 2;
+			vertexAttribs[2].format = wgpu::VertexFormat::Float32x3; // different type!
+			vertexAttribs[2].offset = offsetof(VertexAttributes, color);
 
 			wgpu::VertexBufferLayout vertexBufferLayout;
 			vertexBufferLayout.attributeCount = (uint32_t)vertexAttribs.size();
 			vertexBufferLayout.attributes = vertexAttribs.data();
 			// stride
-			vertexBufferLayout.arrayStride = 6 * sizeof(float);
+			vertexBufferLayout.arrayStride = sizeof(VertexAttributes);
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
