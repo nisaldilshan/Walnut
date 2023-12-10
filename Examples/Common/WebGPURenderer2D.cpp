@@ -327,7 +327,10 @@ void WebGPURenderer2D::RenderIndexed(uint32_t uniformIndex)
     m_renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
 
     // Set binding group
-    uint32_t dynamicOffset = uniformIndex * GetOffset(1);
+    uint32_t dynamicOffset = 0;
+    if (uniformIndex > 0)
+        dynamicOffset = uniformIndex * GetOffset(1);
+    
     m_renderPass.setBindGroup(0, m_bindGroup, m_dynamicOffsetCount, &dynamicOffset);
     m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
 }

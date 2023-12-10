@@ -127,7 +127,7 @@ public:
 
 			//
 			std::vector<VertexAttributes> vertexData;
-			bool success = Geometry::loadGeometryFromObj<VertexAttributes>(RESOURCE_DIR "/pyramid.obj", vertexData);
+			bool success = Geometry::loadGeometryFromObj<VertexAttributes>(RESOURCE_DIR "/mammoth.obj", vertexData);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
