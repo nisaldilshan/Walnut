@@ -92,8 +92,10 @@ public:
 				time: f32,
 			};
 
-			// Instead of the simple uTime variable, our uniform variable is a struct
 			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
+
+			// The texture binding
+			@group(0) @binding(1) var gradientTexture: texture_2d<f32>;
 
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
@@ -107,16 +109,8 @@ public:
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				let normal = normalize(in.normal);
-
-				let lightColor1 = vec3f(1.0, 0.9, 0.6);
-				let lightColor2 = vec3f(0.6, 0.9, 1.0);
-				let lightDirection1 = vec3f(0.5, -0.9, 0.1);
-				let lightDirection2 = vec3f(0.2, 0.4, 0.3);
-				let shading1 = max(0.0, dot(lightDirection1, normal));
-				let shading2 = max(0.0, dot(lightDirection2, normal));
-				let shading = shading1 * lightColor1 + shading2 * lightColor2;
-				let color = in.color * shading;
+				// Fetch a texel from the texture
+				let color = textureLoad(gradientTexture, vec2<i32>(in.position.xy), 0).rgb;
 
 				// Gamma-correction
 				let corrected_color = pow(color, vec3f(2.2));
@@ -165,23 +159,57 @@ public:
 
 			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * sizeof(VertexAttributes), vertexBufferLayout);
 
-			// Create binding layout (don't forget to = Default)
-			wgpu::BindGroupLayoutEntry bGLayoutEntry = wgpu::Default;
-			// The binding index as used in the @binding attribute in the shader
-			bGLayoutEntry.binding = 0;
-			// The stage that needs to access this resource
-			bGLayoutEntry.visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
-			bGLayoutEntry.buffer.type = wgpu::BufferBindingType::Uniform;
-			bGLayoutEntry.buffer.minBindingSize = sizeof(MyUniforms);
-			// Make this binding dynamic so we can offset it between draw calls
-			bGLayoutEntry.buffer.hasDynamicOffset = true;
+			// Create binding layouts
+
+			// Since we now have 2 bindings, we use a vector to store them
+			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(2, wgpu::Default);
+			// The uniform buffer binding that we already had
+			wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
+			uniformBindingLayout.binding = 0;
+			uniformBindingLayout.visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
+			uniformBindingLayout.buffer.type = wgpu::BufferBindingType::Uniform;
+			uniformBindingLayout.buffer.minBindingSize = sizeof(MyUniforms);
+			uniformBindingLayout.buffer.hasDynamicOffset = true;
+
+			// The texture binding
+			wgpu::BindGroupLayoutEntry& textureBindingLayout = bindingLayoutEntries[1];
+			textureBindingLayout.binding = 1;
+			textureBindingLayout.visibility = wgpu::ShaderStage::Fragment;
+			textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
+			textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
+			textureBindingLayout.buffer.hasDynamicOffset = true;
 
 			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
-			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
+			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
 
 			m_renderer->CreateUniformBuffer(1);
 
-			m_renderer->Init();	
+			constexpr uint32_t texWidth = 256;
+			constexpr uint32_t texHeight = 256;
+			std::vector<uint8_t> pixels(4 * texWidth * texHeight);
+			// Create image data
+			// for (uint32_t i = 0; i < texWidth; ++i) {
+			// 	for (uint32_t j = 0; j < texHeight; ++j) {
+			// 		uint8_t *p = &pixels[4 * (j * texWidth + i)];
+			// 		p[0] = (uint8_t)i; // r
+			// 		p[1] = (uint8_t)j; // g
+			// 		p[2] = 128; // b
+			// 		p[3] = 255; // a
+			// 	}
+			// }
+
+			for (uint32_t i = 0; i < texWidth; ++i) {
+				for (uint32_t j = 0; j < texHeight; ++j) {
+					uint8_t *p = &pixels[4 * (j * texWidth + i)];
+					p[0] = (i / 16) % 2 == (j / 16) % 2 ? 255 : 0; // r
+					p[1] = ((i - j) / 16) % 2 == 0 ? 255 : 0; // g
+					p[2] = ((i + j) / 16) % 2 == 0 ? 255 : 0; // b
+					p[3] = 255; // a
+				}
+			}
+			auto texture = m_renderer->CreateTexture(texWidth, texHeight, pixels.data());
+
+			m_renderer->Init();
         }
 
 		if (m_renderer)

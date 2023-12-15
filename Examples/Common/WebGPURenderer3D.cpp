@@ -200,10 +200,19 @@ void WebGPURenderer3D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData
 
 void WebGPURenderer3D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry)
 {
-    // Create a bind group layout
+    // Create a bind group layout using only one layout entry
 	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
 	bindGroupLayoutDesc.entryCount = 1;
 	bindGroupLayoutDesc.entries = &bindGroupLayoutEntry;
+	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
+}
+
+void WebGPURenderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
+{
+    // Create a bind group layout using a vector of layout entries
+	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
+	bindGroupLayoutDesc.entryCount = (uint32_t)bindGroupLayoutEntries.size();
+	bindGroupLayoutDesc.entries = bindGroupLayoutEntries.data();
 	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
 }
 
@@ -229,25 +238,24 @@ void WebGPURenderer3D::CreateBindGroup()
         m_pipelineLayout = WebGPU::GetDevice().createPipelineLayout(pipelineLayoutDesc);
 
         // Create a binding
-        wgpu::BindGroupEntry binding;
-        // The index of the binding (the entries in bindGroupDesc can be in any order)
-        binding.binding = 0;
-        // The buffer it is actually bound to
-        binding.buffer = m_uniformBuffer;
-        // We can specify an offset within the buffer, so that a single buffer can hold
-        // multiple uniform blocks.
-        binding.offset = 0;
-        // And we specify again the size of the buffer.
+        std::vector<wgpu::BindGroupEntry> bindings(2);
+        bindings[0].binding = 0;
+        bindings[0].buffer = m_uniformBuffer;
+        bindings[0].offset = 0;
         assert(m_sizeOfUniform > 0);
-        binding.size = m_sizeOfUniform;
+        bindings[0].size = m_sizeOfUniform;
+
+        bindings[1].binding = 1;
+        assert(m_texturesAndViews.size() > 0);
+	    bindings[1].textureView = m_texturesAndViews[0].second;
 
 
         // A bind group contains one or multiple bindings
         wgpu::BindGroupDescriptor bindGroupDesc;
         bindGroupDesc.layout = m_bindGroupLayout;
         // There must be as many bindings as declared in the layout!
-        bindGroupDesc.entryCount = 1; // TODO: Nisal - use bindGroupLayoutDesc.entryCount
-        bindGroupDesc.entries = &binding;
+        bindGroupDesc.entryCount = (uint32_t)bindings.size();
+        bindGroupDesc.entries = bindings.data();
         m_bindGroup = WebGPU::GetDevice().createBindGroup(bindGroupDesc);
     }
 }
@@ -429,7 +437,7 @@ void WebGPURenderer3D::SubmitCommandBuffer()
     wgpu::CommandBufferDescriptor cmdBufferDescriptor;
     cmdBufferDescriptor.label = "Command buffer";
     wgpu::CommandBuffer commands = m_currentCommandEncoder.finish(cmdBufferDescriptor);
-    GraphicsAPI::WebGPU::GetQueue().submit(commands);
+    WebGPU::GetQueue().submit(commands);
 }
 
 void WebGPURenderer3D::CreateDepthTexture()
@@ -458,6 +466,52 @@ void WebGPURenderer3D::CreateDepthTexture()
 	depthTextureViewDesc.format = m_depthTextureFormat;
 	m_depthTextureView = m_depthTexture.createView(depthTextureViewDesc);
 	std::cout << "Depth texture view: " << m_depthTextureView << std::endl;
+}
+
+void* WebGPURenderer3D::CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData)
+{
+	wgpu::TextureDescriptor textureDesc;
+	textureDesc.dimension = wgpu::TextureDimension::_2D;
+	textureDesc.size = {textureWidth, textureHeight, 1};
+	textureDesc.format = wgpu::TextureFormat::RGBA8Unorm;;
+	textureDesc.mipLevelCount = 1;
+	textureDesc.sampleCount = 1;
+	textureDesc.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst;
+	textureDesc.viewFormatCount = 0;
+	textureDesc.viewFormats = nullptr;
+	auto newTexture = WebGPU::GetDevice().createTexture(textureDesc);
+	std::cout << "texture created: " << newTexture << std::endl;
+
+	wgpu::TextureViewDescriptor textureViewDesc;
+	textureViewDesc.aspect = wgpu::TextureAspect::All;
+	textureViewDesc.baseArrayLayer = 0;
+	textureViewDesc.arrayLayerCount = 1;
+	textureViewDesc.baseMipLevel = 0;
+	textureViewDesc.mipLevelCount = 1;
+	textureViewDesc.dimension = wgpu::TextureViewDimension::_2D;
+	textureViewDesc.format = textureDesc.format;
+	auto newTextureView = newTexture.createView(textureViewDesc);
+	std::cout << "texture view created: " << newTextureView << std::endl;
+
+    // Upload texture data
+	// Arguments telling which part of the texture we upload to (together with the last argument of writeTexture)
+	wgpu::ImageCopyTexture destination;
+	destination.texture = newTexture;
+	destination.mipLevel = 0;
+	destination.origin = { 0, 0, 0 }; // equivalent of the offset argument of Queue::writeBuffer
+	destination.aspect = wgpu::TextureAspect::All; // only relevant for depth/Stencil textures
+
+	// Arguments telling how the C++ side pixel memory is laid out
+	wgpu::TextureDataLayout source;
+	source.offset = 0;
+	source.bytesPerRow = 4 * textureDesc.size.width;
+	source.rowsPerImage = textureDesc.size.height;
+
+    WebGPU::GetQueue().writeTexture(destination, textureData, 4 * textureDesc.size.width * textureDesc.size.height, source, textureDesc.size);
+
+    m_texturesAndViews.emplace_back(std::make_pair(newTexture, newTextureView));
+
+    return newTexture;
 }
 
 } // namespace GraphicsAPI

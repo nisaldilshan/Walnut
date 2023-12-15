@@ -46,6 +46,16 @@ void Renderer3D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLay
     m_rendererBackend->SetBindGroupLayoutEntry(bindGroupLayoutEntry);
 }
 
+void Renderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
+{
+    m_rendererBackend->SetBindGroupLayoutEntries(bindGroupLayoutEntries);
+}
+
+void* Renderer3D::CreateTexture(uint32_t width, uint32_t height, const void* textureData)
+{
+    return m_rendererBackend->CreateTexture(width, height, textureData);
+}
+
 void Renderer3D::SetSizeOfUniform(uint32_t sizeOfUniform)
 {
     m_rendererBackend->SetSizeOfUniform(sizeOfUniform);

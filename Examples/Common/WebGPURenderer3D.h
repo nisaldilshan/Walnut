@@ -20,10 +20,12 @@ namespace GraphicsAPI
         void CreateVertexBuffer(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout);
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
+        void SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
         void SetSizeOfUniform(uint32_t sizeOfUniform);
         void CreateBindGroup();
         void CreateUniformBuffer(size_t dynamicOffsetCount);
         void CreateDepthTexture();
+        void* CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData);
         void SetUniformData(const void* bufferData, uint32_t uniformIndex);
         void SimpleRender();
         void Render(uint32_t uniformIndex);
@@ -62,6 +64,8 @@ namespace GraphicsAPI
         wgpu::TextureFormat m_depthTextureFormat =  wgpu::TextureFormat::Undefined;
         wgpu::Texture m_depthTexture = nullptr;
         wgpu::TextureView m_depthTextureView = nullptr;
+
+        std::vector<std::pair<wgpu::Texture, wgpu::TextureView>> m_texturesAndViews;
 
         wgpu::Limits m_deviceLimits;
 
