@@ -79,6 +79,7 @@ public:
 				@builtin(position) position: vec4f,
 				@location(0) color: vec3f,
 				@location(1) normal: vec3f,
+				@location(2) texelCoords: vec2f,
 			};
 
 			/**
@@ -104,13 +105,18 @@ public:
 				// Forward the normal
 				out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
 				out.color = in.color;
+
+				// In plane.obj, the vertex xy coords range from -1 to 1
+				// and we remap this to (0, 256), the size of our texture.
+				out.texelCoords = (in.position.xy + 1.0) * 128.0;
+
 				return out;
 			}
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 				// Fetch a texel from the texture
-				let color = textureLoad(gradientTexture, vec2<i32>(in.position.xy), 0).rgb;
+				let color = textureLoad(gradientTexture, vec2i(in.texelCoords), 0).rgb;
 
 				// Gamma-correction
 				let corrected_color = pow(color, vec3f(2.2));
@@ -187,16 +193,6 @@ public:
 			constexpr uint32_t texWidth = 256;
 			constexpr uint32_t texHeight = 256;
 			std::vector<uint8_t> pixels(4 * texWidth * texHeight);
-			// Create image data
-			// for (uint32_t i = 0; i < texWidth; ++i) {
-			// 	for (uint32_t j = 0; j < texHeight; ++j) {
-			// 		uint8_t *p = &pixels[4 * (j * texWidth + i)];
-			// 		p[0] = (uint8_t)i; // r
-			// 		p[1] = (uint8_t)j; // g
-			// 		p[2] = 128; // b
-			// 		p[3] = 255; // a
-			// 	}
-			// }
 
 			for (uint32_t i = 0; i < texWidth; ++i) {
 				for (uint32_t j = 0; j < texHeight; ++j) {
@@ -215,33 +211,17 @@ public:
 		if (m_renderer)
 		{
 			m_renderer->BeginRenderPass();
-
-			float time = static_cast<float>(glfwGetTime());
+			const float time = static_cast<float>(glfwGetTime());
+			constexpr float PI = 3.14159265358979323846f;		
+			m_uniformData.viewMatrix = glm::lookAt(glm::vec3(-2.0f, -3.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0, 0, 1));
+			m_uniformData.projectionMatrix = glm::perspective(30 * (PI / 180), (float)(m_viewportWidth / m_viewportHeight), 0.01f, 100.0f);
 
 			// Upload first value
-
 			float angle1 = 2.0f;
-			constexpr float PI = 3.14159265358979323846f;
-			float angle2 = 3.0f * PI / 4.0f;
-			glm::vec3 focalPoint(0.0, 0.0, -2.0);			
-
-			glm::mat4x4 V(1.0);
-			V = glm::translate(V, -focalPoint);
-			V = glm::rotate(V, -angle2, glm::vec3(1.0, 0.0, 0.0));
-			m_uniformData.viewMatrix = V;
-			
-			float focalLength = 2.0;
-			float fov = 2 * glm::atan(1 / focalLength);
-			float ratio = m_viewportWidth / m_viewportHeight;
-			float near = 0.01f;
-			float far = 100.0f;
-			m_uniformData.projectionMatrix = glm::perspective(fov, ratio, near, far);
-			//m_uniformData.projectionMatrix = makePerspectiveProj(m_viewportWidth / m_viewportHeight, 0.01, 100.0, 2.0);
-
 			glm::mat4x4 M1(1.0);
 			angle1 = time * 0.9f;
 			M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
-			M1 = glm::translate(M1, glm::vec3(0.5, 0.0, 0.0));
+			M1 = glm::translate(M1, glm::vec3(1.0, 0.0, 0.0));
 			M1 = glm::scale(M1, glm::vec3(0.3f));
 			m_uniformData.modelMatrix = M1;
 
