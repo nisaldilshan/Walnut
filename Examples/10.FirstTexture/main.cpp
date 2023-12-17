@@ -79,7 +79,7 @@ public:
 				@builtin(position) position: vec4f,
 				@location(0) color: vec3f,
 				@location(1) normal: vec3f,
-				@location(2) texelCoords: vec2f,
+				@location(2) uv: vec2f,
 			};
 
 			/**
@@ -107,16 +107,17 @@ public:
 				out.color = in.color;
 
 				// In plane.obj, the vertex xy coords range from -1 to 1
-				// and we remap this to (0, 256), the size of our texture.
-				out.texelCoords = (in.position.xy + 1.0) * 128.0;
+				// and we remap this to the resolution-agnostic (0, 1) range
+				out.uv = in.position.xy * 0.5 + 0.5;
 
 				return out;
 			}
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				// Fetch a texel from the texture
-				let color = textureLoad(gradientTexture, vec2i(in.texelCoords), 0).rgb;
+				// We remap UV coords to actual texel coordinates
+				let texelCoords = vec2i(in.uv * vec2f(textureDimensions(gradientTexture)));
+    			let color = textureLoad(gradientTexture, texelCoords, 0).rgb;
 
 				// Gamma-correction
 				let corrected_color = pow(color, vec3f(2.2));
