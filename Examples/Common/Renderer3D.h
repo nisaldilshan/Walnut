@@ -34,7 +34,8 @@ public:
     void SetIndexBufferData(const std::vector<uint16_t>& bufferData);
     void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
     void SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
-    void* CreateTexture(uint32_t width, uint32_t height, const void* textureData);
+    void CreateTexture(uint32_t width, uint32_t height, const void* textureData, uint32_t mipMapLevelCount);
+    void CreateTextureSampler();
     void SetSizeOfUniform(uint32_t sizeOfUniform);
     void CreateUniformBuffer(size_t dynamicOffsetCount);
     void SetUniformBufferData(const void* bufferData, uint32_t uniformIndex);

@@ -81,9 +81,8 @@ public:
 			};
 
 			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
-
-			// The texture binding
 			@group(0) @binding(1) var gradientTexture: texture_2d<f32>;
+			@group(0) @binding(2) var textureSampler: sampler;
 
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
@@ -100,8 +99,7 @@ public:
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 				// We remap UV coords to actual texel coordinates
-				let texelCoords = vec2i(in.uv * vec2f(textureDimensions(gradientTexture)));
-    			let color = textureLoad(gradientTexture, texelCoords, 0).rgb;
+    			let color = textureSample(gradientTexture, textureSampler, in.uv).rgb;
 
 				// Gamma-correction
 				let corrected_color = pow(color, vec3f(2.2));
@@ -156,7 +154,7 @@ public:
 			// Create binding layouts
 
 			// Since we now have 2 bindings, we use a vector to store them
-			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(2, wgpu::Default);
+			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(3, wgpu::Default);
 			// The uniform buffer binding that we already had
 			wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
 			uniformBindingLayout.binding = 0;
@@ -172,6 +170,12 @@ public:
 			textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
 			textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
 			textureBindingLayout.buffer.hasDynamicOffset = true;
+
+			// The sampler binding
+			wgpu::BindGroupLayoutEntry& samplerBindingLayout = bindingLayoutEntries[2];
+			samplerBindingLayout.binding = 2;
+			samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
+			samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
 			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
@@ -191,7 +195,8 @@ public:
 					p[3] = 255; // a
 				}
 			}
-			auto texture = m_renderer->CreateTexture(texWidth, texHeight, pixels.data());
+			m_renderer->CreateTextureSampler();
+			m_renderer->CreateTexture(texWidth, texHeight, pixels.data(), 8);
 
 			m_renderer->Init();
         }

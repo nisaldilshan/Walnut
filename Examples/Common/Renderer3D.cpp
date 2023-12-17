@@ -51,9 +51,14 @@ void Renderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayo
     m_rendererBackend->SetBindGroupLayoutEntries(bindGroupLayoutEntries);
 }
 
-void* Renderer3D::CreateTexture(uint32_t width, uint32_t height, const void* textureData)
+void Renderer3D::CreateTexture(uint32_t width, uint32_t height, const void* textureData, uint32_t mipMapLevelCount)
 {
-    return m_rendererBackend->CreateTexture(width, height, textureData);
+    m_rendererBackend->CreateTexture(width, height, textureData, mipMapLevelCount);
+}
+
+void Renderer3D::CreateTextureSampler()
+{
+    m_rendererBackend->CreateTextureSampler();
 }
 
 void Renderer3D::SetSizeOfUniform(uint32_t sizeOfUniform)

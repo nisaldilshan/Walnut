@@ -191,7 +191,7 @@ public:
 					p[3] = 255; // a
 				}
 			}
-			auto texture = m_renderer->CreateTexture(texWidth, texHeight, pixels.data());
+			m_renderer->CreateTexture(texWidth, texHeight, pixels.data(), 1);
 
 			m_renderer->Init();
         }

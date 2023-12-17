@@ -25,7 +25,8 @@ namespace GraphicsAPI
         void CreateBindGroup();
         void CreateUniformBuffer(size_t dynamicOffsetCount);
         void CreateDepthTexture();
-        void* CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData);
+        void CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData, uint32_t mipMapLevelCount);
+        void CreateTextureSampler();
         void SetUniformData(const void* bufferData, uint32_t uniformIndex);
         void SimpleRender();
         void Render(uint32_t uniformIndex);
@@ -36,6 +37,7 @@ namespace GraphicsAPI
         void Reset();
         
     private:
+        void UploadTexture(wgpu::Texture texture, wgpu::TextureDescriptor textureDesc, const void* textureData);
         void SubmitCommandBuffer();
         uint32_t GetOffset(uint32_t uniformIndex);
 
@@ -51,8 +53,10 @@ namespace GraphicsAPI
         uint32_t m_indexCount = 0;
         wgpu::Buffer m_indexBuffer = nullptr;
 
+        uint32_t m_bindGroupLayoutEntryCount = 0;
         wgpu::BindGroupLayout m_bindGroupLayout = nullptr;
         wgpu::PipelineLayout m_pipelineLayout = nullptr;
+
         wgpu::Buffer m_uniformBuffer = nullptr;
         wgpu::BindGroup m_bindGroup = nullptr;
         size_t m_dynamicOffsetCount = 0;
@@ -66,6 +70,7 @@ namespace GraphicsAPI
         wgpu::TextureView m_depthTextureView = nullptr;
 
         std::vector<std::pair<wgpu::Texture, wgpu::TextureView>> m_texturesAndViews;
+        wgpu::Sampler m_textureSampler = nullptr;
 
         wgpu::Limits m_deviceLimits;
 
