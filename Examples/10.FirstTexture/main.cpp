@@ -19,6 +19,7 @@ struct VertexAttributes {
 	glm::vec3 position;
 	glm::vec3 normal;
 	glm::vec3 color;
+	glm::vec2 uv;
 };
 
 struct MyUniforms {
@@ -31,29 +32,14 @@ struct MyUniforms {
     float _pad[3];
 };
 
-glm::mat4x4 makePerspectiveProj(float ratio, float near, float far, float focalLength)
-{
-	float divides = 1.0f / (far - near);
-	float aaa[16] = {
-		focalLength,         0.0,              0.0,               0.0,
-			0.0,     focalLength * ratio,      0.0,               0.0,
-			0.0,             0.0,         far * divides, -far * near * divides,
-			0.0,             0.0,              1.0,               0.0,
-	};
-	return glm::transpose(glm::make_mat4(aaa));
-}
-
 class Renderer2DLayer : public Walnut::Layer
 {
 public:
 	virtual void OnAttach() override
-	{
-	}
+	{}
 
 	virtual void OnDetach() override
-	{
-
-	}
+	{}
 
 	virtual void OnUpdate(float ts) override
 	{
@@ -73,6 +59,7 @@ public:
 				@location(0) position: vec3f,
 				@location(1) normal: vec3f,
 				@location(2) color: vec3f,
+				@location(3) uv: vec2f,
 			};
 
 			struct VertexOutput {
@@ -105,10 +92,7 @@ public:
 				// Forward the normal
 				out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
 				out.color = in.color;
-
-				// In plane.obj, the vertex xy coords range from -1 to 1
-				// and we remap this to the resolution-agnostic (0, 1) range
-				out.uv = in.position.xy * 0.5 + 0.5;
+				out.uv = in.uv;
 
 				return out;
 			}
@@ -128,7 +112,7 @@ public:
 
 			//
 			std::vector<VertexAttributes> vertexData;
-			bool success = Geometry::loadGeometryFromObj<VertexAttributes>(RESOURCE_DIR "/plane.obj", vertexData);
+			bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/cube.obj", vertexData);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
@@ -137,9 +121,7 @@ public:
 			}
 			//
 
-			// Vertex fetch
-			// We now have 2 attributes
-			std::vector<wgpu::VertexAttribute> vertexAttribs(3);
+			std::vector<wgpu::VertexAttribute> vertexAttribs(4);
 
 			// Position attribute
 			vertexAttribs[0].shaderLocation = 0;
@@ -153,8 +135,13 @@ public:
 
 			// Color attribute
 			vertexAttribs[2].shaderLocation = 2;
-			vertexAttribs[2].format = wgpu::VertexFormat::Float32x3; // different type!
+			vertexAttribs[2].format = wgpu::VertexFormat::Float32x3;
 			vertexAttribs[2].offset = offsetof(VertexAttributes, color);
+
+			// UV attribute
+			vertexAttribs[3].shaderLocation = 3;
+			vertexAttribs[3].format = wgpu::VertexFormat::Float32x2;
+			vertexAttribs[3].offset = offsetof(VertexAttributes, uv);
 
 			wgpu::VertexBufferLayout vertexBufferLayout;
 			vertexBufferLayout.attributeCount = (uint32_t)vertexAttribs.size();

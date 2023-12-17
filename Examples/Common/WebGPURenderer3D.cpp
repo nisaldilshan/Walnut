@@ -238,17 +238,21 @@ void WebGPURenderer3D::CreateBindGroup()
         m_pipelineLayout = WebGPU::GetDevice().createPipelineLayout(pipelineLayoutDesc);
 
         // Create a binding
-        std::vector<wgpu::BindGroupEntry> bindings(2);
+        std::vector<wgpu::BindGroupEntry> bindings;
+        if (m_texturesAndViews.size() > 0)
+        {
+            bindings.resize(2);
+            bindings[1].binding = 1;
+	        bindings[1].textureView = m_texturesAndViews[0].second;
+        }
+        else
+            bindings.resize(1);
+
         bindings[0].binding = 0;
         bindings[0].buffer = m_uniformBuffer;
         bindings[0].offset = 0;
         assert(m_sizeOfUniform > 0);
         bindings[0].size = m_sizeOfUniform;
-
-        bindings[1].binding = 1;
-        assert(m_texturesAndViews.size() > 0);
-	    bindings[1].textureView = m_texturesAndViews[0].second;
-
 
         // A bind group contains one or multiple bindings
         wgpu::BindGroupDescriptor bindGroupDesc;
