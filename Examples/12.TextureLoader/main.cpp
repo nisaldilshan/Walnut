@@ -186,9 +186,11 @@ public:
 
 			int texWidth;
 			int texHeight; 
+			uint32_t mipMapLevelCount;
 			m_renderer->CreateTextureSampler();
-			auto* textureData = Texture::loadTexture(RESOURCE_DIR "/fourareen2K_albedo.jpg", texWidth, texHeight);
-			m_renderer->CreateTexture(texWidth, texHeight, textureData, 8);
+			auto* textureData = Texture::loadTexture(RESOURCE_DIR "/fourareen2K_albedo.jpg", texWidth, texHeight, mipMapLevelCount);
+			assert(texWidth > 0 && texHeight > 0 && mipMapLevelCount > 0);
+			m_renderer->CreateTexture(texWidth, texHeight, textureData, mipMapLevelCount);
 			Texture::freeTexture(textureData);
 
 			m_renderer->Init();
