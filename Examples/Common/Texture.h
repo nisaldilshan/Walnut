@@ -14,8 +14,11 @@ unsigned char* loadTexture(const fs::path &path, int& width, int& height)
     int channels;
     unsigned char *pixelData = stbi_load(path.string().c_str(), &width, &height, &channels, 4 /* force 4 channels */);
     if (nullptr == pixelData)
+    {
+        assert(false);
         return nullptr;
-
+    }
+    
     return pixelData;
 }
 

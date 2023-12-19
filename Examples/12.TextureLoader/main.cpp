@@ -111,7 +111,7 @@ public:
 
 			//
 			std::vector<VertexAttributes> vertexData;
-			bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/cube.obj", vertexData);
+			bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/fourareen.obj", vertexData);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
@@ -183,19 +183,6 @@ public:
 
 			m_renderer->CreateUniformBuffer(1);
 
-			// constexpr uint32_t texWidth = 256;
-			// constexpr uint32_t texHeight = 256;
-			// std::vector<uint8_t> pixels(4 * texWidth * texHeight);
-
-			// for (uint32_t i = 0; i < texWidth; ++i) {
-			// 	for (uint32_t j = 0; j < texHeight; ++j) {
-			// 		uint8_t *p = &pixels[4 * (j * texWidth + i)];
-			// 		p[0] = (i / 16) % 2 == (j / 16) % 2 ? 255 : 0; // r
-			// 		p[1] = ((i - j) / 16) % 2 == 0 ? 255 : 0; // g
-			// 		p[2] = ((i + j) / 16) % 2 == 0 ? 255 : 0; // b
-			// 		p[3] = 255; // a
-			// 	}
-			// }
 
 			int texWidth;
 			int texHeight; 
@@ -220,7 +207,7 @@ public:
 			glm::mat4x4 M1(1.0);
 			angle1 = time * 0.9f;
 			M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
-			M1 = glm::translate(M1, glm::vec3(1.0, 0.0, 0.0));
+			M1 = glm::translate(M1, glm::vec3(0.0, 0.0, 0.0));
 			M1 = glm::scale(M1, glm::vec3(0.3f));
 			m_uniformData.modelMatrix = M1;
 
@@ -229,21 +216,8 @@ public:
 			m_renderer->SetUniformBufferData(&m_uniformData, 0);
 			////
 
-			// Upload second value
-			glm::mat4x4 M2(1.0);
-			angle1 = time * 1.1f;
-			M2 = glm::rotate(M2, angle1, glm::vec3(0.0, 0.0, 1.0));
-			M2 = glm::translate(M2, glm::vec3(0.5, 0.0, 0.0));
-			M2 = glm::scale(M2, glm::vec3(0.3f));
-			m_uniformData.modelMatrix = M2;
-
-			m_uniformData.time = time; // glfwGetTime returns a double
-			m_uniformData.color = { 1.0f, 1.0f, 1.0f, 0.7f };
-			m_renderer->SetUniformBufferData(&m_uniformData, 1);
-			////                         				^^^^^^^^^^^^^ beware of the non-null offset!
 
 			m_renderer->Render(0);
-			m_renderer->Render(1);
 			m_renderer->EndRenderPass();
 		}
        		
