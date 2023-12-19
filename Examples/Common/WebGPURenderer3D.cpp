@@ -513,8 +513,18 @@ void WebGPURenderer3D::CreateTexture(uint32_t textureWidth, uint32_t textureHeig
 
 void WebGPURenderer3D::UploadTexture(wgpu::Texture texture, wgpu::TextureDescriptor textureDesc, const void* textureData)
 {
+    wgpu::ImageCopyTexture destination;
+    destination.texture = texture;
+    destination.origin = { 0, 0, 0 }; // equivalent of the offset argument of Queue::writeBuffer
+    destination.aspect = wgpu::TextureAspect::All; // only relevant for depth/Stencil textures
+
+    // Arguments telling how the C++ side pixel memory is laid out
+    wgpu::TextureDataLayout source;
+    source.offset = 0;
+
     wgpu::Extent3D mipLevelSize = textureDesc.size;
 	std::vector<uint8_t> previousLevelPixels;
+    wgpu::Extent3D previousMipLevelSize;
 	for (uint32_t level = 0; level < textureDesc.mipLevelCount; ++level) {
 		// Create image data
         std::vector<uint8_t> pixels(4 * mipLevelSize.width * mipLevelSize.height);
@@ -524,48 +534,37 @@ void WebGPURenderer3D::UploadTexture(wgpu::Texture texture, wgpu::TextureDescrip
         } 
 		else
         {
+            // Create mip level data
             for (uint32_t i = 0; i < mipLevelSize.width; ++i)
             {
                 for (uint32_t j = 0; j < mipLevelSize.height; ++j)
                 {
                     uint8_t *p = &pixels[4 * (j * mipLevelSize.width + i)];
-
                     // Get the corresponding 4 pixels from the previous level
-                    uint8_t *p00 = &previousLevelPixels[4 * ((2 * j + 0) * (2 * mipLevelSize.width) + (2 * i + 0))];
-                    uint8_t *p01 = &previousLevelPixels[4 * ((2 * j + 0) * (2 * mipLevelSize.width) + (2 * i + 1))];
-                    uint8_t *p10 = &previousLevelPixels[4 * ((2 * j + 1) * (2 * mipLevelSize.width) + (2 * i + 0))];
-                    uint8_t *p11 = &previousLevelPixels[4 * ((2 * j + 1) * (2 * mipLevelSize.width) + (2 * i + 1))];
+                    uint8_t *p00 = &previousLevelPixels[4 * ((2 * j + 0) * previousMipLevelSize.width + (2 * i + 0))];
+                    uint8_t *p01 = &previousLevelPixels[4 * ((2 * j + 0) * previousMipLevelSize.width + (2 * i + 1))];
+                    uint8_t *p10 = &previousLevelPixels[4 * ((2 * j + 1) * previousMipLevelSize.width + (2 * i + 0))];
+                    uint8_t *p11 = &previousLevelPixels[4 * ((2 * j + 1) * previousMipLevelSize.width + (2 * i + 1))];
                     // Average
                     p[0] = (p00[0] + p01[0] + p10[0] + p11[0]) / 4;
                     p[1] = (p00[1] + p01[1] + p10[1] + p11[1]) / 4;
                     p[2] = (p00[2] + p01[2] + p10[2] + p11[2]) / 4;
-                    p[3] = 255; // a
+                    p[3] = (p00[3] + p01[3] + p10[3] + p11[3]) / 4;
                 }
             }
-        }    
+        }
 
-        wgpu::ImageCopyTexture destination;
-        destination.texture = texture;
-        destination.origin = { 0, 0, 0 }; // equivalent of the offset argument of Queue::writeBuffer
-        destination.aspect = wgpu::TextureAspect::All; // only relevant for depth/Stencil textures
         // Change this to the current level
-		destination.mipLevel = level;
+        destination.mipLevel = level;
+        source.bytesPerRow = 4 * mipLevelSize.width;
+        source.rowsPerImage = mipLevelSize.height;
+        WebGPU::GetQueue().writeTexture(destination, pixels.data(), pixels.size(), source, mipLevelSize);
 
-        // Arguments telling how the C++ side pixel memory is laid out
-        wgpu::TextureDataLayout source;
-        source.offset = 0;
-		// Compute from the mip level size
-		source.bytesPerRow = 4 * mipLevelSize.width;
-		source.rowsPerImage = mipLevelSize.height;
-
-		WebGPU::GetQueue().writeTexture(destination, pixels.data(), pixels.size(), source, mipLevelSize);
-
-		// The size of the next mip level:
-		// (see https://www.w3.org/TR/webgpu/#logical-miplevel-specific-texture-extent)
-		mipLevelSize.width /= 2;
-		mipLevelSize.height /= 2;
-		previousLevelPixels = std::move(pixels);
-	}
+        previousLevelPixels = std::move(pixels);
+        previousMipLevelSize = mipLevelSize;
+        mipLevelSize.width /= 2;
+        mipLevelSize.height /= 2;
+    }
 }
 
 void WebGPURenderer3D::CreateTextureSampler()

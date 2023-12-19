@@ -188,7 +188,7 @@ public:
 			int texHeight; 
 			m_renderer->CreateTextureSampler();
 			auto* textureData = Texture::loadTexture(RESOURCE_DIR "/fourareen2K_albedo.jpg", texWidth, texHeight);
-			m_renderer->CreateTexture(texWidth, texHeight, textureData, 1);
+			m_renderer->CreateTexture(texWidth, texHeight, textureData, 8);
 			Texture::freeTexture(textureData);
 
 			m_renderer->Init();
