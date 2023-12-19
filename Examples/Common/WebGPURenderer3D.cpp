@@ -517,27 +517,32 @@ void WebGPURenderer3D::UploadTexture(wgpu::Texture texture, wgpu::TextureDescrip
 	std::vector<uint8_t> previousLevelPixels;
 	for (uint32_t level = 0; level < textureDesc.mipLevelCount; ++level) {
 		// Create image data
-		std::vector<uint8_t> pixels(4 * mipLevelSize.width * mipLevelSize.height);
-		for (uint32_t i = 0; i < mipLevelSize.width; ++i) {
-			for (uint32_t j = 0; j < mipLevelSize.height; ++j) {
-				uint8_t* p = &pixels[4 * (j * mipLevelSize.width + i)];
-				if (level == 0) {
-					memcpy(pixels.data(), textureData, 4 * mipLevelSize.width * mipLevelSize.height);
-				} else {
-					// Get the corresponding 4 pixels from the previous level
-					uint8_t* p00 = &previousLevelPixels[4 * ((2 * j + 0) * (2 * mipLevelSize.width) + (2 * i + 0))];
-					uint8_t* p01 = &previousLevelPixels[4 * ((2 * j + 0) * (2 * mipLevelSize.width) + (2 * i + 1))];
-					uint8_t* p10 = &previousLevelPixels[4 * ((2 * j + 1) * (2 * mipLevelSize.width) + (2 * i + 0))];
-					uint8_t* p11 = &previousLevelPixels[4 * ((2 * j + 1) * (2 * mipLevelSize.width) + (2 * i + 1))];
-					// Average
-					p[0] = (p00[0] + p01[0] + p10[0] + p11[0]) / 4;
-					p[1] = (p00[1] + p01[1] + p10[1] + p11[1]) / 4;
-					p[2] = (p00[2] + p01[2] + p10[2] + p11[2]) / 4;
+        std::vector<uint8_t> pixels(4 * mipLevelSize.width * mipLevelSize.height);
+        if (level == 0) 
+        {
+            memcpy(pixels.data(), textureData, 4 * mipLevelSize.width * mipLevelSize.height);
+        } 
+		else
+        {
+            for (uint32_t i = 0; i < mipLevelSize.width; ++i)
+            {
+                for (uint32_t j = 0; j < mipLevelSize.height; ++j)
+                {
+                    uint8_t *p = &pixels[4 * (j * mipLevelSize.width + i)];
+
+                    // Get the corresponding 4 pixels from the previous level
+                    uint8_t *p00 = &previousLevelPixels[4 * ((2 * j + 0) * (2 * mipLevelSize.width) + (2 * i + 0))];
+                    uint8_t *p01 = &previousLevelPixels[4 * ((2 * j + 0) * (2 * mipLevelSize.width) + (2 * i + 1))];
+                    uint8_t *p10 = &previousLevelPixels[4 * ((2 * j + 1) * (2 * mipLevelSize.width) + (2 * i + 0))];
+                    uint8_t *p11 = &previousLevelPixels[4 * ((2 * j + 1) * (2 * mipLevelSize.width) + (2 * i + 1))];
+                    // Average
+                    p[0] = (p00[0] + p01[0] + p10[0] + p11[0]) / 4;
+                    p[1] = (p00[1] + p01[1] + p10[1] + p11[1]) / 4;
+                    p[2] = (p00[2] + p01[2] + p10[2] + p11[2]) / 4;
                     p[3] = 255; // a
-				}
-				
-			}
-		}
+                }
+            }
+        }    
 
         wgpu::ImageCopyTexture destination;
         destination.texture = texture;
