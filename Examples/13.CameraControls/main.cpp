@@ -8,6 +8,7 @@
 #include "../Common/Renderer3D.h"
 #include "../Common/Geometry.h"
 #include "../Common/Texture.h"
+#include "../Common/Camera.h"
 #include <GLFW/glfw3.h>
 
 #include <Walnut/GLM/GLM.h>
@@ -109,6 +110,8 @@ public:
 
 		m_renderer->CreateTextureSampler();
 		m_renderer->CreateTexture(m_texHandle->GetWidth(), m_texHandle->GetHeight(), m_texHandle->GetData(), m_texHandle->GetMipLevelCount());
+
+		m_camera = std::make_unique<Camera::PerspectiveCamera>(30.0f, 0.01f, 100.0f);
 	}
 
 	virtual void OnDetach() override
@@ -130,13 +133,14 @@ public:
 		if (m_renderer)
 		{
 			m_renderer->BeginRenderPass();
-			const float time = static_cast<float>(glfwGetTime());
-			constexpr float PI = 3.14159265358979323846f;		
+			
+			m_camera->SetViewportSize((float)m_viewportWidth, (float)m_viewportHeight);
 			m_uniformData.viewMatrix = glm::lookAt(glm::vec3(-2.0f, -3.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0, 0, 1));
-			m_uniformData.projectionMatrix = glm::perspective(30 * (PI / 180), (float)(m_viewportWidth / m_viewportHeight), 0.01f, 100.0f);
+			m_uniformData.projectionMatrix = m_camera->GetProjectionMatrix();
 
 			// Upload first value
 			float angle1 = 2.0f;
+			const float time = static_cast<float>(glfwGetTime());	
 			glm::mat4x4 M1(1.0);
 			angle1 = time * 0.9f;
 			M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
@@ -151,6 +155,7 @@ public:
 
 
 			m_renderer->Render(0);
+
 			m_renderer->EndRenderPass();
 		}
        		
@@ -256,6 +261,8 @@ private:
 	std::vector<VertexAttributes> m_vertexData;
 	std::unique_ptr<Texture::TextureHandle> m_texHandle = nullptr;
 	const char* m_shaderSource = nullptr;
+
+	std::unique_ptr<Camera::PerspectiveCamera> m_camera;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
