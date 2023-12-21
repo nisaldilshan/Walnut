@@ -123,42 +123,35 @@ public:
 		if (m_viewportWidth == 0 || m_viewportHeight == 0)
 			return;
 
-        if (!m_renderer ||
-            m_viewportWidth != m_renderer->GetWidth() ||
-            m_viewportHeight != m_renderer->GetHeight())
+        if (m_viewportWidth != m_renderer->GetWidth() || m_viewportHeight != m_renderer->GetHeight())
         {
 			InitialCode();
+			m_camera->SetViewportSize((float)m_viewportWidth, (float)m_viewportHeight);
         }
 
-		if (m_renderer)
-		{
-			m_renderer->BeginRenderPass();
-			
-			m_camera->SetViewportSize((float)m_viewportWidth, (float)m_viewportHeight);
-			m_uniformData.viewMatrix = glm::lookAt(glm::vec3(-2.0f, -3.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0, 0, 1));
-			m_uniformData.projectionMatrix = m_camera->GetProjectionMatrix();
+		m_renderer->BeginRenderPass();
 
-			// Upload first value
-			float angle1 = 2.0f;
-			const float time = static_cast<float>(glfwGetTime());	
-			glm::mat4x4 M1(1.0);
-			angle1 = time * 0.9f;
-			M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
-			M1 = glm::translate(M1, glm::vec3(0.0, 0.0, 0.0));
-			M1 = glm::scale(M1, glm::vec3(0.3f));
-			m_uniformData.modelMatrix = M1;
+		m_uniformData.viewMatrix = glm::lookAt(glm::vec3(-2.0f, -3.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0, 0, 1));
+		m_uniformData.projectionMatrix = m_camera->GetProjectionMatrix();
 
-			m_uniformData.time = time; // glfwGetTime returns a double
-			m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
-			m_renderer->SetUniformBufferData(&m_uniformData, 0);
-			////
+		// Upload first value
+		float angle1 = 2.0f;
+		const float time = static_cast<float>(glfwGetTime());	
+		glm::mat4x4 M1(1.0);
+		angle1 = time * 0.9f;
+		M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
+		M1 = glm::translate(M1, glm::vec3(0.0, 0.0, 0.0));
+		M1 = glm::scale(M1, glm::vec3(0.3f));
+		m_uniformData.modelMatrix = M1;
 
+		m_uniformData.time = time; // glfwGetTime returns a double
+		m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
+		m_renderer->SetUniformBufferData(&m_uniformData, 0);
+		////
 
-			m_renderer->Render(0);
+		m_renderer->Render(0);
 
-			m_renderer->EndRenderPass();
-		}
-       		
+		m_renderer->EndRenderPass();
 
         m_lastRenderTime = timer.ElapsedMillis();
 	}
@@ -173,8 +166,7 @@ public:
         ImGui::Begin("Viewport");
 		m_viewportWidth = ImGui::GetContentRegionAvail().x;
         m_viewportHeight = ImGui::GetContentRegionAvail().y;
-        if (m_renderer)
-            ImGui::Image(m_renderer->GetDescriptorSet(), {(float)m_renderer->GetWidth(),(float)m_renderer->GetWidth()});
+        ImGui::Image(m_renderer->GetDescriptorSet(), {(float)m_renderer->GetWidth(),(float)m_renderer->GetWidth()});
 		ImGui::End();
         ImGui::PopStyleVar();
 
