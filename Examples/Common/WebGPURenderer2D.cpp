@@ -32,7 +32,7 @@ void WebGPURenderer2D::CreateTextureToRenderInto(uint32_t width, uint32_t height
     tex_view_desc.baseArrayLayer = 0;
     tex_view_desc.arrayLayerCount = 1;
     tex_view_desc.aspect = WGPUTextureAspect_All;
-    m_nextTexture = texture.createView(tex_view_desc);
+    m_textureToRenderInto = texture.createView(tex_view_desc);
 }
 
 void WebGPURenderer2D::CreateShaders(const char* shaderSource)
@@ -337,12 +337,12 @@ void WebGPURenderer2D::RenderIndexed(uint32_t uniformIndex)
 
 ImTextureID WebGPURenderer2D::GetDescriptorSet()
 {
-    return m_nextTexture;
+    return m_textureToRenderInto;
 }
 
 void WebGPURenderer2D::BeginRenderPass()
 {
-    if (!m_nextTexture)
+    if (!m_textureToRenderInto)
         std::cerr << "Cannot acquire texture to render into" << std::endl;
 
     wgpu::CommandEncoderDescriptor commandEncoderDesc;
@@ -352,7 +352,7 @@ void WebGPURenderer2D::BeginRenderPass()
     wgpu::RenderPassDescriptor renderPassDesc;
 
     wgpu::RenderPassColorAttachment renderPassColorAttachment;
-    renderPassColorAttachment.view = m_nextTexture;
+    renderPassColorAttachment.view = m_textureToRenderInto;
     renderPassColorAttachment.resolveTarget = nullptr;
     renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
     renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;

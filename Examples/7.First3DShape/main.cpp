@@ -46,7 +46,8 @@ public:
             m_viewportHeight != m_renderer->GetHeight())
         {
 			m_renderer.reset();
-			m_renderer = std::make_shared<Renderer3D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+			m_renderer = std::make_shared<Renderer3D>();
+			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
 
 			const char* shaderSource = R"(
 			/**
@@ -153,7 +154,8 @@ public:
 			m_renderer->SetIndexBufferData(indexData);
 
 			// Create binding layout (don't forget to = Default)
-			wgpu::BindGroupLayoutEntry bGLayoutEntry = wgpu::Default;
+			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(1, wgpu::Default);
+			wgpu::BindGroupLayoutEntry& bGLayoutEntry = bindingLayoutEntries[0];
 			// The binding index as used in the @binding attribute in the shader
 			bGLayoutEntry.binding = 0;
 			// The stage that needs to access this resource
@@ -164,7 +166,7 @@ public:
 			bGLayoutEntry.buffer.hasDynamicOffset = true;
 
 			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
-			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
+			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
 
 			m_renderer->CreateUniformBuffer(1);
 

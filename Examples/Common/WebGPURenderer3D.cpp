@@ -32,7 +32,7 @@ void WebGPURenderer3D::CreateTextureToRenderInto(uint32_t width, uint32_t height
     tex_view_desc.baseArrayLayer = 0;
     tex_view_desc.arrayLayerCount = 1;
     tex_view_desc.aspect = WGPUTextureAspect_All;
-    m_nextTexture = texture.createView(tex_view_desc);
+    m_textureToRenderInto = texture.createView(tex_view_desc);
 }
 
 void WebGPURenderer3D::CreateShaders(const char* shaderSource)
@@ -198,14 +198,6 @@ void WebGPURenderer3D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData
     std::cout << "Index buffer: " << m_indexBuffer << std::endl;
 }
 
-void WebGPURenderer3D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry)
-{
-    // Create a bind group layout using only one layout entry
-	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
-	bindGroupLayoutDesc.entryCount = 1;
-	bindGroupLayoutDesc.entries = &bindGroupLayoutEntry;
-	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
-}
 
 void WebGPURenderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
 {
@@ -369,12 +361,12 @@ void WebGPURenderer3D::RenderIndexed(uint32_t uniformIndex)
 
 ImTextureID WebGPURenderer3D::GetDescriptorSet()
 {
-    return m_nextTexture;
+    return m_textureToRenderInto;
 }
 
 void WebGPURenderer3D::BeginRenderPass()
 {
-    if (!m_nextTexture)
+    if (!m_textureToRenderInto)
         std::cerr << "Cannot acquire texture to render into" << std::endl;
 
     wgpu::CommandEncoderDescriptor commandEncoderDesc;
@@ -384,7 +376,7 @@ void WebGPURenderer3D::BeginRenderPass()
     wgpu::RenderPassDescriptor renderPassDesc;
 
     wgpu::RenderPassColorAttachment renderPassColorAttachment;
-    renderPassColorAttachment.view = m_nextTexture;
+    renderPassColorAttachment.view = m_textureToRenderInto;
     renderPassColorAttachment.resolveTarget = nullptr;
     renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
     renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;

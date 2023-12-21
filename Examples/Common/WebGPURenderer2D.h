@@ -37,7 +37,7 @@ namespace GraphicsAPI
 
         wgpu::ShaderModule m_shaderModule = nullptr;
         wgpu::RenderPipeline m_pipeline = nullptr;
-        wgpu::TextureView m_nextTexture = nullptr;
+        wgpu::TextureView m_textureToRenderInto = nullptr;
 
         uint32_t m_vertexCount = 0;
         uint64_t m_vertexBufferSize = 0;

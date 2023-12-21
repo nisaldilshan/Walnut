@@ -52,7 +52,8 @@ public:
             m_viewportHeight != m_renderer->GetHeight())
         {
 			m_renderer.reset();
-			m_renderer = std::make_shared<Renderer3D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+			m_renderer = std::make_shared<Renderer3D>();
+			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
 
 			const char* shaderSource = R"(
 			struct VertexInput {
@@ -91,7 +92,7 @@ public:
 				// Forward the normal
 				out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
 				out.color = in.color;
-				out.uv = in.uv;
+				out.uv = in.uv * 2.0;
 
 				return out;
 			}

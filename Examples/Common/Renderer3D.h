@@ -24,15 +24,15 @@ typedef WebGPURenderer3D RendererType;
 class Renderer3D
 {
 public:
-    Renderer3D(uint32_t width, uint32_t height, Walnut::ImageFormat format);
+    Renderer3D();
     ~Renderer3D();
 
+    void OnResize(uint32_t width, uint32_t height);
     void Init();
     void SetShader(const char* shaderSource);
     void SetStandaloneShader(const char* shaderSource, uint32_t vertexShaderCallCount);
     void SetVertexBufferData(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout);
     void SetIndexBufferData(const std::vector<uint16_t>& bufferData);
-    void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
     void SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
     void CreateTexture(uint32_t width, uint32_t height, const void* textureData, uint32_t mipMapLevelCount);
     void CreateTextureSampler();
@@ -51,6 +51,5 @@ public:
 private:
     uint32_t m_Width = 0, m_Height = 0;
     std::unique_ptr<GraphicsAPI::WebGPURenderer3D> m_rendererBackend;
-    const char* m_shaderSource = nullptr;
 };
 

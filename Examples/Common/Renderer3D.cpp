@@ -2,16 +2,20 @@
 
 #include "WebGPURenderer3D.h"
 
-Renderer3D::Renderer3D(uint32_t width, uint32_t height, Walnut::ImageFormat format)
-    : m_Width(width)
-    , m_Height(height)
+Renderer3D::Renderer3D()
+    : m_Width(0)
+    , m_Height(0)
     , m_rendererBackend(std::make_unique<GraphicsAPI::WebGPURenderer3D>())
-{
-    m_rendererBackend->CreateTextureToRenderInto(m_Width, m_Height);
-}
+{}
 
 Renderer3D::~Renderer3D()
+{}
+
+void Renderer3D::OnResize(uint32_t width, uint32_t height)
 {
+    m_Width = width;
+    m_Height = height;
+    m_rendererBackend->CreateTextureToRenderInto(m_Width, m_Height);
 }
 
 void Renderer3D::Init()
@@ -41,10 +45,6 @@ void Renderer3D::SetIndexBufferData(const std::vector<uint16_t>& bufferData)
     m_rendererBackend->CreateIndexBuffer(bufferData);
 }
 
-void Renderer3D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry)
-{
-    m_rendererBackend->SetBindGroupLayoutEntry(bindGroupLayoutEntry);
-}
 
 void Renderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
 {

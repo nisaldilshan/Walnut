@@ -19,7 +19,6 @@ namespace GraphicsAPI
         void CreatePipeline();
         void CreateVertexBuffer(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout);
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
-        void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
         void SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
         void SetSizeOfUniform(uint32_t sizeOfUniform);
         void CreateBindGroup();
@@ -43,7 +42,7 @@ namespace GraphicsAPI
 
         wgpu::ShaderModule m_shaderModule = nullptr;
         wgpu::RenderPipeline m_pipeline = nullptr;
-        wgpu::TextureView m_nextTexture = nullptr;
+        wgpu::TextureView m_textureToRenderInto = nullptr;
 
         uint32_t m_vertexCount = 0;
         uint64_t m_vertexBufferSize = 0;

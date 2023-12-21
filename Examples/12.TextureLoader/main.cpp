@@ -37,7 +37,73 @@ class Renderer2DLayer : public Walnut::Layer
 {
 public:
 	virtual void OnAttach() override
-	{}
+	{
+		bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/fourareen.obj", m_vertexData);
+		if (!success) 
+		{
+			std::cerr << "Could not load geometry!" << std::endl;
+			assert(false);
+		}
+
+		m_texHandle = Texture::loadTexture(RESOURCE_DIR "/fourareen2K_albedo.jpg");
+		assert(m_texHandle && m_texHandle->GetWidth() > 0 && m_texHandle->GetHeight() > 0 && m_texHandle->GetMipLevelCount() > 0);
+
+		m_shaderSource = R"(
+		struct VertexInput {
+			@location(0) position: vec3f,
+			@location(1) normal: vec3f,
+			@location(2) color: vec3f,
+			@location(3) uv: vec2f,
+		};
+
+		struct VertexOutput {
+			@builtin(position) position: vec4f,
+			@location(0) color: vec3f,
+			@location(1) normal: vec3f,
+			@location(2) uv: vec2f,
+		};
+
+		/**
+		 * A structure holding the value of our uniforms
+		 */
+		struct MyUniforms {
+			projectionMatrix: mat4x4f,
+			viewMatrix: mat4x4f,
+			modelMatrix: mat4x4f,
+			color: vec4f,
+			time: f32,
+		};
+
+		@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
+		@group(0) @binding(1) var gradientTexture: texture_2d<f32>;
+		@group(0) @binding(2) var textureSampler: sampler;
+
+		@vertex
+		fn vs_main(in: VertexInput) -> VertexOutput {
+			var out: VertexOutput;
+			out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * uMyUniforms.modelMatrix * vec4f(in.position, 1.0);
+			// Forward the normal
+			out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
+			out.color = in.color;
+			out.uv = in.uv;
+
+			return out;
+		}
+
+		@fragment
+		fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+			// We remap UV coords to actual texel coordinates
+			let color = textureSample(gradientTexture, textureSampler, in.uv).rgb;
+
+			// Gamma-correction
+			let corrected_color = pow(color, vec3f(2.2));
+			return vec4f(corrected_color, uMyUniforms.color.a);
+		}
+		)";
+
+		m_renderer.reset();
+		m_renderer = std::make_unique<Renderer3D>();
+	}
 
 	virtual void OnDetach() override
 	{}
@@ -52,148 +118,7 @@ public:
             m_viewportWidth != m_renderer->GetWidth() ||
             m_viewportHeight != m_renderer->GetHeight())
         {
-			m_renderer.reset();
-			m_renderer = std::make_shared<Renderer3D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
-
-			const char* shaderSource = R"(
-			struct VertexInput {
-				@location(0) position: vec3f,
-				@location(1) normal: vec3f,
-				@location(2) color: vec3f,
-				@location(3) uv: vec2f,
-			};
-
-			struct VertexOutput {
-				@builtin(position) position: vec4f,
-				@location(0) color: vec3f,
-				@location(1) normal: vec3f,
-				@location(2) uv: vec2f,
-			};
-
-			/**
-			 * A structure holding the value of our uniforms
-			 */
-			struct MyUniforms {
-				projectionMatrix: mat4x4f,
-				viewMatrix: mat4x4f,
-				modelMatrix: mat4x4f,
-				color: vec4f,
-				time: f32,
-			};
-
-			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
-			@group(0) @binding(1) var gradientTexture: texture_2d<f32>;
-			@group(0) @binding(2) var textureSampler: sampler;
-
-			@vertex
-			fn vs_main(in: VertexInput) -> VertexOutput {
-				var out: VertexOutput;
-				out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * uMyUniforms.modelMatrix * vec4f(in.position, 1.0);
-				// Forward the normal
-				out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
-				out.color = in.color;
-				out.uv = in.uv;
-
-				return out;
-			}
-
-			@fragment
-			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				// We remap UV coords to actual texel coordinates
-    			let color = textureSample(gradientTexture, textureSampler, in.uv).rgb;
-
-				// Gamma-correction
-				let corrected_color = pow(color, vec3f(2.2));
-				return vec4f(corrected_color, uMyUniforms.color.a);
-			}
-			)";
-			m_renderer->SetShader(shaderSource);
-
-			//
-			std::vector<VertexAttributes> vertexData;
-			bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/fourareen.obj", vertexData);
-			if (!success) 
-			{
-				std::cerr << "Could not load geometry!" << std::endl;
-				assert(false);
-				return;
-			}
-			//
-
-			std::vector<wgpu::VertexAttribute> vertexAttribs(4);
-
-			// Position attribute
-			vertexAttribs[0].shaderLocation = 0;
-			vertexAttribs[0].format = wgpu::VertexFormat::Float32x3;
-			vertexAttribs[0].offset = 0;
-
-			// Normal attribute
-			vertexAttribs[1].shaderLocation = 1;
-			vertexAttribs[1].format = wgpu::VertexFormat::Float32x3;
-			vertexAttribs[1].offset = offsetof(VertexAttributes, normal);
-
-			// Color attribute
-			vertexAttribs[2].shaderLocation = 2;
-			vertexAttribs[2].format = wgpu::VertexFormat::Float32x3;
-			vertexAttribs[2].offset = offsetof(VertexAttributes, color);
-
-			// UV attribute
-			vertexAttribs[3].shaderLocation = 3;
-			vertexAttribs[3].format = wgpu::VertexFormat::Float32x2;
-			vertexAttribs[3].offset = offsetof(VertexAttributes, uv);
-
-			wgpu::VertexBufferLayout vertexBufferLayout;
-			vertexBufferLayout.attributeCount = (uint32_t)vertexAttribs.size();
-			vertexBufferLayout.attributes = vertexAttribs.data();
-			// stride
-			vertexBufferLayout.arrayStride = sizeof(VertexAttributes);
-			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
-
-
-			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * sizeof(VertexAttributes), vertexBufferLayout);
-
-			// Create binding layouts
-
-			// Since we now have 2 bindings, we use a vector to store them
-			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(3, wgpu::Default);
-			// The uniform buffer binding that we already had
-			wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
-			uniformBindingLayout.binding = 0;
-			uniformBindingLayout.visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
-			uniformBindingLayout.buffer.type = wgpu::BufferBindingType::Uniform;
-			uniformBindingLayout.buffer.minBindingSize = sizeof(MyUniforms);
-			uniformBindingLayout.buffer.hasDynamicOffset = true;
-
-			// The texture binding
-			wgpu::BindGroupLayoutEntry& textureBindingLayout = bindingLayoutEntries[1];
-			textureBindingLayout.binding = 1;
-			textureBindingLayout.visibility = wgpu::ShaderStage::Fragment;
-			textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
-			textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
-			textureBindingLayout.buffer.hasDynamicOffset = true;
-
-			// The sampler binding
-			wgpu::BindGroupLayoutEntry& samplerBindingLayout = bindingLayoutEntries[2];
-			samplerBindingLayout.binding = 2;
-			samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
-			samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
-
-			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
-			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
-
-			m_renderer->CreateUniformBuffer(1);
-
-
-			int texWidth;
-			int texHeight; 
-			uint32_t mipMapLevelCount;
-			m_renderer->CreateTextureSampler();
-			auto* textureData = Texture::loadTexture(RESOURCE_DIR "/fourareen2K_albedo.jpg", texWidth, texHeight, mipMapLevelCount);
-			assert(texWidth > 0 && texHeight > 0 && mipMapLevelCount > 0);
-			m_renderer->CreateTexture(texWidth, texHeight, textureData, mipMapLevelCount);
-			Texture::freeTexture(textureData);
-
-			m_renderer->Init();
+			InitialCode();
         }
 
 		if (m_renderer)
@@ -246,12 +171,94 @@ public:
 	}
 
 private:
-    std::shared_ptr<Renderer3D> m_renderer;
+	void InitialCode()
+	{
+		// m_renderer.reset();
+		// m_renderer = std::make_unique<Renderer3D>();
+		m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
+
+		assert(m_shaderSource);
+		m_renderer->SetShader(m_shaderSource);
+
+		std::vector<wgpu::VertexAttribute> vertexAttribs(4);
+
+		// Position attribute
+		vertexAttribs[0].shaderLocation = 0;
+		vertexAttribs[0].format = wgpu::VertexFormat::Float32x3;
+		vertexAttribs[0].offset = 0;
+
+		// Normal attribute
+		vertexAttribs[1].shaderLocation = 1;
+		vertexAttribs[1].format = wgpu::VertexFormat::Float32x3;
+		vertexAttribs[1].offset = offsetof(VertexAttributes, normal);
+
+		// Color attribute
+		vertexAttribs[2].shaderLocation = 2;
+		vertexAttribs[2].format = wgpu::VertexFormat::Float32x3;
+		vertexAttribs[2].offset = offsetof(VertexAttributes, color);
+
+		// UV attribute
+		vertexAttribs[3].shaderLocation = 3;
+		vertexAttribs[3].format = wgpu::VertexFormat::Float32x2;
+		vertexAttribs[3].offset = offsetof(VertexAttributes, uv);
+
+		wgpu::VertexBufferLayout vertexBufferLayout;
+		vertexBufferLayout.attributeCount = (uint32_t)vertexAttribs.size();
+		vertexBufferLayout.attributes = vertexAttribs.data();
+		// stride
+		vertexBufferLayout.arrayStride = sizeof(VertexAttributes);
+		vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
+
+		assert(m_vertexData.size() > 0);
+		m_renderer->SetVertexBufferData(m_vertexData.data(), m_vertexData.size() * sizeof(VertexAttributes), vertexBufferLayout);
+
+		// Create binding layouts
+
+		// Since we now have 2 bindings, we use a vector to store them
+		std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(3, wgpu::Default);
+		// The uniform buffer binding that we already had
+		wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
+		uniformBindingLayout.binding = 0;
+		uniformBindingLayout.visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
+		uniformBindingLayout.buffer.type = wgpu::BufferBindingType::Uniform;
+		uniformBindingLayout.buffer.minBindingSize = sizeof(MyUniforms);
+		uniformBindingLayout.buffer.hasDynamicOffset = true;
+
+		// The texture binding
+		wgpu::BindGroupLayoutEntry& textureBindingLayout = bindingLayoutEntries[1];
+		textureBindingLayout.binding = 1;
+		textureBindingLayout.visibility = wgpu::ShaderStage::Fragment;
+		textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
+		textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
+		textureBindingLayout.buffer.hasDynamicOffset = true;
+
+		// The sampler binding
+		wgpu::BindGroupLayoutEntry& samplerBindingLayout = bindingLayoutEntries[2];
+		samplerBindingLayout.binding = 2;
+		samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
+		samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
+
+		m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
+		m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
+
+		m_renderer->CreateUniformBuffer(1);
+
+
+		m_renderer->CreateTextureSampler();
+		m_renderer->CreateTexture(m_texHandle->GetWidth(), m_texHandle->GetHeight(), m_texHandle->GetData(), m_texHandle->GetMipLevelCount());
+
+		m_renderer->Init();
+	}
+
+    std::unique_ptr<Renderer3D> m_renderer;
     uint32_t m_viewportWidth = 0;
     uint32_t m_viewportHeight = 0;
     float m_lastRenderTime = 0.0f;
 
 	MyUniforms m_uniformData;
+	std::vector<VertexAttributes> m_vertexData;
+	std::unique_ptr<Texture::TextureHandle> m_texHandle = nullptr;
+	const char* m_shaderSource = nullptr;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
