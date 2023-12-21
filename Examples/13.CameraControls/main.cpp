@@ -129,9 +129,11 @@ public:
 			m_camera->SetViewportSize((float)m_viewportWidth, (float)m_viewportHeight);
         }
 
+		m_camera->OnUpdate();
+
 		m_renderer->BeginRenderPass();
 
-		m_uniformData.viewMatrix = glm::lookAt(glm::vec3(-2.0f, -3.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0, 0, 1));
+		m_uniformData.viewMatrix = m_camera->GetViewMatrix();
 		m_uniformData.projectionMatrix = m_camera->GetProjectionMatrix();
 
 		// Upload first value

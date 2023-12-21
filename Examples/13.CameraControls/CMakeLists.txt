@@ -1,7 +1,8 @@
 add_executable(CameraControls
             main.cpp
             ../Common/Renderer3D.cpp
-            ../Common/WebGPURenderer3D.cpp)
+            ../Common/WebGPURenderer3D.cpp
+            ../Common/Camera.cpp)
 
 target_include_directories(CameraControls PRIVATE ../../Walnut/src)
 
