@@ -103,6 +103,12 @@ public:
 
 		m_renderer.reset();
 		m_renderer = std::make_unique<Renderer3D>();
+
+		assert(m_shaderSource);
+		m_renderer->SetShader(m_shaderSource);
+
+		m_renderer->CreateTextureSampler();
+		m_renderer->CreateTexture(m_texHandle->GetWidth(), m_texHandle->GetHeight(), m_texHandle->GetData(), m_texHandle->GetMipLevelCount());
 	}
 
 	virtual void OnDetach() override
@@ -173,12 +179,7 @@ public:
 private:
 	void InitialCode()
 	{
-		// m_renderer.reset();
-		// m_renderer = std::make_unique<Renderer3D>();
 		m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
-
-		assert(m_shaderSource);
-		m_renderer->SetShader(m_shaderSource);
 
 		std::vector<wgpu::VertexAttribute> vertexAttribs(4);
 
@@ -242,10 +243,6 @@ private:
 		m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
 
 		m_renderer->CreateUniformBuffer(1);
-
-
-		m_renderer->CreateTextureSampler();
-		m_renderer->CreateTexture(m_texHandle->GetWidth(), m_texHandle->GetHeight(), m_texHandle->GetData(), m_texHandle->GetMipLevelCount());
 
 		m_renderer->Init();
 	}
