@@ -66,6 +66,11 @@ void Renderer3D::SetSizeOfUniform(uint32_t sizeOfUniform)
     m_rendererBackend->SetSizeOfUniform(sizeOfUniform);
 }
 
+void Renderer3D::SetClearColor(glm::vec4 clearColor)
+{
+    m_rendererBackend->SetClearColor(clearColor);
+}
+
 void Renderer3D::CreateUniformBuffer(size_t dynamicOffsetCount)
 {
     m_rendererBackend->CreateUniformBuffer(dynamicOffsetCount);

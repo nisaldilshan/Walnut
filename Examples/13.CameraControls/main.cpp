@@ -162,6 +162,14 @@ public:
 	{
 		ImGui::Begin("Settings");
         ImGui::Text("Last render: %.3fms", m_lastRenderTime);
+		static ImVec4 newClearColorImgui = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+		ImGui::ColorEdit3("Clear Color", (float*)&newClearColorImgui); 
+		glm::vec4 newClearColor = {newClearColorImgui.x, newClearColorImgui.y, newClearColorImgui.z, newClearColorImgui.w};
+		if (newClearColor != m_clearColor)
+		{
+			m_clearColor = newClearColor;
+			m_renderer->SetClearColor(m_clearColor);
+		}
 		ImGui::End();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -250,6 +258,7 @@ private:
     uint32_t m_viewportWidth = 0;
     uint32_t m_viewportHeight = 0;
     float m_lastRenderTime = 0.0f;
+	glm::vec4 m_clearColor = glm::vec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	MyUniforms m_uniformData;
 	std::vector<VertexAttributes> m_vertexData;

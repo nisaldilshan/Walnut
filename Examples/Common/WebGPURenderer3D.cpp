@@ -220,6 +220,11 @@ void WebGPURenderer3D::SetSizeOfUniform(uint32_t sizeOfUniform)
     m_deviceLimits = deviceSupportedLimits.limits;
 }
 
+void WebGPURenderer3D::SetClearColor(glm::vec4 clearColor)
+{
+    m_clearColor = wgpu::Color{clearColor.x, clearColor.y, clearColor.z, clearColor.w};
+}
+
 void WebGPURenderer3D::CreateBindGroup()
 {
     if (m_bindGroupLayout)
@@ -380,7 +385,7 @@ void WebGPURenderer3D::BeginRenderPass()
     renderPassColorAttachment.resolveTarget = nullptr;
     renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
     renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
-    renderPassColorAttachment.clearValue = wgpu::Color{ 0.9, 0.1, 0.2, 1.0 };
+    renderPassColorAttachment.clearValue = m_clearColor;
     renderPassDesc.colorAttachmentCount = 1;
     renderPassDesc.colorAttachments = &renderPassColorAttachment;
 

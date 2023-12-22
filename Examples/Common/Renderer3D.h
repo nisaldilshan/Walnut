@@ -6,6 +6,8 @@
 
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
+#include <Walnut/GLM/GLM.h>
+
 namespace GraphicsAPI
 {
 #if (RENDERER_BACKEND == 1)
@@ -37,6 +39,7 @@ public:
     void CreateTexture(uint32_t width, uint32_t height, const void* textureData, uint32_t mipMapLevelCount);
     void CreateTextureSampler();
     void SetSizeOfUniform(uint32_t sizeOfUniform);
+    void SetClearColor(glm::vec4 clearColor);
     void CreateUniformBuffer(size_t dynamicOffsetCount);
     void SetUniformBufferData(const void* bufferData, uint32_t uniformIndex);
     void* GetDescriptorSet();

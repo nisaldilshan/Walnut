@@ -5,6 +5,8 @@
 
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
+#include <Walnut/GLM/GLM.h>
+
 namespace GraphicsAPI
 {
     class WebGPURenderer3D
@@ -21,6 +23,7 @@ namespace GraphicsAPI
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
         void SetSizeOfUniform(uint32_t sizeOfUniform);
+        void SetClearColor(glm::vec4 clearColor);
         void CreateBindGroup();
         void CreateUniformBuffer(size_t dynamicOffsetCount);
         void CreateDepthTexture();
@@ -39,6 +42,8 @@ namespace GraphicsAPI
         void UploadTexture(wgpu::Texture texture, wgpu::TextureDescriptor textureDesc, const void* textureData);
         void SubmitCommandBuffer();
         uint32_t GetOffset(uint32_t uniformIndex);
+
+        wgpu::Color m_clearColor = wgpu::Color{ 0.9, 0.1, 0.2, 1.0 };
 
         wgpu::ShaderModule m_shaderModule = nullptr;
         wgpu::RenderPipeline m_pipeline = nullptr;
