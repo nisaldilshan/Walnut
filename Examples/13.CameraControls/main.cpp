@@ -39,14 +39,14 @@ class Renderer2DLayer : public Walnut::Layer
 public:
 	virtual void OnAttach() override
 	{
-		bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/fourareen.obj", m_vertexData);
+		bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/Meshes/fourareen.obj", m_vertexData);
 		if (!success) 
 		{
 			std::cerr << "Could not load geometry!" << std::endl;
 			assert(false);
 		}
 
-		m_texHandle = Texture::loadTexture(RESOURCE_DIR "/fourareen2K_albedo.jpg");
+		m_texHandle = Texture::loadTexture(RESOURCE_DIR "/Textures/fourareen2K_albedo.jpg");
 		assert(m_texHandle && m_texHandle->GetWidth() > 0 && m_texHandle->GetHeight() > 0 && m_texHandle->GetMipLevelCount() > 0);
 
 		m_shaderSource = R"(

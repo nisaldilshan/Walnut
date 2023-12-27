@@ -95,6 +95,7 @@
         "queue": "cpp",
         "regex": "cpp",
         "scoped_allocator": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "filesystem": "cpp"
     }
 }
