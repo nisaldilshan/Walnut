@@ -245,7 +245,7 @@ public:
 			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
 
-			m_renderer->CreateUniformBuffer(1);
+			m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection);
 
 			m_renderer->Init();	
         }

@@ -7,6 +7,7 @@
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
 #include <Walnut/GLM/GLM.h>
+#include "Uniform.h"
 
 namespace GraphicsAPI
 {
@@ -40,7 +41,7 @@ public:
     void CreateTextureSampler();
     void SetSizeOfUniform(uint32_t sizeOfUniform);
     void SetClearColor(glm::vec4 clearColor);
-    void CreateUniformBuffer(size_t dynamicOffsetCount);
+    void CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type);
     void SetUniformBufferData(const void* bufferData, uint32_t uniformIndex);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }

@@ -251,7 +251,6 @@ private:
 		textureBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
 		textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
-		textureBindingLayout.buffer.hasDynamicOffset = true;
 
 		// The sampler binding
 		wgpu::BindGroupLayoutEntry& samplerBindingLayout = bindingLayoutEntries[2];
@@ -262,7 +261,7 @@ private:
 		m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 		m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
 
-		m_renderer->CreateUniformBuffer(1);
+		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection);
 
 		m_renderer->Init();
 	}

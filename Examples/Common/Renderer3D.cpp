@@ -71,9 +71,9 @@ void Renderer3D::SetClearColor(glm::vec4 clearColor)
     m_rendererBackend->SetClearColor(clearColor);
 }
 
-void Renderer3D::CreateUniformBuffer(size_t dynamicOffsetCount)
+void Renderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type)
 {
-    m_rendererBackend->CreateUniformBuffer(dynamicOffsetCount);
+    m_rendererBackend->CreateUniformBuffer(maxUniformIndex, type);
 }
 
 void Renderer3D::SetUniformBufferData(const void* bufferData, uint32_t uniformIndex)

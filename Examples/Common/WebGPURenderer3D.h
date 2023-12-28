@@ -26,7 +26,7 @@ namespace GraphicsAPI
         void SetSizeOfUniform(uint32_t sizeOfUniform);
         void SetClearColor(glm::vec4 clearColor);
         void CreateBindGroup();
-        void CreateUniformBuffer(size_t dynamicOffsetCount, Uniform::UniformType type = Uniform::UniformType::ModelViewProjection);
+        void CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type);
         void CreateDepthTexture();
         void CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData, uint32_t mipMapLevelCount);
         void CreateTextureSampler();
@@ -42,7 +42,7 @@ namespace GraphicsAPI
     private:
         void UploadTexture(wgpu::Texture texture, wgpu::TextureDescriptor textureDesc, const void* textureData);
         void SubmitCommandBuffer();
-        uint32_t GetOffset(uint32_t uniformIndex);
+        uint32_t GetOffset(const uint32_t& uniformIndex, const uint32_t& sizeOfUniform);
 
         wgpu::Color m_clearColor = wgpu::Color{ 0.9, 0.1, 0.2, 1.0 };
 
@@ -65,7 +65,6 @@ namespace GraphicsAPI
 
         wgpu::Buffer m_modelViewProjectionUniformBuffer = nullptr;
         wgpu::BindGroup m_bindGroup = nullptr;
-        size_t m_dynamicOffsetCount = 0;
         uint32_t m_sizeOfUniform = 0;
 
         wgpu::CommandEncoder m_currentCommandEncoder = nullptr;
@@ -77,8 +76,6 @@ namespace GraphicsAPI
 
         std::vector<std::pair<wgpu::Texture, wgpu::TextureView>> m_texturesAndViews;
         wgpu::Sampler m_textureSampler = nullptr;
-
-        wgpu::Limits m_deviceLimits;
 
         uint32_t m_width, m_height;
     };
