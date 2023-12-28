@@ -63,7 +63,7 @@ namespace GraphicsAPI
         std::vector<wgpu::BindGroupEntry> m_bindings;
         wgpu::PipelineLayout m_pipelineLayout = nullptr;
 
-        wgpu::Buffer m_modelViewProjectionUniformBuffer = nullptr;
+        std::unordered_map<Uniform::UniformType, std::pair<wgpu::Buffer, uint32_t>> m_uniformBuffers;
         wgpu::BindGroup m_bindGroup = nullptr;
         uint32_t m_sizeOfUniform = 0;
 
