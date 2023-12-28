@@ -6,6 +6,7 @@
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
 #include <Walnut/GLM/GLM.h>
+#include "Uniform.h"
 
 namespace GraphicsAPI
 {
@@ -25,7 +26,7 @@ namespace GraphicsAPI
         void SetSizeOfUniform(uint32_t sizeOfUniform);
         void SetClearColor(glm::vec4 clearColor);
         void CreateBindGroup();
-        void CreateUniformBuffer(size_t dynamicOffsetCount);
+        void CreateUniformBuffer(size_t dynamicOffsetCount, Uniform::UniformType type = Uniform::UniformType::ModelViewProjection);
         void CreateDepthTexture();
         void CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData, uint32_t mipMapLevelCount);
         void CreateTextureSampler();
@@ -59,9 +60,10 @@ namespace GraphicsAPI
 
         uint32_t m_bindGroupLayoutEntryCount = 0;
         wgpu::BindGroupLayout m_bindGroupLayout = nullptr;
+        std::vector<wgpu::BindGroupEntry> m_bindings;
         wgpu::PipelineLayout m_pipelineLayout = nullptr;
 
-        wgpu::Buffer m_uniformBuffer = nullptr;
+        wgpu::Buffer m_modelViewProjectionUniformBuffer = nullptr;
         wgpu::BindGroup m_bindGroup = nullptr;
         size_t m_dynamicOffsetCount = 0;
         uint32_t m_sizeOfUniform = 0;

@@ -235,37 +235,41 @@ void WebGPURenderer3D::CreateBindGroup()
         pipelineLayoutDesc.bindGroupLayouts = (WGPUBindGroupLayout*)&m_bindGroupLayout;
         m_pipelineLayout = WebGPU::GetDevice().createPipelineLayout(pipelineLayoutDesc);
 
-        // Create a binding
-        std::vector<wgpu::BindGroupEntry> bindings;
         assert(m_bindGroupLayoutEntryCount > 0);
-        bindings.resize(m_bindGroupLayoutEntryCount);
+        m_bindings.resize(0);
 
-        bindings[0].binding = 0;
-        bindings[0].buffer = m_uniformBuffer;
-        bindings[0].offset = 0;
-        assert(m_sizeOfUniform > 0);
-        bindings[0].size = m_sizeOfUniform;
-
+        if (m_modelViewProjectionUniformBuffer)
+        {
+            m_bindings.emplace_back();
+            m_bindings[0].binding = 0;
+            m_bindings[0].buffer = m_modelViewProjectionUniformBuffer;
+            m_bindings[0].offset = 0;
+            assert(m_sizeOfUniform > 0);
+            m_bindings[0].size = m_sizeOfUniform;
+        }
+        
         if (m_texturesAndViews.size() > 0)
         {
             assert(m_bindGroupLayoutEntryCount > 1);
-            bindings[1].binding = 1;
-	        bindings[1].textureView = m_texturesAndViews[0].second;
+            m_bindings.emplace_back();
+            m_bindings[1].binding = 1;
+	        m_bindings[1].textureView = m_texturesAndViews[0].second;
         }
 
         if (m_textureSampler)
         {
             assert(m_bindGroupLayoutEntryCount > 2);
-            bindings[2].binding = 2;
-            bindings[2].sampler = m_textureSampler;
+            m_bindings.emplace_back();
+            m_bindings[2].binding = 2;
+            m_bindings[2].sampler = m_textureSampler;
         }
 
         // A bind group contains one or multiple bindings
         wgpu::BindGroupDescriptor bindGroupDesc;
         bindGroupDesc.layout = m_bindGroupLayout;
         // There must be as many bindings as declared in the layout!
-        bindGroupDesc.entryCount = (uint32_t)bindings.size();
-        bindGroupDesc.entries = bindings.data();
+        bindGroupDesc.entryCount = (uint32_t)m_bindings.size();
+        bindGroupDesc.entries = m_bindings.data();
         m_bindGroup = WebGPU::GetDevice().createBindGroup(bindGroupDesc);
     }
 }
@@ -293,7 +297,7 @@ uint32_t WebGPURenderer3D::GetOffset(uint32_t uniformIndex)
     return uniformStride * uniformIndex;
 }
 
-void WebGPURenderer3D::CreateUniformBuffer(size_t dynamicOffsetCount)
+void WebGPURenderer3D::CreateUniformBuffer(size_t dynamicOffsetCount, Uniform::UniformType type)
 {
     assert(m_sizeOfUniform > 0);
     m_dynamicOffsetCount = dynamicOffsetCount;
@@ -304,19 +308,20 @@ void WebGPURenderer3D::CreateUniformBuffer(size_t dynamicOffsetCount)
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     bufferDesc.mappedAtCreation = false;
-    m_uniformBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+    bufferDesc.label = "ModelViewProjection";
+    m_modelViewProjectionUniformBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 }
 
 void WebGPURenderer3D::SetUniformData(const void* bufferData, uint32_t uniformIndex)
 {
-    if (m_uniformBuffer)
+    if (m_modelViewProjectionUniformBuffer)
     {
         // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, time), &bufferData.time, sizeof(MyUniforms::time));
         // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, color), &bufferData.color, sizeof(MyUniforms::color));
 
         auto offset = GetOffset(uniformIndex);
         assert(m_sizeOfUniform > 0);
-        WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offset, bufferData, m_sizeOfUniform);
+        WebGPU::GetQueue().writeBuffer(m_modelViewProjectionUniformBuffer, offset, bufferData, m_sizeOfUniform);
     }
     else
     {
