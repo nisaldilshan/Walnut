@@ -61,19 +61,14 @@ void Renderer3D::CreateTextureSampler()
     m_rendererBackend->CreateTextureSampler();
 }
 
-void Renderer3D::SetSizeOfUniform(uint32_t sizeOfUniform)
-{
-    m_rendererBackend->SetSizeOfUniform(sizeOfUniform);
-}
-
 void Renderer3D::SetClearColor(glm::vec4 clearColor)
 {
     m_rendererBackend->SetClearColor(clearColor);
 }
 
-void Renderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type)
+void Renderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type, uint32_t sizeOfUniform)
 {
-    m_rendererBackend->CreateUniformBuffer(maxUniformIndex, type);
+    m_rendererBackend->CreateUniformBuffer(maxUniformIndex, type, sizeOfUniform);
 }
 
 void Renderer3D::SetUniformBufferData(const void* bufferData, uint32_t uniformIndex)

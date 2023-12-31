@@ -75,19 +75,26 @@ public:
 			time: f32,
 		};
 
+		// /**
+		//  * A structure holding the lighting settings
+		//  */
+		// struct LightingUniforms {
+		// 	directions: array<vec4f, 2>,
+		// 	colors: array<vec4f, 2>,
+		// }
+
 		@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
 		@group(0) @binding(1) var baseColorTexture: texture_2d<f32>;
 		@group(0) @binding(2) var textureSampler: sampler;
+		//@group(0) @binding(3) var<uniform> uLighting: LightingUniforms;
 
 		@vertex
 		fn vs_main(in: VertexInput) -> VertexOutput {
 			var out: VertexOutput;
 			out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * uMyUniforms.modelMatrix * vec4f(in.position, 1.0);
-			// Forward the normal
 			out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
 			out.color = in.color;
 			out.uv = in.uv;
-
 			return out;
 		}
 
@@ -102,6 +109,13 @@ public:
 			let shading1 = max(0.0, dot(lightDirection1, normal));
 			let shading2 = max(0.0, dot(lightDirection2, normal));
 			let shading = shading1 * lightColor1 * 2 + shading2 * lightColor2 * 3;
+
+			// var shading = vec3f(0.0);
+			// for (var i: i32 = 0; i < 2; i++) {
+			// 	let direction = normalize(uLighting.directions[i].xyz);
+			// 	let color = uLighting.colors[i].rgb;
+			// 	shading += max(0.0, dot(direction, normal)) * color;
+			// }
 			
 			// Sample texture
 			let baseColor = textureSample(baseColorTexture, textureSampler, in.uv).rgb;
@@ -258,10 +272,9 @@ private:
 		samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
-		m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 		m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
 
-		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection);
+		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
 
 		m_renderer->Init();
 	}

@@ -209,12 +209,6 @@ void WebGPURenderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGro
 	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
 }
 
-void WebGPURenderer3D::SetSizeOfUniform(uint32_t sizeOfUniform)
-{
-    assert(sizeOfUniform > 0);
-    m_sizeOfUniform = sizeOfUniform;
-}
-
 void WebGPURenderer3D::SetClearColor(glm::vec4 clearColor)
 {
     m_clearColor = wgpu::Color{clearColor.x, clearColor.y, clearColor.z, clearColor.w};
@@ -300,20 +294,19 @@ uint32_t WebGPURenderer3D::GetOffset(const uint32_t& uniformIndex, const uint32_
     return uniformStride * uniformIndex;
 }
 
-void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type)
+void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type, uint32_t sizeOfUniform)
 {
-    assert(m_sizeOfUniform > 0);
     // Create uniform buffer
     // The buffer will only contain 1 float with the value of uTime
     wgpu::BufferDescriptor bufferDesc;
-    bufferDesc.size = m_sizeOfUniform + GetOffset(maxUniformIndex, m_sizeOfUniform);
+    bufferDesc.size = sizeOfUniform + GetOffset(maxUniformIndex, sizeOfUniform);
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     bufferDesc.mappedAtCreation = false;
     bufferDesc.label = "ModelViewProjection";
 
     auto buffer = WebGPU::GetDevice().createBuffer(bufferDesc);
-    m_uniformBuffers.insert({Uniform::UniformType::ModelViewProjection, std::make_pair(buffer, m_sizeOfUniform)});
+    m_uniformBuffers.insert({Uniform::UniformType::ModelViewProjection, std::make_pair(buffer, sizeOfUniform)});
 }
 
 void WebGPURenderer3D::SetUniformData(const void* bufferData, uint32_t uniformIndex)
@@ -350,7 +343,12 @@ void WebGPURenderer3D::Render(uint32_t uniformIndex)
     // Set binding group
     if (m_bindGroup)
     {
-        uint32_t dynamicOffset = uniformIndex * GetOffset(1, m_sizeOfUniform); // TODO: better to use a array of offsets and select a offsert from it
+        uint32_t dynamicOffset = 0;
+        auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
+        if (modelViewProjectionUniformBuffer != m_uniformBuffers.end())
+        {
+            dynamicOffset = uniformIndex * GetOffset(1, modelViewProjectionUniformBuffer->second.second); // TODO: better to use a array of offsets and select a offset from it
+        }
         uint32_t dynamicOffsetCount = 1; // because we have enabled dynamic offset in only one binding in the bind group
         m_renderPass.setBindGroup(0, m_bindGroup, dynamicOffsetCount, &dynamicOffset);
     }
@@ -373,7 +371,12 @@ void WebGPURenderer3D::RenderIndexed(uint32_t uniformIndex)
     m_renderPass.setIndexBuffer(m_indexBuffer, wgpu::IndexFormat::Uint16, 0, m_indexCount * sizeof(uint16_t));
 
     // Set binding group
-    uint32_t dynamicOffset = uniformIndex * GetOffset(1, m_sizeOfUniform); // TODO: better to use a array of offsets and select a offsert from it
+    uint32_t dynamicOffset = 0;
+    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
+    if (modelViewProjectionUniformBuffer != m_uniformBuffers.end())
+    {
+        dynamicOffset = uniformIndex * GetOffset(1, modelViewProjectionUniformBuffer->second.second); // TODO: better to use a array of offsets and select a offset from it
+    }
     uint32_t dynamicOffsetCount = 1; // because we have enabled dynamic offset in only one binding in the bind group
     m_renderPass.setBindGroup(0, m_bindGroup, dynamicOffsetCount, &dynamicOffset);
     m_renderPass.drawIndexed(m_indexCount, 1, 0, 0, 0);
