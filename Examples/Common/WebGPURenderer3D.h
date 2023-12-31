@@ -29,7 +29,7 @@ namespace GraphicsAPI
         void CreateDepthTexture();
         void CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData, uint32_t mipMapLevelCount);
         void CreateTextureSampler();
-        void SetUniformData(const void* bufferData, uint32_t uniformIndex);
+        void SetUniformData(Uniform::UniformType type, const void* bufferData, uint32_t uniformIndex);
         void SimpleRender();
         void Render(uint32_t uniformIndex);
         void RenderIndexed(uint32_t uniformIndex);

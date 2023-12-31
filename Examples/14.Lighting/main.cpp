@@ -33,6 +33,13 @@ struct MyUniforms {
     float time;
     float _pad[3];
 };
+static_assert(sizeof(MyUniforms) % 16 == 0);
+
+struct LightingUniforms {
+    std::array<glm::vec4, 2> directions;
+    std::array<glm::vec4, 2> colors;
+};
+static_assert(sizeof(LightingUniforms) % 16 == 0);
 
 class Renderer2DLayer : public Walnut::Layer
 {
@@ -78,15 +85,15 @@ public:
 		// /**
 		//  * A structure holding the lighting settings
 		//  */
-		// struct LightingUniforms {
-		// 	directions: array<vec4f, 2>,
-		// 	colors: array<vec4f, 2>,
-		// }
+		struct LightingUniforms {
+			directions: array<vec4f, 2>,
+			colors: array<vec4f, 2>,
+		}
 
 		@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
 		@group(0) @binding(1) var baseColorTexture: texture_2d<f32>;
 		@group(0) @binding(2) var textureSampler: sampler;
-		//@group(0) @binding(3) var<uniform> uLighting: LightingUniforms;
+		@group(0) @binding(3) var<uniform> uLighting: LightingUniforms;
 
 		@vertex
 		fn vs_main(in: VertexInput) -> VertexOutput {
@@ -102,20 +109,12 @@ public:
 		fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 			// Compute shading
 			let normal = normalize(in.normal);
-			let lightDirection1 = vec3f(0.5, -0.9, 0.1);
-			let lightDirection2 = vec3f(0.2, 0.4, 0.3);
-			let lightColor1 = vec3f(1.0, 0.9, 0.6);
-			let lightColor2 = vec3f(0.6, 0.9, 1.0);
-			let shading1 = max(0.0, dot(lightDirection1, normal));
-			let shading2 = max(0.0, dot(lightDirection2, normal));
-			let shading = shading1 * lightColor1 * 2 + shading2 * lightColor2 * 3;
-
-			// var shading = vec3f(0.0);
-			// for (var i: i32 = 0; i < 2; i++) {
-			// 	let direction = normalize(uLighting.directions[i].xyz);
-			// 	let color = uLighting.colors[i].rgb;
-			// 	shading += max(0.0, dot(direction, normal)) * color;
-			// }
+			var shading = vec3f(0.0);
+			for (var i: i32 = 0; i < 2; i++) {
+				let direction = normalize(uLighting.directions[i].xyz);
+				let color = uLighting.colors[i].rgb;
+				shading += max(0.0, dot(direction, normal)) * color * 2;
+			}
 			
 			// Sample texture
 			let baseColor = textureSample(baseColorTexture, textureSampler, in.uv).rgb;
@@ -160,10 +159,9 @@ public:
 
 		m_renderer->BeginRenderPass();
 
-		m_uniformData.viewMatrix = m_camera->GetViewMatrix();
-		m_uniformData.projectionMatrix = m_camera->GetProjectionMatrix();
+		m_myUniformData.viewMatrix = m_camera->GetViewMatrix();
+		m_myUniformData.projectionMatrix = m_camera->GetProjectionMatrix();
 
-		// Upload first value
 		float angle1 = 2.0f;
 		const float time = static_cast<float>(glfwGetTime());	
 		glm::mat4x4 M1(1.0);
@@ -171,12 +169,18 @@ public:
 		M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
 		M1 = glm::translate(M1, glm::vec3(0.0, 0.0, 0.0));
 		M1 = glm::scale(M1, glm::vec3(0.3f));
-		m_uniformData.modelMatrix = M1;
+		m_myUniformData.modelMatrix = M1;
 
-		m_uniformData.time = time; // glfwGetTime returns a double
-		m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
-		m_renderer->SetUniformBufferData(&m_uniformData, 0);
-		////
+		m_myUniformData.time = time;
+		m_myUniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
+		m_renderer->SetUniformBufferData(Uniform::UniformType::ModelViewProjection, &m_myUniformData, 0);
+
+		// Initial values
+		m_lightingUniformData.directions[0] = { 0.5f, -0.9f, 0.1f, 0.0f };
+		m_lightingUniformData.directions[1] = { 0.2f, 0.4f, 0.3f, 0.0f };
+		m_lightingUniformData.colors[0] = { 1.0f, 0.0f, 0.0f, 1.0f };
+		m_lightingUniformData.colors[1] = { 0.0f, 1.0f, 1.0f, 1.0f };
+		m_renderer->SetUniformBufferData(Uniform::UniformType::Lighting, &m_lightingUniformData, 0);
 
 		m_renderer->Render(0);
 
@@ -250,7 +254,7 @@ private:
 		// Create binding layouts
 
 		// Since we now have 2 bindings, we use a vector to store them
-		std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(3, wgpu::Default);
+		std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(4, wgpu::Default);
 		// The uniform buffer binding that we already had
 		wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
 		uniformBindingLayout.binding = 0;
@@ -272,9 +276,17 @@ private:
 		samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
+		// Lighting Uniforms
+		wgpu::BindGroupLayoutEntry& lightingUniformLayout = bindingLayoutEntries[3];
+		lightingUniformLayout.binding = 3;
+		lightingUniformLayout.visibility = wgpu::ShaderStage::Fragment; // only Fragment is needed
+		lightingUniformLayout.buffer.type = wgpu::BufferBindingType::Uniform;
+		lightingUniformLayout.buffer.minBindingSize = sizeof(LightingUniforms);
+
 		m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
 
 		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
+		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::Lighting, sizeof(LightingUniforms));
 
 		m_renderer->Init();
 	}
@@ -285,7 +297,8 @@ private:
     float m_lastRenderTime = 0.0f;
 	glm::vec4 m_clearColor = glm::vec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	MyUniforms m_uniformData;
+	MyUniforms m_myUniformData;
+	LightingUniforms m_lightingUniformData;
 	std::vector<VertexAttributes> m_vertexData;
 	std::unique_ptr<Texture::TextureHandle> m_texHandle = nullptr;
 	const char* m_shaderSource = nullptr;

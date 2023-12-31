@@ -41,7 +41,7 @@ public:
     void CreateTextureSampler();
     void SetClearColor(glm::vec4 clearColor);
     void CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type, uint32_t sizeOfUniform);
-    void SetUniformBufferData(const void* bufferData, uint32_t uniformIndex);
+    void SetUniformBufferData(Uniform::UniformType type, const void* bufferData, uint32_t uniformIndex);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }

@@ -232,14 +232,14 @@ void WebGPURenderer3D::CreateBindGroup()
         {
             const auto buffer = modelViewProjectionUniformBuffer->second.first;
             const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
+            assert(bufferSize > 0);
             m_bindings.emplace_back();
             m_bindings[0].binding = 0;
             m_bindings[0].buffer = buffer;
             m_bindings[0].offset = 0;
-            assert(bufferSize > 0);
             m_bindings[0].size = bufferSize;
         }
-        
+
         if (m_texturesAndViews.size() > 0)
         {
             assert(m_bindGroupLayoutEntryCount > 1);
@@ -254,6 +254,19 @@ void WebGPURenderer3D::CreateBindGroup()
             m_bindings.emplace_back();
             m_bindings[2].binding = 2;
             m_bindings[2].sampler = m_textureSampler;
+        }
+
+        auto lightingUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::Lighting);
+        if (lightingUniformBuffer != m_uniformBuffers.end())
+        {
+            const auto buffer = lightingUniformBuffer->second.first;
+            const auto bufferSize = lightingUniformBuffer->second.second;
+            assert(bufferSize > 0);
+            m_bindings.emplace_back();
+            m_bindings[3].binding = 3;
+            m_bindings[3].buffer = buffer;
+            m_bindings[3].offset = 0;
+            m_bindings[3].size = bufferSize;
         }
 
         // A bind group contains one or multiple bindings
@@ -303,22 +316,27 @@ void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::Unif
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     bufferDesc.mappedAtCreation = false;
-    bufferDesc.label = "ModelViewProjection";
+
+    if (type == Uniform::UniformType::ModelViewProjection)
+    {
+        bufferDesc.label = "ModelViewProjection";
+    }
+    else
+    {
+        bufferDesc.label = "Lighting";
+    }
 
     auto buffer = WebGPU::GetDevice().createBuffer(bufferDesc);
-    m_uniformBuffers.insert({Uniform::UniformType::ModelViewProjection, std::make_pair(buffer, sizeOfUniform)});
+    m_uniformBuffers.insert({type, std::make_pair(buffer, sizeOfUniform)});
 }
 
-void WebGPURenderer3D::SetUniformData(const void* bufferData, uint32_t uniformIndex)
+void WebGPURenderer3D::SetUniformData(Uniform::UniformType type, const void* bufferData, uint32_t uniformIndex)
 {
-    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
-    if (modelViewProjectionUniformBuffer != m_uniformBuffers.end())
+    auto uniformBuffer = m_uniformBuffers.find(type);
+    if (uniformBuffer != m_uniformBuffers.end())
     {
-        // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, time), &bufferData.time, sizeof(MyUniforms::time));
-        // WebGPU::GetQueue().writeBuffer(m_uniformBuffer, offsetof(MyUniforms, color), &bufferData.color, sizeof(MyUniforms::color));
-
-        const auto buffer = modelViewProjectionUniformBuffer->second.first;
-        const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
+        const auto buffer = uniformBuffer->second.first;
+        const auto bufferSize = uniformBuffer->second.second;
 
         auto offset = GetOffset(uniformIndex, bufferSize);
         assert(bufferSize > 0);

@@ -148,7 +148,7 @@ public:
 
 		m_uniformData.time = time; // glfwGetTime returns a double
 		m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
-		m_renderer->SetUniformBufferData(&m_uniformData, 0);
+		m_renderer->SetUniformBufferData(Uniform::UniformType::ModelViewProjection, &m_uniformData, 0);
 		////
 
 		m_renderer->Render(0);
