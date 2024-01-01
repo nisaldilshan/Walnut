@@ -39,9 +39,9 @@ struct LightingUniforms {
     std::array<glm::vec4, 2> directions;
     std::array<glm::vec4, 2> colors;
 	// Material properties
-	float hardness = 32.0f;
-	float kd = 1.0f;
-	float ks = 0.4f;
+	float hardness = 16.0f;
+	float kd = 1.5f;
+	float ks = 0.5f;
 
 	float _pad[1];
 };
@@ -200,8 +200,8 @@ public:
 		m_renderer->SetUniformBufferData(Uniform::UniformType::ModelViewProjection, &m_myUniformData, 0);
 
 		// Initial values
-		m_lightingUniformData.directions[0] = { 0.5f, -0.9f, 0.1f, 0.0f };
-		m_lightingUniformData.directions[1] = { 0.2f, 0.4f, 0.3f, 0.0f };
+		m_lightingUniformData.directions[0] = { 0.5f, 0.5f, 0.5f, 0.0f };
+		m_lightingUniformData.directions[1] = { -0.5f, -0.5f, -0.5f, 0.0f };
 		m_lightingUniformData.colors[0] = { 1.0f, 0.9f, 0.6f, 1.0f };
 		m_lightingUniformData.colors[1] = { 0.6f, 0.9f, 1.0f, 1.0f };
 		m_renderer->SetUniformBufferData(Uniform::UniformType::Lighting, &m_lightingUniformData, 0);
