@@ -111,7 +111,7 @@ public:
 
 			//
 			std::vector<VertexAttributes> vertexData;
-			bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/cube.obj", vertexData);
+			bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/Meshes/cube.obj", vertexData);
 			if (!success) 
 			{
 				std::cerr << "Could not load geometry!" << std::endl;
