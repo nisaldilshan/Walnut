@@ -21,7 +21,7 @@ void PerspectiveCamera::OnUpdate()
 {
     if (Walnut::Input::IsKeyDown(Walnut::Key::LeftAlt))
     {
-        std::cout << "Alt Down!!" << std::endl;
+        //std::cout << "Alt Down!!" << std::endl;
         const glm::vec2& mouse = Walnut::Input::GetMousePosition();
         static glm::vec2 initialMousePosition{ 0.0f, 0.0f };
         glm::vec2 delta = (mouse - initialMousePosition) * 0.003f;
@@ -36,9 +36,13 @@ void PerspectiveCamera::OnUpdate()
     }
 }
 
+glm::vec3 PerspectiveCamera::GetPosition() const
+{
+    return m_Position; 
+}
+
 glm::mat4x4 PerspectiveCamera::GetViewMatrix() 
-{ 
-    //m_view = glm::lookAt(glm::vec3(-2.0f, -3.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0, 0, 1));
+{
     UpdateView();
     return m_view; 
 }
@@ -58,15 +62,16 @@ glm::quat PerspectiveCamera::GetOrientation() const
     return glm::quat(glm::vec3(-m_Pitch, -m_Yaw, 0.0f));
 }
 
-glm::vec3 PerspectiveCamera::CalculatePosition() const
+void PerspectiveCamera::UpdatePosition()
 {
-    return m_FocalPoint - GetForwardDirection() * m_Distance;
+    m_Position = m_FocalPoint - GetForwardDirection() * m_Distance;
 }
 
 void PerspectiveCamera::UpdateView()
 {
-    m_Position = CalculatePosition();
+    UpdatePosition();
 
+    //m_view = glm::lookAt(glm::vec3(-2.0f, -3.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0, 0, 1));
     glm::quat orientation = GetOrientation();
     m_view = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
     m_view = glm::inverse(m_view);
