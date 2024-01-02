@@ -245,15 +245,23 @@ void WebGPURenderer3D::CreateBindGroup()
             assert(m_bindGroupLayoutEntryCount > 1);
             m_bindings.emplace_back();
             m_bindings[1].binding = 1;
-	        m_bindings[1].textureView = m_texturesAndViews[0].second;
+	        m_bindings[1].textureView = m_texturesAndViews[0].second; // m_texturesAndViews[0] is the base color texture
         }
 
-        if (m_textureSampler)
+        if (m_texturesAndViews.size() > 1)
         {
             assert(m_bindGroupLayoutEntryCount > 2);
             m_bindings.emplace_back();
             m_bindings[2].binding = 2;
-            m_bindings[2].sampler = m_textureSampler;
+            m_bindings[2].textureView = m_texturesAndViews[1].second;
+        }
+
+        if (m_textureSampler)
+        {
+            assert(m_bindGroupLayoutEntryCount > 3);
+            m_bindings.emplace_back();
+            m_bindings[3].binding = 3;
+            m_bindings[3].sampler = m_textureSampler;
         }
 
         auto lightingUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::Lighting);
@@ -263,10 +271,10 @@ void WebGPURenderer3D::CreateBindGroup()
             const auto bufferSize = lightingUniformBuffer->second.second;
             assert(bufferSize > 0);
             m_bindings.emplace_back();
-            m_bindings[3].binding = 3;
-            m_bindings[3].buffer = buffer;
-            m_bindings[3].offset = 0;
-            m_bindings[3].size = bufferSize;
+            m_bindings[4].binding = 4;
+            m_bindings[4].buffer = buffer;
+            m_bindings[4].offset = 0;
+            m_bindings[4].size = bufferSize;
         }
 
         // A bind group contains one or multiple bindings

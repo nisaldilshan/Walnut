@@ -39,8 +39,8 @@ struct LightingUniforms {
     std::array<glm::vec4, 2> directions;
     std::array<glm::vec4, 2> colors;
 	// Material properties
-	float hardness = 16.0f;
-	float kd = 1.5f;
+	float hardness = 50.0f;
+	float kd = 1.0f;
 	float ks = 0.5f;
 
 	float _pad[1];
@@ -52,15 +52,14 @@ class Renderer2DLayer : public Walnut::Layer
 public:
 	virtual void OnAttach() override
 	{
-		bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/Meshes/fourareen.obj", m_vertexData);
-		if (!success) 
-		{
-			std::cerr << "Could not load geometry!" << std::endl;
-			assert(false);
-		}
+		bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/Meshes/plane.obj", m_vertexData);
+		assert(success);
 
-		m_texHandle = Texture::loadTexture(RESOURCE_DIR "/Textures/fourareen2K_albedo.jpg");
-		assert(m_texHandle && m_texHandle->GetWidth() > 0 && m_texHandle->GetHeight() > 0 && m_texHandle->GetMipLevelCount() > 0);
+		auto baseColorTexture = Texture::loadTexture(RESOURCE_DIR "/Textures/cobblestone_floor_08_diff_2k.jpg");
+		assert(baseColorTexture && baseColorTexture->GetWidth() > 0 && baseColorTexture->GetHeight() > 0 && baseColorTexture->GetMipLevelCount() > 0);
+
+		auto normalTexture = Texture::loadTexture(RESOURCE_DIR "/Textures/cobblestone_floor_08_nor_gl_2k.png");
+		assert(normalTexture && normalTexture->GetWidth() > 0 && normalTexture->GetHeight() > 0 && normalTexture->GetMipLevelCount() > 0);
 
 		m_shaderSource = R"(
 		struct VertexInput {
@@ -103,8 +102,9 @@ public:
 
 		@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
 		@group(0) @binding(1) var baseColorTexture: texture_2d<f32>;
-		@group(0) @binding(2) var textureSampler: sampler;
-		@group(0) @binding(3) var<uniform> uLighting: LightingUniforms;
+		@group(0) @binding(2) var normalTexture: texture_2d<f32>;
+		@group(0) @binding(3) var textureSampler: sampler;
+		@group(0) @binding(4) var<uniform> uLighting: LightingUniforms;
 
 		@vertex
 		fn vs_main(in: VertexInput) -> VertexOutput {
@@ -120,8 +120,11 @@ public:
 
 		@fragment
 		fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-			// Compute shading
-			let N = normalize(in.normal);
+			// Sample normal
+			let normalMapStrength = 1.0; // could be a uniform
+			let encodedN = textureSample(normalTexture, textureSampler, in.uv).rgb;
+			let N = normalize(mix(in.normal, encodedN - 0.5, normalMapStrength));
+
 			let V = normalize(in.viewDirection);
 
 			// Sample texture
@@ -158,7 +161,8 @@ public:
 		m_renderer->SetShader(m_shaderSource);
 
 		m_renderer->CreateTextureSampler();
-		m_renderer->CreateTexture(m_texHandle->GetWidth(), m_texHandle->GetHeight(), m_texHandle->GetData(), m_texHandle->GetMipLevelCount());
+		m_renderer->CreateTexture(baseColorTexture->GetWidth(), baseColorTexture->GetHeight(), baseColorTexture->GetData(), baseColorTexture->GetMipLevelCount());
+		m_renderer->CreateTexture(normalTexture->GetWidth(), normalTexture->GetHeight(), normalTexture->GetData(), normalTexture->GetMipLevelCount());
 
 		m_camera = std::make_unique<Camera::PerspectiveCamera>(30.0f, 0.01f, 100.0f);
 	}
@@ -278,7 +282,7 @@ private:
 		// Create binding layouts
 
 		// Since we now have 2 bindings, we use a vector to store them
-		std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(4, wgpu::Default);
+		std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(5, wgpu::Default);
 		// The uniform buffer binding that we already had
 		wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
 		uniformBindingLayout.binding = 0;
@@ -294,15 +298,22 @@ private:
 		textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
 		textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
 
+		// The normal map binding
+		wgpu::BindGroupLayoutEntry& normalTextureBindingLayout = bindingLayoutEntries[2];
+		normalTextureBindingLayout.binding = 2;
+		normalTextureBindingLayout.visibility = wgpu::ShaderStage::Fragment;
+		normalTextureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
+		normalTextureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
+
 		// The sampler binding
-		wgpu::BindGroupLayoutEntry& samplerBindingLayout = bindingLayoutEntries[2];
-		samplerBindingLayout.binding = 2;
+		wgpu::BindGroupLayoutEntry& samplerBindingLayout = bindingLayoutEntries[3];
+		samplerBindingLayout.binding = 3;
 		samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
 		// Lighting Uniforms
-		wgpu::BindGroupLayoutEntry& lightingUniformLayout = bindingLayoutEntries[3];
-		lightingUniformLayout.binding = 3;
+		wgpu::BindGroupLayoutEntry& lightingUniformLayout = bindingLayoutEntries[4];
+		lightingUniformLayout.binding = 4;
 		lightingUniformLayout.visibility = wgpu::ShaderStage::Fragment; // only Fragment is needed
 		lightingUniformLayout.buffer.type = wgpu::BufferBindingType::Uniform;
 		lightingUniformLayout.buffer.minBindingSize = sizeof(LightingUniforms);
@@ -324,7 +335,6 @@ private:
 	MyUniforms m_myUniformData;
 	LightingUniforms m_lightingUniformData;
 	std::vector<VertexAttributes> m_vertexData;
-	std::unique_ptr<Texture::TextureHandle> m_texHandle = nullptr;
 	const char* m_shaderSource = nullptr;
 
 	std::unique_ptr<Camera::PerspectiveCamera> m_camera;
