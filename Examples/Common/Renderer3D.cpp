@@ -20,7 +20,6 @@ void Renderer3D::OnResize(uint32_t width, uint32_t height)
 
 void Renderer3D::Init()
 {
-    m_rendererBackend->CreateBindGroup();
     m_rendererBackend->CreatePipeline();
     m_rendererBackend->CreateDepthTexture();
 }
@@ -45,10 +44,9 @@ void Renderer3D::SetIndexBufferData(const std::vector<uint16_t>& bufferData)
     m_rendererBackend->CreateIndexBuffer(bufferData);
 }
 
-
-void Renderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
+void Renderer3D::CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
 {
-    m_rendererBackend->SetBindGroupLayoutEntries(bindGroupLayoutEntries);
+    m_rendererBackend->CreateBindGroup(bindGroupLayoutEntries);
 }
 
 void Renderer3D::CreateTexture(uint32_t width, uint32_t height, const void* textureData, uint32_t mipMapLevelCount)

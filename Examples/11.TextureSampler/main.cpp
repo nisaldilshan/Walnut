@@ -177,8 +177,6 @@ public:
 			samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 			samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
-			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
-
 			m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
 
 			constexpr uint32_t texWidth = 256;
@@ -197,6 +195,7 @@ public:
 			m_renderer->CreateTextureSampler();
 			m_renderer->CreateTexture(texWidth, texHeight, pixels.data(), 8);
 
+			m_renderer->CreateBindGroup(bindingLayoutEntries);
 			m_renderer->Init();
         }
 

@@ -177,10 +177,9 @@ public:
 			// Make this binding dynamic so we can offset it between draw calls
 			bGLayoutEntry.buffer.hasDynamicOffset = true;
 
-			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
-
 			m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
 
+			m_renderer->CreateBindGroup(bindingLayoutEntries);
 			m_renderer->Init();	
         }
 

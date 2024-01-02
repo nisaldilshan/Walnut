@@ -173,8 +173,6 @@ public:
 			textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
 			textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
 
-			m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
-
 			m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
 
 			constexpr uint32_t texWidth = 256;
@@ -192,6 +190,7 @@ public:
 			}
 			m_renderer->CreateTexture(texWidth, texHeight, pixels.data(), 1);
 
+			m_renderer->CreateBindGroup(bindingLayoutEntries);
 			m_renderer->Init();
         }
 

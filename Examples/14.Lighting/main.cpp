@@ -307,11 +307,10 @@ private:
 		lightingUniformLayout.buffer.type = wgpu::BufferBindingType::Uniform;
 		lightingUniformLayout.buffer.minBindingSize = sizeof(LightingUniforms);
 
-		m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
-
 		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
 		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::Lighting, sizeof(LightingUniforms));
 
+		m_renderer->CreateBindGroup(bindingLayoutEntries);
 		m_renderer->Init();
 	}
 

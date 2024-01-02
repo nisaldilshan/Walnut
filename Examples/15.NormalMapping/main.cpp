@@ -280,11 +280,10 @@ private:
 		m_renderer->SetVertexBufferData(m_vertexData.data(), m_vertexData.size() * sizeof(VertexAttributes), vertexBufferLayout);
 
 		// Create binding layouts
-
-		// Since we now have 2 bindings, we use a vector to store them
 		std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(5, wgpu::Default);
 		// The uniform buffer binding that we already had
 		wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
+		uniformBindingLayout.setDefault();
 		uniformBindingLayout.binding = 0;
 		uniformBindingLayout.visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
 		uniformBindingLayout.buffer.type = wgpu::BufferBindingType::Uniform;
@@ -293,6 +292,7 @@ private:
 
 		// The texture binding
 		wgpu::BindGroupLayoutEntry& textureBindingLayout = bindingLayoutEntries[1];
+		textureBindingLayout.setDefault();
 		textureBindingLayout.binding = 1;
 		textureBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
@@ -300,6 +300,7 @@ private:
 
 		// The normal map binding
 		wgpu::BindGroupLayoutEntry& normalTextureBindingLayout = bindingLayoutEntries[2];
+		normalTextureBindingLayout.setDefault();
 		normalTextureBindingLayout.binding = 2;
 		normalTextureBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		normalTextureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
@@ -307,22 +308,23 @@ private:
 
 		// The sampler binding
 		wgpu::BindGroupLayoutEntry& samplerBindingLayout = bindingLayoutEntries[3];
+		samplerBindingLayout.setDefault();
 		samplerBindingLayout.binding = 3;
 		samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
 		// Lighting Uniforms
 		wgpu::BindGroupLayoutEntry& lightingUniformLayout = bindingLayoutEntries[4];
+		lightingUniformLayout.setDefault();
 		lightingUniformLayout.binding = 4;
 		lightingUniformLayout.visibility = wgpu::ShaderStage::Fragment; // only Fragment is needed
 		lightingUniformLayout.buffer.type = wgpu::BufferBindingType::Uniform;
 		lightingUniformLayout.buffer.minBindingSize = sizeof(LightingUniforms);
 
-		m_renderer->SetBindGroupLayoutEntries(bindingLayoutEntries);
-
 		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
 		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::Lighting, sizeof(LightingUniforms));
 
+		m_renderer->CreateBindGroup(bindingLayoutEntries);
 		m_renderer->Init();
 	}
 

@@ -198,91 +198,133 @@ void WebGPURenderer3D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData
     std::cout << "Index buffer: " << m_indexBuffer << std::endl;
 }
 
-
-void WebGPURenderer3D::SetBindGroupLayoutEntries(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
-{
-    // Create a bind group layout using a vector of layout entries
-    m_bindGroupLayoutEntryCount = (uint32_t)bindGroupLayoutEntries.size();
-	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
-	bindGroupLayoutDesc.entryCount = m_bindGroupLayoutEntryCount;
-	bindGroupLayoutDesc.entries = bindGroupLayoutEntries.data();
-	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
-}
-
 void WebGPURenderer3D::SetClearColor(glm::vec4 clearColor)
 {
     m_clearColor = wgpu::Color{clearColor.x, clearColor.y, clearColor.z, clearColor.w};
 }
 
-void WebGPURenderer3D::CreateBindGroup()
+void WebGPURenderer3D::CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
 {
+    // Create a bind group layout using a vector of layout entries
+    auto bindGroupLayoutEntryCount = (uint32_t)bindGroupLayoutEntries.size();
+	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
+	bindGroupLayoutDesc.entryCount = bindGroupLayoutEntryCount;
+	bindGroupLayoutDesc.entries = bindGroupLayoutEntries.data();
+    bindGroupLayoutDesc.label = "MainBindGroupLayout";
+	m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
+
     if (m_bindGroupLayout)
     {
         // Create the pipeline layout
         wgpu::PipelineLayoutDescriptor pipelineLayoutDesc;
         pipelineLayoutDesc.bindGroupLayoutCount = 1;
         pipelineLayoutDesc.bindGroupLayouts = (WGPUBindGroupLayout*)&m_bindGroupLayout;
+        pipelineLayoutDesc.label = "PipelineLayout";
         m_pipelineLayout = WebGPU::GetDevice().createPipelineLayout(pipelineLayoutDesc);
 
-        assert(m_bindGroupLayoutEntryCount > 0);
-        m_bindings.resize(0);
+        assert(bindGroupLayoutEntryCount > 0);
+        std::vector<wgpu::BindGroupEntry> bindings;
+        bindings.resize(bindGroupLayoutEntryCount);
 
-        auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
-        if (modelViewProjectionUniformBuffer != m_uniformBuffers.end())
+        for (const auto& bindGroupLayoutEntry : bindGroupLayoutEntries)
         {
-            const auto buffer = modelViewProjectionUniformBuffer->second.first;
-            const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
-            assert(bufferSize > 0);
-            m_bindings.emplace_back();
-            m_bindings[0].binding = 0;
-            m_bindings[0].buffer = buffer;
-            m_bindings[0].offset = 0;
-            m_bindings[0].size = bufferSize;
-        }
+            auto bindingIndex = bindGroupLayoutEntry.binding;
+            bindings[bindingIndex].binding = bindingIndex;
 
-        if (m_texturesAndViews.size() > 0)
-        {
-            assert(m_bindGroupLayoutEntryCount > 1);
-            m_bindings.emplace_back();
-            m_bindings[1].binding = 1;
-	        m_bindings[1].textureView = m_texturesAndViews[0].second; // m_texturesAndViews[0] is the base color texture
+            if (bindGroupLayoutEntry.buffer.type == wgpu::BufferBindingType::Uniform)
+            {
+                if (bindingIndex == 0) // this is main uniform buffer
+                {
+                    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
+                    const auto buffer = modelViewProjectionUniformBuffer->second.first;
+                    const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
+                    bindings[bindingIndex].buffer = buffer;
+                    bindings[bindingIndex].offset = 0;
+                    bindings[bindingIndex].size = bufferSize;
+                }
+                else // this is lighting uniforms
+                {
+                    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::Lighting);
+                    const auto buffer = modelViewProjectionUniformBuffer->second.first;
+                    const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
+                    bindings[bindingIndex].buffer = buffer;
+                    bindings[bindingIndex].offset = 0;
+                    bindings[bindingIndex].size = bufferSize;
+                }
+            }
+            else if (bindGroupLayoutEntry.sampler.type == wgpu::SamplerBindingType::Filtering)
+            {
+                bindings[bindingIndex].sampler = m_textureSampler;
+            }
+            else if (bindGroupLayoutEntry.texture.viewDimension == wgpu::TextureViewDimension::_2D)
+            {
+                if (bindingIndex == 1) // this is base color texture
+                {
+                    bindings[bindingIndex].textureView = m_texturesAndViews[0].second; // m_texturesAndViews[0] is the base color texture
+                }
+                else // this is normal texture
+                {
+                    bindings[bindingIndex].textureView = m_texturesAndViews[1].second; // m_texturesAndViews[0] is the normal texture
+                }
+            }
+            else
+            {
+                assert(false);
+            }
         }
+        
 
-        if (m_texturesAndViews.size() > 1)
-        {
-            assert(m_bindGroupLayoutEntryCount > 2);
-            m_bindings.emplace_back();
-            m_bindings[2].binding = 2;
-            m_bindings[2].textureView = m_texturesAndViews[1].second;
-        }
+        // auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
+        // if (modelViewProjectionUniformBuffer != m_uniformBuffers.end())
+        // {
+        //     const auto buffer = modelViewProjectionUniformBuffer->second.first;
+        //     const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
+        //     assert(bufferSize > 0);
+        //     bindings[0].binding = 0;
+        //     bindings[0].buffer = buffer;
+        //     bindings[0].offset = 0;
+        //     bindings[0].size = bufferSize;
+        // }
 
-        if (m_textureSampler)
-        {
-            assert(m_bindGroupLayoutEntryCount > 3);
-            m_bindings.emplace_back();
-            m_bindings[3].binding = 3;
-            m_bindings[3].sampler = m_textureSampler;
-        }
+        // if (m_texturesAndViews.size() > 0)
+        // {
+        //     assert(bindGroupLayoutEntryCount > 1);
+        //     bindings[1].binding = 1;
+	    //     bindings[1].textureView = m_texturesAndViews[0].second; // m_texturesAndViews[0] is the base color texture
+        // }
 
-        auto lightingUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::Lighting);
-        if (lightingUniformBuffer != m_uniformBuffers.end())
-        {
-            const auto buffer = lightingUniformBuffer->second.first;
-            const auto bufferSize = lightingUniformBuffer->second.second;
-            assert(bufferSize > 0);
-            m_bindings.emplace_back();
-            m_bindings[4].binding = 4;
-            m_bindings[4].buffer = buffer;
-            m_bindings[4].offset = 0;
-            m_bindings[4].size = bufferSize;
-        }
+        // if (m_texturesAndViews.size() > 1)
+        // {
+        //     assert(bindGroupLayoutEntryCount > 2);
+        //     bindings[2].binding = 2;
+        //     bindings[2].textureView = m_texturesAndViews[1].second;
+        // }
+
+        // if (m_textureSampler)
+        // {
+        //     assert(bindGroupLayoutEntryCount > 3);
+        //     bindings[3].binding = 3;
+        //     bindings[3].sampler = m_textureSampler;
+        // }
+
+        // auto lightingUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::Lighting);
+        // if (lightingUniformBuffer != m_uniformBuffers.end())
+        // {
+        //     const auto buffer = lightingUniformBuffer->second.first;
+        //     const auto bufferSize = lightingUniformBuffer->second.second;
+        //     assert(bufferSize > 0);
+        //     bindings[4].binding = 4;
+        //     bindings[4].buffer = buffer;
+        //     bindings[4].offset = 0;
+        //     bindings[4].size = bufferSize;
+        // }
 
         // A bind group contains one or multiple bindings
         wgpu::BindGroupDescriptor bindGroupDesc;
         bindGroupDesc.layout = m_bindGroupLayout;
         // There must be as many bindings as declared in the layout!
-        bindGroupDesc.entryCount = (uint32_t)m_bindings.size();
-        bindGroupDesc.entries = m_bindings.data();
+        bindGroupDesc.entryCount = (uint32_t)bindings.size();
+        bindGroupDesc.entries = bindings.data();
         m_bindGroup = WebGPU::GetDevice().createBindGroup(bindGroupDesc);
     }
 }
