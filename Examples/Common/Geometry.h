@@ -177,6 +177,52 @@ bool loadGeometryFromObj(const fs::path& path, std::vector<T>& vertexData) {
 	return true;
 }
 
+template<typename T1>
+glm::mat3x3 computeTBN(const T1 corners[3], const glm::vec3& expectedN) {
+	// What we call e in the figure
+	glm::vec3 ePos1 = corners[1].position - corners[0].position;
+	glm::vec3 ePos2 = corners[2].position - corners[0].position;
+
+	// What we call \bar e in the figure
+	glm::vec2 eUV1 = corners[1].uv - corners[0].uv;
+	glm::vec2 eUV2 = corners[2].uv - corners[0].uv;
+
+	glm::vec3 T = normalize(ePos1 * eUV2.y - ePos2 * eUV1.y);
+	glm::vec3 B = normalize(ePos2 * eUV1.x - ePos1 * eUV2.x);
+	glm::vec3 N = cross(T, B);
+
+	// Fix overall orientation
+	if (dot(N, expectedN) < 0.0) {
+		T = -T;
+		B = -B;
+		N = -N;
+	}
+
+	// Ortho-normalize the (T, B, expectedN) frame
+	// a. "Remove" the part of T that is along expected N
+	N = expectedN;
+	T = normalize(T - dot(T, N) * N);
+	// b. Recompute B from N and T
+	B = cross(N, T);
+
+	return glm::mat3x3(T, B, N);
+}
+
+template<typename T>
+void populateTextureFrameAttributes(std::vector<T>& vertexData) {
+	size_t triangleCount = vertexData.size() / 3;
+	// We compute the local texture frame per triangle
+	for (int t = 0; t < triangleCount; ++t) {
+		T* v = &vertexData[3 * t];
+
+		for (int k = 0; k < 3; ++k) {
+			glm::mat3x3 TBN = computeTBN<T>(v, v[k].normal);
+			v[k].tangent = TBN[0];
+			v[k].bitangent = TBN[1];
+		}
+	}
+}
+
 template<typename T>
 bool loadGeometryFromObjWithUV(const fs::path& path, std::vector<T>& vertexData) {
 	tinyobj::attrib_t attrib;

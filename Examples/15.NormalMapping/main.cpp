@@ -19,6 +19,10 @@
  */
 struct VertexAttributes {
 	glm::vec3 position;
+	// Texture mapping attributes represent the local frame in which
+	// normals sampled from the normal map are expressed.
+	glm::vec3 tangent; // T = local X axis
+	glm::vec3 bitangent; // B = local Y axis
 	glm::vec3 normal;
 	glm::vec3 color;
 	glm::vec2 uv;
@@ -39,9 +43,9 @@ struct LightingUniforms {
     std::array<glm::vec4, 2> directions;
     std::array<glm::vec4, 2> colors;
 	// Material properties
-	float hardness = 50.0f;
+	float hardness = 32.0f;
 	float kd = 1.0f;
-	float ks = 0.5f;
+	float ks = 0.3f;
 
 	float _pad[1];
 };
@@ -52,8 +56,9 @@ class Renderer2DLayer : public Walnut::Layer
 public:
 	virtual void OnAttach() override
 	{
-		bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/Meshes/plane.obj", m_vertexData);
+		bool success = Geometry::loadGeometryFromObjWithUV<VertexAttributes>(RESOURCE_DIR "/Meshes/cylinder.obj", m_vertexData);
 		assert(success);
+		Geometry::populateTextureFrameAttributes(m_vertexData);
 
 		auto baseColorTexture = Texture::loadTexture(RESOURCE_DIR "/Textures/cobblestone_floor_08_diff_2k.jpg");
 		assert(baseColorTexture && baseColorTexture->GetWidth() > 0 && baseColorTexture->GetHeight() > 0 && baseColorTexture->GetMipLevelCount() > 0);
@@ -67,6 +72,8 @@ public:
 			@location(1) normal: vec3f,
 			@location(2) color: vec3f,
 			@location(3) uv: vec2f,
+			@location(4) tangent: vec3f,
+			@location(5) bitangent: vec3f,
 		};
 
 		struct VertexOutput {
@@ -75,6 +82,8 @@ public:
 			@location(1) normal: vec3f,
 			@location(2) uv: vec2f,
 			@location(3) viewDirection: vec3<f32>,
+			@location(4) tangent: vec3f,
+			@location(5) bitangent: vec3f,
 		};
 
 		/**
@@ -111,6 +120,8 @@ public:
 			var out: VertexOutput;
 			let worldPosition = uMyUniforms.modelMatrix * vec4<f32>(in.position, 1.0);
 			out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * worldPosition;
+			out.tangent = (uMyUniforms.modelMatrix * vec4f(in.tangent, 0.0)).xyz;
+			out.bitangent = (uMyUniforms.modelMatrix * vec4f(in.bitangent, 0.0)).xyz;
 			out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
 			out.color = in.color;
 			out.uv = in.uv;
@@ -123,7 +134,15 @@ public:
 			// Sample normal
 			let normalMapStrength = 1.0; // could be a uniform
 			let encodedN = textureSample(normalTexture, textureSampler, in.uv).rgb;
-			let N = normalize(mix(in.normal, encodedN - 0.5, normalMapStrength));
+			let localN = encodedN * 2.0 - 1.0;
+			// The TBN matrix converts directions from the local space to the world space
+			let localToWorld = mat3x3f(
+				normalize(in.tangent),
+				normalize(in.bitangent),
+				normalize(in.normal),
+			);
+			let worldN = localToWorld * localN;
+			let N = normalize(mix(in.normal, worldN, normalMapStrength));
 
 			let V = normalize(in.viewDirection);
 
@@ -189,11 +208,10 @@ public:
 		m_myUniformData.viewMatrix = m_camera->GetViewMatrix();
 		m_myUniformData.projectionMatrix = m_camera->GetProjectionMatrix();
 
-		float angle1 = 2.0f;
 		const float time = static_cast<float>(glfwGetTime());	
 		glm::mat4x4 M1(1.0);
-		angle1 = time * 0.9f;
-		M1 = glm::rotate(M1, angle1, glm::vec3(0.0, 0.0, 1.0));
+		float angle = time;
+		M1 = glm::rotate(M1, angle, glm::vec3(0.0, 0.0, 1.0));
 		M1 = glm::translate(M1, glm::vec3(0.0, 0.0, 0.0));
 		M1 = glm::scale(M1, glm::vec3(0.3f));
 		m_myUniformData.modelMatrix = M1;
@@ -204,8 +222,8 @@ public:
 		m_renderer->SetUniformBufferData(Uniform::UniformType::ModelViewProjection, &m_myUniformData, 0);
 
 		// Initial values
-		m_lightingUniformData.directions[0] = { 0.5f, 0.5f, 0.5f, 0.0f };
-		m_lightingUniformData.directions[1] = { -0.5f, -0.5f, -0.5f, 0.0f };
+		m_lightingUniformData.directions[0] = { 0.5f, -0.9f, 0.1f, 0.0f };
+		m_lightingUniformData.directions[1] = { 0.2f, 0.4f, 0.3f, 0.0f };
 		m_lightingUniformData.colors[0] = { 1.0f, 0.9f, 0.6f, 1.0f };
 		m_lightingUniformData.colors[1] = { 0.6f, 0.9f, 1.0f, 1.0f };
 		m_renderer->SetUniformBufferData(Uniform::UniformType::Lighting, &m_lightingUniformData, 0);
@@ -247,7 +265,7 @@ private:
 	{
 		m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
 
-		std::vector<wgpu::VertexAttribute> vertexAttribs(4);
+		std::vector<wgpu::VertexAttribute> vertexAttribs(6);
 
 		// Position attribute
 		vertexAttribs[0].shaderLocation = 0;
@@ -268,6 +286,16 @@ private:
 		vertexAttribs[3].shaderLocation = 3;
 		vertexAttribs[3].format = wgpu::VertexFormat::Float32x2;
 		vertexAttribs[3].offset = offsetof(VertexAttributes, uv);
+
+		// Tangent attribute
+		vertexAttribs[4].shaderLocation = 4;
+		vertexAttribs[4].format = wgpu::VertexFormat::Float32x3;
+		vertexAttribs[4].offset = offsetof(VertexAttributes, tangent);
+
+		// Bitangent attribute
+		vertexAttribs[5].shaderLocation = 5;
+		vertexAttribs[5].format = wgpu::VertexFormat::Float32x3;
+		vertexAttribs[5].offset = offsetof(VertexAttributes, bitangent);
 
 		wgpu::VertexBufferLayout vertexBufferLayout;
 		vertexBufferLayout.attributeCount = (uint32_t)vertexAttribs.size();
