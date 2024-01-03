@@ -25,7 +25,9 @@ class Compute
 public:
     Compute();
     ~Compute();
-    void Init();
+    void SetShader(const char* shaderSource);
+    void CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
+    void CreatePipeline();
     void BeginComputePass();
     void EndComputePass();
 private:
