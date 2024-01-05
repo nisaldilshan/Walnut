@@ -25,6 +25,7 @@ namespace GraphicsAPI
         void EndComputePass();
     private:
         wgpu::BindGroupLayout m_bindGroupLayout = nullptr;
+        wgpu::BindGroup m_bindGroup = nullptr;
         wgpu::ShaderModule m_shaderModule = nullptr;
         wgpu::ComputePipeline m_pipeline = nullptr;
         wgpu::CommandEncoder m_commandEncoder = nullptr;
