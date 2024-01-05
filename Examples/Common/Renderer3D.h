@@ -7,7 +7,7 @@
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
 #include <Walnut/GLM/GLM.h>
-#include "Uniform.h"
+#include "Buffer.h"
 
 namespace GraphicsAPI
 {
