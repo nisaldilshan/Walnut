@@ -219,14 +219,14 @@ public:
 		m_myUniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
 		m_myUniformData.cameraWorldPosition = m_camera->GetPosition();
 		m_myUniformData.time = time;
-		m_renderer->SetUniformBufferData(Uniform::UniformType::ModelViewProjection, &m_myUniformData, 0);
+		m_renderer->SetUniformBufferData(UniformBuf::UniformType::ModelViewProjection, &m_myUniformData, 0);
 
 		// Initial values
 		m_lightingUniformData.directions[0] = { 0.5f, -0.9f, 0.1f, 0.0f };
 		m_lightingUniformData.directions[1] = { 0.2f, 0.4f, 0.3f, 0.0f };
 		m_lightingUniformData.colors[0] = { 1.0f, 0.9f, 0.6f, 1.0f };
 		m_lightingUniformData.colors[1] = { 0.6f, 0.9f, 1.0f, 1.0f };
-		m_renderer->SetUniformBufferData(Uniform::UniformType::Lighting, &m_lightingUniformData, 0);
+		m_renderer->SetUniformBufferData(UniformBuf::UniformType::Lighting, &m_lightingUniformData, 0);
 
 		m_renderer->Render(0);
 
@@ -349,8 +349,8 @@ private:
 		lightingUniformLayout.buffer.type = wgpu::BufferBindingType::Uniform;
 		lightingUniformLayout.buffer.minBindingSize = sizeof(LightingUniforms);
 
-		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
-		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::Lighting, sizeof(LightingUniforms));
+		m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms));
+		m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::Lighting, sizeof(LightingUniforms));
 
 		m_renderer->CreateBindGroup(bindingLayoutEntries);
 		m_renderer->Init();

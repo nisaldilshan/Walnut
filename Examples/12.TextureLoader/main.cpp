@@ -146,7 +146,7 @@ public:
 
 			m_uniformData.time = time; // glfwGetTime returns a double
 			m_uniformData.color = { 0.0f, 1.0f, 0.4f, 1.0f };
-			m_renderer->SetUniformBufferData(Uniform::UniformType::ModelViewProjection, &m_uniformData, 0);
+			m_renderer->SetUniformBufferData(UniformBuf::UniformType::ModelViewProjection, &m_uniformData, 0);
 			////
 
 
@@ -238,7 +238,7 @@ private:
 		samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
-		m_renderer->CreateUniformBuffer(1, Uniform::UniformType::ModelViewProjection, sizeof(MyUniforms));
+		m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms));
 
 		m_renderer->CreateBindGroup(bindingLayoutEntries);
 		m_renderer->Init();

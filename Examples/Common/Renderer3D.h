@@ -40,8 +40,8 @@ public:
     void CreateTexture(uint32_t width, uint32_t height, const void* textureData, uint32_t mipMapLevelCount);
     void CreateTextureSampler();
     void SetClearColor(glm::vec4 clearColor);
-    void CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type, uint32_t sizeOfUniform);
-    void SetUniformBufferData(Uniform::UniformType type, const void* bufferData, uint32_t uniformIndex);
+    void CreateUniformBuffer(size_t maxUniformIndex, UniformBuf::UniformType type, uint32_t sizeOfUniform);
+    void SetUniformBufferData(UniformBuf::UniformType type, const void* bufferData, uint32_t uniformIndex);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }

@@ -235,7 +235,7 @@ void WebGPURenderer3D::CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEn
             {
                 if (bindingIndex == 0) // this is main uniform buffer
                 {
-                    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
+                    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(UniformBuf::UniformType::ModelViewProjection);
                     const auto buffer = modelViewProjectionUniformBuffer->second.first;
                     const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
                     bindings[bindingIndex].buffer = buffer;
@@ -244,7 +244,7 @@ void WebGPURenderer3D::CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEn
                 }
                 else // this is lighting uniforms
                 {
-                    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::Lighting);
+                    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(UniformBuf::UniformType::Lighting);
                     const auto buffer = modelViewProjectionUniformBuffer->second.first;
                     const auto bufferSize = modelViewProjectionUniformBuffer->second.second;
                     bindings[bindingIndex].buffer = buffer;
@@ -357,7 +357,7 @@ uint32_t WebGPURenderer3D::GetOffset(const uint32_t& uniformIndex, const uint32_
     return uniformStride * uniformIndex;
 }
 
-void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::UniformType type, uint32_t sizeOfUniform)
+void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, UniformBuf::UniformType type, uint32_t sizeOfUniform)
 {
     // Create uniform buffer
     // The buffer will only contain 1 float with the value of uTime
@@ -367,7 +367,7 @@ void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::Unif
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     bufferDesc.mappedAtCreation = false;
 
-    if (type == Uniform::UniformType::ModelViewProjection)
+    if (type == UniformBuf::UniformType::ModelViewProjection)
     {
         bufferDesc.label = "ModelViewProjection";
     }
@@ -380,7 +380,7 @@ void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, Uniform::Unif
     m_uniformBuffers.insert({type, std::make_pair(buffer, sizeOfUniform)});
 }
 
-void WebGPURenderer3D::SetUniformData(Uniform::UniformType type, const void* bufferData, uint32_t uniformIndex)
+void WebGPURenderer3D::SetUniformData(UniformBuf::UniformType type, const void* bufferData, uint32_t uniformIndex)
 {
     auto uniformBuffer = m_uniformBuffers.find(type);
     if (uniformBuffer != m_uniformBuffers.end())
@@ -412,7 +412,7 @@ void WebGPURenderer3D::Render(uint32_t uniformIndex)
     if (m_bindGroup)
     {
         uint32_t dynamicOffset = 0;
-        auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
+        auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(UniformBuf::UniformType::ModelViewProjection);
         if (modelViewProjectionUniformBuffer != m_uniformBuffers.end())
         {
             dynamicOffset = uniformIndex * GetOffset(1, modelViewProjectionUniformBuffer->second.second); // TODO: better to use a array of offsets and select a offset from it
@@ -440,7 +440,7 @@ void WebGPURenderer3D::RenderIndexed(uint32_t uniformIndex)
 
     // Set binding group
     uint32_t dynamicOffset = 0;
-    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(Uniform::UniformType::ModelViewProjection);
+    auto modelViewProjectionUniformBuffer = m_uniformBuffers.find(UniformBuf::UniformType::ModelViewProjection);
     if (modelViewProjectionUniformBuffer != m_uniformBuffers.end())
     {
         dynamicOffset = uniformIndex * GetOffset(1, modelViewProjectionUniformBuffer->second.second); // TODO: better to use a array of offsets and select a offset from it

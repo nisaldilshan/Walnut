@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Uniform
+namespace UniformBuf
 {
 
 enum class UniformType
@@ -9,4 +9,16 @@ enum class UniformType
     Lighting
 };
 
-}
+} // namespace Uniform
+
+namespace ComputeBuf
+{
+
+enum class BufferType
+{
+    Input = 0,
+    Output,
+    Map
+};
+    
+} // namespace Compute
