@@ -59,6 +59,10 @@ void WebGPUCompute::CreatePipeline()
     m_pipeline = WebGPU::GetDevice().createComputePipeline(computePipelineDesc);
 }
 
+void WebGPUCompute::CreateBuffer(const void *bufferData, uint32_t bufferLength, ComputeBuf::BufferType type)
+{
+}
+
 void WebGPUCompute::BeginComputePass()
 {
     wgpu::CommandEncoderDescriptor commandEncoderDesc;
@@ -71,6 +75,14 @@ void WebGPUCompute::BeginComputePass()
     computePassDesc.timestampWrites = nullptr;
 
     m_computePass = m_commandEncoder.beginComputePass(computePassDesc);
+
+    m_computePass.setPipeline(m_pipeline);
+}
+
+void WebGPUCompute::Compute()
+{
+    //m_computePass.setBindGroup();
+    //m_computePass.dispatchWorkgroups();
 }
 
 void WebGPUCompute::EndComputePass()
@@ -82,7 +94,7 @@ void WebGPUCompute::EndComputePass()
     wgpu::CommandBuffer commands = m_commandEncoder.finish(cmdBufferDescriptor);
     GraphicsAPI::WebGPU::GetQueue().submit(commands);
 
-    m_commandEncoder.release();
+    //m_commandEncoder.release();
 }
 
 

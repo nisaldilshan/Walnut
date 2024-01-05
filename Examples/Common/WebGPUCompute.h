@@ -6,6 +6,7 @@
 #include "../../Walnut/src/Walnut/GraphicsAPI/WebGPU/WebGPUGraphics.h"
 
 #include <Walnut/GLM/GLM.h>
+#include "Buffer.h"
 
 namespace GraphicsAPI
 {
@@ -18,7 +19,9 @@ namespace GraphicsAPI
         void CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
         void CreateShaders(const char *shaderSource);
         void CreatePipeline();
+        void CreateBuffer(const void* bufferData, uint32_t bufferLength, ComputeBuf::BufferType type);
         void BeginComputePass();
+        void Compute();
         void EndComputePass();
     private:
         wgpu::BindGroupLayout m_bindGroupLayout = nullptr;

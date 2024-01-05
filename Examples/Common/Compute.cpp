@@ -25,11 +25,22 @@ void Compute::CreatePipeline()
     m_computeBackend->CreatePipeline();
 }
 
+void Compute::CreateBuffer(const void* bufferData, uint32_t bufferLength, ComputeBuf::BufferType type)
+{
+    m_computeBackend->CreateBuffer(bufferData, bufferLength, type);
+}
+
 void Compute::BeginComputePass()
 {
     m_computeBackend->BeginComputePass();
 }
 
+void Compute::DoCompute()
+{
+    m_computeBackend->Compute();
+}
+
 void Compute::EndComputePass()
 {
+    m_computeBackend->EndComputePass();
 }
