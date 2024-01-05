@@ -38,7 +38,7 @@ namespace GraphicsAPI
 
 		std::cout << "Requesting device..." << std::endl;
 		wgpu::RequiredLimits requiredLimits = wgpu::Default;
-		requiredLimits.limits.maxVertexAttributes = 4;
+		requiredLimits.limits.maxVertexAttributes = 6;
 		requiredLimits.limits.maxVertexBuffers = 1;
 
 		struct VertexAttributes {
@@ -52,18 +52,27 @@ namespace GraphicsAPI
 		requiredLimits.limits.maxVertexBufferArrayStride = sizeof(VertexAttributes);
 		requiredLimits.limits.minStorageBufferOffsetAlignment = supportedLimits.limits.minStorageBufferOffsetAlignment;
 		requiredLimits.limits.minUniformBufferOffsetAlignment = supportedLimits.limits.minUniformBufferOffsetAlignment;
-		requiredLimits.limits.maxInterStageShaderComponents = 8;
+		requiredLimits.limits.maxInterStageShaderComponents = 17;
 		requiredLimits.limits.maxBindGroups = 2;
-		//                                    ^ This was a 1
-		requiredLimits.limits.maxUniformBuffersPerShaderStage = 1;
+		requiredLimits.limits.maxUniformBuffersPerShaderStage = 2;
 		requiredLimits.limits.maxUniformBufferBindingSize = 16 * 4 * sizeof(float);
 		requiredLimits.limits.maxDynamicUniformBuffersPerPipelineLayout = 1;
-		// Allow textures up to 2K
-		requiredLimits.limits.maxTextureDimension1D = 2048;
-		requiredLimits.limits.maxTextureDimension2D = 2048;
+		// Allow textures up to 4K
+		requiredLimits.limits.maxTextureDimension1D = 4096;
+		requiredLimits.limits.maxTextureDimension2D = 4096;
+		requiredLimits.limits.maxTextureDimension3D = 2048;
 		requiredLimits.limits.maxTextureArrayLayers = 1;
-		requiredLimits.limits.maxSampledTexturesPerShaderStage = 1;
+		requiredLimits.limits.maxSampledTexturesPerShaderStage = 3;
 		requiredLimits.limits.maxSamplersPerShaderStage = 1;
+
+		// For Compute 
+		requiredLimits.limits.maxStorageBuffersPerShaderStage = 2;
+		requiredLimits.limits.maxStorageBufferBindingSize = requiredLimits.limits.maxBufferSize;
+		requiredLimits.limits.maxComputeWorkgroupSizeX = 32;
+		requiredLimits.limits.maxComputeWorkgroupSizeY = 1;
+		requiredLimits.limits.maxComputeWorkgroupSizeZ = 1;
+		requiredLimits.limits.maxComputeInvocationsPerWorkgroup = 32;
+		requiredLimits.limits.maxComputeWorkgroupsPerDimension = 2;
 
 		wgpu::DeviceDescriptor deviceDesc;
 		deviceDesc.label = "My Device";
@@ -72,11 +81,15 @@ namespace GraphicsAPI
 		deviceDesc.defaultQueue.label = "The default queue";
 		g_device = adapter.requestDevice(deviceDesc);
 		adapter.release();
+		assert(g_device);
 		std::cout << "Got device: " << g_device << std::endl;
 
-		std::cout << "Requesting queue..." << std::endl;
-		g_queue = g_device.getQueue();
-		std::cout << "Got queue: " << g_queue << std::endl;
+		if (g_device)
+		{
+			std::cout << "Requesting queue..." << std::endl;
+			g_queue = g_device.getQueue();
+			std::cout << "Got queue: " << g_queue << std::endl;
+		}
     }
 
     void WebGPU::FreeGraphicsResources()

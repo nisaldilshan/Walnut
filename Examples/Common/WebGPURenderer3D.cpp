@@ -183,7 +183,7 @@ void WebGPURenderer3D::CreateVertexBuffer(const void* bufferData, uint32_t buffe
 
 void WebGPURenderer3D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData)
 {
-    std::cout << "Creating vertex buffer..." << std::endl;
+    std::cout << "Creating index buffer..." << std::endl;
 
     m_indexCount = bufferData.size();
 
