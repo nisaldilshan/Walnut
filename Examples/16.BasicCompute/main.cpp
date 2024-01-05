@@ -33,6 +33,8 @@ public:
 		)";
 		m_compute->SetShader(shaderSource);
 
+		m_compute->CreateBuffer(10, ComputeBuf::BufferType::Input);
+
 		initBindGroupLayout();
 		m_compute->CreatePipeline();
 	}

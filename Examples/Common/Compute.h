@@ -29,9 +29,9 @@ public:
     void SetShader(const char* shaderSource);
     void CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
     void CreatePipeline();
-    void CreateBuffer(const void* bufferData, uint32_t bufferLength, ComputeBuf::BufferType type);
+    void CreateBuffer(const uint32_t bufferLength, ComputeBuf::BufferType type);
     void BeginComputePass();
-    void DoCompute();
+    void DoCompute(const void* bufferData, const uint32_t bufferLength);
     void EndComputePass();
 private:
     std::unique_ptr<GraphicsAPI::ComputeType> m_computeBackend;

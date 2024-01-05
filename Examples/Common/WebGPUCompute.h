@@ -19,9 +19,9 @@ namespace GraphicsAPI
         void CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
         void CreateShaders(const char *shaderSource);
         void CreatePipeline();
-        void CreateBuffer(const void* bufferData, uint32_t bufferLength, ComputeBuf::BufferType type);
+        void CreateBuffer(uint32_t bufferLength, ComputeBuf::BufferType type);
         void BeginComputePass();
-        void Compute();
+        void Compute(const void *bufferData, uint32_t bufferLength);
         void EndComputePass();
     private:
         wgpu::BindGroupLayout m_bindGroupLayout = nullptr;

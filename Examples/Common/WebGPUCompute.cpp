@@ -79,7 +79,7 @@ void WebGPUCompute::CreatePipeline()
     std::cout << "Compute pipeline: " << m_pipeline << std::endl;
 }
 
-void WebGPUCompute::CreateBuffer(const void *bufferData, uint32_t bufferLength, ComputeBuf::BufferType type)
+void WebGPUCompute::CreateBuffer(uint32_t bufferLength, ComputeBuf::BufferType type)
 {
     std::cout << "Creating buffer..." << std::endl;
     std::cout << "Vertex buffer: " << std::endl;
@@ -99,7 +99,7 @@ void WebGPUCompute::BeginComputePass()
     m_computePass = m_commandEncoder.beginComputePass(computePassDesc);
 }
 
-void WebGPUCompute::Compute()
+void WebGPUCompute::Compute(const void *bufferData, uint32_t bufferLength)
 {
     m_computePass.setPipeline(m_pipeline);
     m_computePass.setBindGroup(0, m_bindGroup, 0, nullptr);
