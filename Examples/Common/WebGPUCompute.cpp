@@ -5,7 +5,26 @@ namespace GraphicsAPI
 
 WebGPUCompute::~WebGPUCompute()
 {
+    if (m_inputBuffer)
+    {
+        m_inputBuffer.destroy();
+	    m_inputBuffer.release();
+        m_inputBuffer = nullptr;
+    }
     
+    if (m_outputBuffer)
+    {
+        m_outputBuffer.destroy();
+	    m_outputBuffer.release();
+        m_outputBuffer = nullptr;
+    }
+	
+    if (m_mapBuffer)
+    {
+        m_mapBuffer.destroy();
+	    m_mapBuffer.release();
+        m_mapBuffer = nullptr;
+    }
 }
 
 void WebGPUCompute::CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries)
@@ -81,8 +100,31 @@ void WebGPUCompute::CreatePipeline()
 
 void WebGPUCompute::CreateBuffer(uint32_t bufferLength, ComputeBuf::BufferType type)
 {
-    std::cout << "Creating buffer..." << std::endl;
-    std::cout << "Vertex buffer: " << std::endl;
+    wgpu::BufferDescriptor bufferDesc;
+    bufferDesc.mappedAtCreation = false;
+    bufferDesc.size = bufferLength;
+
+    switch (type)
+    {
+    case ComputeBuf::BufferType::Input:
+        std::cout << "Creating input buffer..." << std::endl;
+        bufferDesc.usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopyDst;
+        m_inputBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+        std::cout << "input buffer: " << m_inputBuffer << std::endl;
+        break;
+    case ComputeBuf::BufferType::Output:
+        std::cout << "Creating output buffer..." << std::endl;
+        bufferDesc.usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc;
+        m_outputBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+        std::cout << "output buffer: " << m_outputBuffer << std::endl;
+        break;
+    case ComputeBuf::BufferType::Map:
+        std::cout << "Creating map buffer..." << std::endl;
+        bufferDesc.usage = wgpu::BufferUsage::MapRead | wgpu::BufferUsage::CopyDst;
+        m_mapBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
+        std::cout << "map buffer: " << m_mapBuffer << std::endl;
+        break;
+    }
 }
 
 void WebGPUCompute::BeginComputePass()
@@ -101,6 +143,8 @@ void WebGPUCompute::BeginComputePass()
 
 void WebGPUCompute::Compute(const void *bufferData, uint32_t bufferLength)
 {
+    WebGPU::GetQueue().writeBuffer(m_inputBuffer, 0, bufferData, bufferLength);
+
     m_computePass.setPipeline(m_pipeline);
     m_computePass.setBindGroup(0, m_bindGroup, 0, nullptr);
     constexpr uint32_t workgroupCount = 2;
@@ -117,7 +161,7 @@ void WebGPUCompute::EndComputePass()
     wgpu::CommandBufferDescriptor cmdBufferDescriptor;
     cmdBufferDescriptor.label = "Compute Command Buffer";
     wgpu::CommandBuffer commands = m_commandEncoder.finish(cmdBufferDescriptor);
-    GraphicsAPI::WebGPU::GetQueue().submit(commands);
+    WebGPU::GetQueue().submit(commands);
 
     //m_commandEncoder.release();
 }

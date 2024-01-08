@@ -8,6 +8,8 @@
 
 #include <Walnut/GLM/GLM.h>
 
+constexpr uint32_t g_bufferSize = 64 * sizeof(float);
+
 class Renderer2DLayer : public Walnut::Layer
 {
 public:
@@ -33,10 +35,18 @@ public:
 		)";
 		m_compute->SetShader(shaderSource);
 
-		m_compute->CreateBuffer(10, ComputeBuf::BufferType::Input);
+		
+		m_compute->CreateBuffer(g_bufferSize, ComputeBuf::BufferType::Input);
+		m_compute->CreateBuffer(g_bufferSize, ComputeBuf::BufferType::Output);
+		m_compute->CreateBuffer(g_bufferSize, ComputeBuf::BufferType::Map);
 
 		initBindGroupLayout();
 		m_compute->CreatePipeline();
+
+		m_inputBufferValues.resize(g_bufferSize / sizeof(float));
+		for (int i = 0; i < m_inputBufferValues.size(); ++i) {
+			m_inputBufferValues[i] = 0.1f * i;
+		}
 	}
 
 	virtual void OnDetach() override
@@ -47,6 +57,8 @@ public:
         Walnut::Timer timer;
 
 		m_compute->BeginComputePass();
+
+		m_compute->DoCompute(m_inputBufferValues.data(), g_bufferSize);
 
 		m_compute->EndComputePass();
 
@@ -88,6 +100,7 @@ private:
 
     std::unique_ptr<Compute> m_compute;
     float m_lastRenderTime = 0.0f;
+	std::vector<float> m_inputBufferValues;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)

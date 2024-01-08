@@ -30,5 +30,9 @@ namespace GraphicsAPI
         wgpu::ComputePipeline m_pipeline = nullptr;
         wgpu::CommandEncoder m_commandEncoder = nullptr;
         wgpu::ComputePassEncoder m_computePass = nullptr;
+
+        wgpu::Buffer m_inputBuffer = nullptr;
+        wgpu::Buffer m_outputBuffer = nullptr;
+        wgpu::Buffer m_mapBuffer = nullptr;
     };
 }
