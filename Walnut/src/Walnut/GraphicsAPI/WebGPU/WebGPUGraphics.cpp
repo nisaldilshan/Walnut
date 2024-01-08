@@ -5,16 +5,25 @@
 
 namespace GraphicsAPI
 {
-
+	wgpu::Instance g_instance = nullptr;
     wgpu::Device g_device = nullptr;
     wgpu::Surface g_surface = nullptr;
 	wgpu::TextureFormat g_swapChainFormat = wgpu::TextureFormat::Undefined;
 	wgpu::Queue g_queue = nullptr;
 
-    void WebGPU::CreateSurface(wgpu::Instance instance, GLFWwindow* window)
+	void WebGPU::CreateInstance(wgpu::InstanceDescriptor desc)
+	{
+		g_instance = createInstance(desc);
+		if (!g_instance) {
+			std::cerr << "Could not initialize WebGPU!" << std::endl;
+		}
+	}
+
+    void WebGPU::CreateSurface(GLFWwindow* window)
     {
+		assert(g_instance);
         std::cout << "Requesting surface..." << std::endl;
-        g_surface = glfwGetWGPUSurface(instance, window);
+        g_surface = glfwGetWGPUSurface(g_instance, window);
         std::cout << "Got surface: " << g_surface << std::endl;
 
 #ifdef WEBGPU_BACKEND_WGPU
@@ -25,12 +34,13 @@ namespace GraphicsAPI
 		std::cout << "SwapChain Format: " << g_swapChainFormat << std::endl;
     }
 
-    void WebGPU::CreateDevice(wgpu::Instance instance)
+    void WebGPU::CreateDevice()
     {
+		assert(g_instance);
         std::cout << "Requesting adapter..." << std::endl;
         wgpu::RequestAdapterOptions adapterOpts{};
 		adapterOpts.compatibleSurface = g_surface;
-		wgpu::Adapter adapter = instance.requestAdapter(adapterOpts);
+		wgpu::Adapter adapter = g_instance.requestAdapter(adapterOpts);
 		std::cout << "Got adapter: " << adapter << std::endl;
 
 		wgpu::SupportedLimits supportedLimits;
@@ -94,6 +104,12 @@ namespace GraphicsAPI
 
     void WebGPU::FreeGraphicsResources()
     {
+    }
+
+    wgpu::Instance WebGPU::GetInstance()
+    {
+		assert(g_instance);
+        return g_instance;
     }
 
     wgpu::Surface WebGPU::GetSurface()

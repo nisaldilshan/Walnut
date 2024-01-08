@@ -156,14 +156,40 @@ void WebGPUCompute::EndComputePass()
     m_computePass.end();
 
     // Have to copy buffers before encoder.finish
-	//m_commandEncoder.copyBufferToBuffer(m_outputBuffer, 0, m_mapBuffer, 0, m_bufferSize);
+    auto sizeOfMapBuffer = m_mapBuffer.getSize();
+    std::cout << "sizeOfMapBuffer : " << sizeOfMapBuffer << std::endl;
+    // Copy the memory from the output buffer that lies in the storage part of the
+    // memory to the map buffer, which is in the "mappable" part of the memory.
+	m_commandEncoder.copyBufferToBuffer(m_outputBuffer, 0, m_mapBuffer, 0, sizeOfMapBuffer);
 
     wgpu::CommandBufferDescriptor cmdBufferDescriptor;
     cmdBufferDescriptor.label = "Compute Command Buffer";
     wgpu::CommandBuffer commands = m_commandEncoder.finish(cmdBufferDescriptor);
     WebGPU::GetQueue().submit(commands);
 
-    //m_commandEncoder.release();
+    // Print output
+	bool done = false;
+	auto handle = m_mapBuffer.mapAsync(wgpu::MapMode::Read, 0, sizeOfMapBuffer, [&](wgpu::BufferMapAsyncStatus status) {
+		if (status == wgpu::BufferMapAsyncStatus::Success) {
+			const float* output = (const float*)m_mapBuffer.getConstMappedRange(0, sizeOfMapBuffer);
+			for (int i = 0; i < sizeOfMapBuffer/sizeof(float); ++i) {
+				std::cout << "output " << output[i] << std::endl;
+			}
+			m_mapBuffer.unmap();
+		}
+		done = true;
+	});
+
+	while (!done) {
+		// Checks for ongoing asynchronous operations and call their callbacks if needed
+#ifdef WEBGPU_BACKEND_WGPU
+        queue.submit(0, nullptr);
+#else
+        WebGPU::GetInstance().processEvents();
+#endif
+	}
+
+    m_commandEncoder.release();
 }
 
 

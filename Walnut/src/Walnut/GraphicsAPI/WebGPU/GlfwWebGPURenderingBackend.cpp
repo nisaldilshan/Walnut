@@ -8,7 +8,6 @@
 
 #include "WebGPUGraphics.h"
 
-wgpu::Instance m_instance = nullptr;
 wgpu::SwapChain m_swapChain = nullptr;
 
 namespace Walnut
@@ -17,14 +16,9 @@ namespace Walnut
     {
         m_windowHandle = windowHandle;
 
-        m_instance = createInstance(wgpu::InstanceDescriptor{});
-		if (!m_instance) {
-			std::cerr << "Could not initialize WebGPU!" << std::endl;
-		}
-
-		
-		GraphicsAPI::WebGPU::CreateSurface(m_instance, m_windowHandle);
-        GraphicsAPI::WebGPU::CreateDevice(m_instance);
+		GraphicsAPI::WebGPU::CreateInstance(wgpu::InstanceDescriptor{});
+		GraphicsAPI::WebGPU::CreateSurface(m_windowHandle);
+        GraphicsAPI::WebGPU::CreateDevice();
 
         auto device = GraphicsAPI::WebGPU::GetDevice();
         if (device == nullptr)
