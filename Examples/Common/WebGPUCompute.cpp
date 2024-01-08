@@ -43,6 +43,18 @@ void WebGPUCompute::CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry
     std::vector<wgpu::BindGroupEntry> bindings;
     bindings.resize(bindGroupLayoutEntryCount);
 
+    // Input buffer
+	bindings[0].binding = 0;
+	bindings[0].buffer = m_inputBuffer;
+	bindings[0].offset = 0;
+	bindings[0].size = m_inputBuffer.getSize();
+
+	// Output buffer
+	bindings[1].binding = 1;
+	bindings[1].buffer = m_outputBuffer;
+	bindings[1].offset = 0;
+	bindings[1].size = m_outputBuffer.getSize();
+
     wgpu::BindGroupDescriptor bindGroupDesc;
 	bindGroupDesc.layout = m_bindGroupLayout;
 	bindGroupDesc.entryCount = (uint32_t)bindings.size();

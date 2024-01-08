@@ -3,6 +3,7 @@
 #include "WebGPUCompute.h"
 
 Compute::Compute()
+    : m_computeBackend(std::make_unique<GraphicsAPI::WebGPUCompute>())
 {
 }
 
