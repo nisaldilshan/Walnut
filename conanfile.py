@@ -14,9 +14,11 @@ class Walnut(ConanFile):
     build_policy = "missing"
     options = {
         "rendering_backend": ["OpenGL", "Vulkan", "WebGPU"],
+        'fPIC': [True, False]
     }
     default_options = {
         "rendering_backend": "WebGPU",
+        'fPIC': True,
         "glad:no_loader": False,
         "glad:spec": "gl",
         "glad:extensions": "",
@@ -98,5 +100,6 @@ class Walnut(ConanFile):
         self.copy(pattern="*.dylib", dst="lib", keep_path=False)
         self.copy(pattern="*.dll", dst="lib", keep_path=False)
         self.copy(pattern="*.so", dst="lib", keep_path=False)
+        self.copy(pattern="*.a", dst="lib", keep_path=False)
         self.copy(pattern="*.lib", dst="lib", keep_path=False)
         self.copy(pattern="*.pdb", dst="lib", keep_path=False)
