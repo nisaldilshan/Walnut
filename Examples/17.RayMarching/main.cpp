@@ -5,6 +5,15 @@
 
 #include "../Common/Renderer3D.h"
 
+/**
+ * A structure that describes the data layout in the vertex buffer
+ * We do not instantiate it but use it in `sizeof` and `offsetof`
+ */
+struct VertexAttributes {
+	glm::vec3 position;
+	glm::vec2 uv;
+};
+
 class Renderer3DLayer : public Walnut::Layer
 {
 public:
@@ -32,21 +41,31 @@ public:
 			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
 
 			const char* shaderSource = R"(
-			// The `@location(0)` attribute means that this input variable is described
-			// by the vertex buffer layout at index 0 in the `pipelineDesc.vertex.buffers`
-			// array.
-			// The type `vec2f` must comply with what we will declare in the layout.
-			// The argument name `in_vertex_position` is up to you, it is only internal to
-			// the shader code!
-				@vertex
-				fn vs_main(@location(0) in_vertex_position: vec2f) -> @builtin(position) vec4f {
-					return vec4f(in_vertex_position, 0.0, 1.0);
-				}
+			
+			struct VertexInput {
+				@location(0) position: vec3f,
+				@location(1) uv: vec2f,
+			};
 
-				@fragment
-				fn fs_main() -> @location(0) vec4f {
-					return vec4f(1.0, 0.4, 0.0, 1.0);
-				}
+			struct VertexOutput {
+				@builtin(position) position: vec4f,
+				@location(0) uv: vec2f,
+			};
+
+			@vertex
+			fn vs_main(in: VertexInput) -> VertexOutput {
+				var out: VertexOutput;
+				out.position = vec4f(in.position, 1.0);
+				out.uv = in.uv;
+				return out;
+			}
+
+			@fragment
+			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+				let cameraPos = vec3f(0.0, 1.82, 0.83);
+				return vec4f(in.uv.x, in.uv.x/2 + in.uv.y/2, in.uv.y, 1.0);
+			}
+
 			)";
 			m_renderer->SetShader(shaderSource);
 
@@ -55,28 +74,31 @@ public:
 			// But in the end this is just a bunch of floats to the eyes of the GPU,
 			// the *layout* will tell how to interpret this.
 			const std::vector<float> vertexData = {
-				-0.9, -0.9,
-				+0.9, -0.9,
-				+0.9, +0.9,
+				-0.9, -0.9, 0.0, 0.0 , 0.0,
+				+0.9, -0.9, 0.0, 1.0 , 0.0,
+				+0.9, +0.9, 0.0, 1.0 , 1.0,
 
-				-0.9, -0.9,
-				-0.9, +0.9,
-				+0.9, +0.9,
+				-0.9, -0.9, 0.0, 0.0 , 0.0,
+				-0.9, +0.9, 0.0, 0.0 , 1.0,
+				+0.9, +0.9, 0.0, 1.0 , 1.0,
 			};
 
-			wgpu::VertexBufferLayout vertexBufferLayout;
-			wgpu::VertexAttribute vertexAttrib;
-			// == Per attribute ==
-			// Corresponds to @location(...)
-			vertexAttrib.shaderLocation = 0;
-			// Means vec2f in the shader
-			vertexAttrib.format = wgpu::VertexFormat::Float32x2;
-			// Index of the first element
-			vertexAttrib.offset = 0;
+			std::vector<wgpu::VertexAttribute> vertexAttribs(2);
 
-			vertexBufferLayout.attributeCount = 1;
-			vertexBufferLayout.attributes = &vertexAttrib;
-			vertexBufferLayout.arrayStride = 2 * sizeof(float);
+			// Position attribute
+			vertexAttribs[0].shaderLocation = 0;
+			vertexAttribs[0].format = wgpu::VertexFormat::Float32x3;
+			vertexAttribs[0].offset = 0;
+
+			// UV attribute
+			vertexAttribs[1].shaderLocation = 1;
+			vertexAttribs[1].format = wgpu::VertexFormat::Float32x2;
+			vertexAttribs[1].offset = offsetof(VertexAttributes, uv);
+
+			wgpu::VertexBufferLayout vertexBufferLayout;
+			vertexBufferLayout.attributeCount = (uint32_t)vertexAttribs.size();
+			vertexBufferLayout.attributes = vertexAttribs.data();
+			vertexBufferLayout.arrayStride = sizeof(VertexAttributes);
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
