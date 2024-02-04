@@ -1,7 +1,7 @@
 add_executable(RayMarching 
             main.cpp
-            ../Common/Renderer2D.cpp
-            ../Common/WebGPURenderer2D.cpp)
+            ../Common/Renderer3D.cpp
+            ../Common/WebGPURenderer3D.cpp)
 
 target_include_directories(RayMarching PRIVATE ../../Walnut/src)
 

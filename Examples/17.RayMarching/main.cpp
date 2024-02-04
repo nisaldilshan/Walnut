@@ -3,13 +3,15 @@
 #include "Walnut/Random.h"
 #include <Walnut/Timer.h>
 
-#include "../Common/Renderer2D.h"
+#include "../Common/Renderer3D.h"
 
-class Renderer2DLayer : public Walnut::Layer
+class Renderer3DLayer : public Walnut::Layer
 {
 public:
 	virtual void OnAttach() override
 	{
+		m_renderer.reset();
+		m_renderer = std::make_shared<Renderer3D>();
 	}
 
 	virtual void OnDetach() override
@@ -27,8 +29,7 @@ public:
             m_viewportWidth != m_renderer->GetWidth() ||
             m_viewportHeight != m_renderer->GetHeight())
         {
-			m_renderer.reset();
-			m_renderer = std::make_shared<Renderer2D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
 
 			const char* shaderSource = R"(
 			// The `@location(0)` attribute means that this input variable is described
@@ -54,17 +55,13 @@ public:
 			// But in the end this is just a bunch of floats to the eyes of the GPU,
 			// the *layout* will tell how to interpret this.
 			const std::vector<float> vertexData = {
-				-0.5, -0.5,
-				+0.5, -0.5,
-				+0.0, +0.5,
+				-0.9, -0.9,
+				+0.9, -0.9,
+				+0.9, +0.9,
 
-				-0.55f, -0.5,
-				-0.05f, +0.5,
-				-0.55f, +0.5,
-
-				+0.275f, +0.05,
-				+0.5f, +0.5,
-				+0.05f, +0.5
+				-0.9, -0.9,
+				-0.9, +0.9,
+				+0.9, +0.9,
 			};
 
 			wgpu::VertexBufferLayout vertexBufferLayout;
@@ -83,7 +80,7 @@ public:
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
-			m_renderer->SetVertexBufferData(vertexData, vertexBufferLayout);
+			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * 4, vertexBufferLayout);
 
 			m_renderer->Init();
         }
@@ -91,7 +88,7 @@ public:
 		if (m_renderer)
 		{
 			m_renderer->BeginRenderPass();
-       		m_renderer->Render();
+       		m_renderer->Render(0);
 			m_renderer->EndRenderPass();
 		}
 
@@ -117,7 +114,7 @@ public:
 	}
 
 private:
-    std::shared_ptr<Renderer2D> m_renderer;
+    std::shared_ptr<Renderer3D> m_renderer;
     uint32_t m_viewportWidth = 0;
     uint32_t m_viewportHeight = 0;
     float m_lastRenderTime = 0.0f;
@@ -126,9 +123,9 @@ private:
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
 	Walnut::ApplicationSpecification spec;
-	spec.Name = "Renderer2D Example";
+	spec.Name = "Renderer3D Example";
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	app->PushLayer<Renderer2DLayer>();
+	app->PushLayer<Renderer3DLayer>();
 	return app;
 }
