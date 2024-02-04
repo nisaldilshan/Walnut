@@ -62,8 +62,28 @@ public:
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				let cameraPos = vec3f(0.0, 1.82, 0.83);
-				return vec4f(in.uv.x, in.uv.x/2 + in.uv.y/2, in.uv.y, 1.0);
+				//let cameraPos = vec3f(0.0, 1.82, 0.83);
+				let cameraPos = vec3f(0.0, 0.0, -3.0); // ray origin
+				let rayDirection = normalize(vec3f(in.uv, 1.0));
+
+				var t = 0.0; // total distance travelled form cameras ray origin
+				var color = vec3f(0.0, 0.0, 0.0);
+				for (var i = 0; i < 80; i++)
+				{
+					let p = cameraPos + rayDirection * t;
+					//float d = map(p);
+					let d = length(p) - 0.3;
+					t = t + d;
+
+					let one = f32(i);
+					color = vec3f(one, one, one) / 80.0;
+
+					if d < 0.001
+					{
+						break;
+					}
+				}
+				return vec4f(color, 1.0);
 			}
 
 			)";
@@ -74,12 +94,12 @@ public:
 			// But in the end this is just a bunch of floats to the eyes of the GPU,
 			// the *layout* will tell how to interpret this.
 			const std::vector<float> vertexData = {
-				-0.9, -0.9, 0.0, 0.0 , 0.0,
-				+0.9, -0.9, 0.0, 1.0 , 0.0,
+				-0.9, -0.9, 0.0, -1.0 , -1.0,
+				+0.9, -0.9, 0.0, 1.0 , -1.0,
 				+0.9, +0.9, 0.0, 1.0 , 1.0,
 
-				-0.9, -0.9, 0.0, 0.0 , 0.0,
-				-0.9, +0.9, 0.0, 0.0 , 1.0,
+				-0.9, -0.9, 0.0, -1.0 , -1.0,
+				-0.9, +0.9, 0.0, -1.0 , 1.0,
 				+0.9, +0.9, 0.0, 1.0 , 1.0,
 			};
 
