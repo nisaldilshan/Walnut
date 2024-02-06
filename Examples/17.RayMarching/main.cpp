@@ -76,9 +76,9 @@ public:
 					t = t + d;
 
 					let one = f32(i);
-					color = vec3f(one, one, one) / 80.0;
+					color = vec3f(t * 0.25);
 
-					if d < 0.001
+					if d < 0.001 || t > 100.0
 					{
 						break;
 					}
