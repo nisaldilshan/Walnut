@@ -52,6 +52,12 @@ public:
 				@location(0) uv: vec2f,
 			};
 
+			fn map(currentRayPosition: vec3f) -> f32 {
+				let radius = 0.3;
+				let pos = vec3f(0.5, 0.0, 0.0);
+  				return length(currentRayPosition - pos) - radius;
+			}
+
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
 				var out: VertexOutput;
@@ -71,8 +77,7 @@ public:
 				for (var i = 0; i < 80; i++)
 				{
 					let p = cameraPos + rayDirection * t;
-					//float d = map(p);
-					let d = length(p) - 0.3;
+					let d = map(p);
 					t = t + d;
 
 					let one = f32(i);
