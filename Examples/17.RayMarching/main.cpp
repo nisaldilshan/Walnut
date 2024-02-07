@@ -52,10 +52,45 @@ public:
 				@location(0) uv: vec2f,
 			};
 
-			fn map(currentRayPosition: vec3f) -> f32 {
+			const MAX_DIST = 100.0; 
+
+			fn map(currentRayPosition: vec3f) -> f32 
+			{
 				let radius = 0.3;
 				let pos = vec3f(0.5, 0.0, 0.0);
   				return length(currentRayPosition - pos) - radius;
+			}
+
+			fn rayMarch(rayDirection: vec3f, cameraPos: vec3f) -> f32
+			{
+				var t = 0.0; // total distance travelled form cameras ray origin
+				for (var i = 0; i < 80; i++)
+				{
+					let p = cameraPos + rayDirection * t;
+					let d = map(p);
+					t = t + d;
+
+					if d < 0.001 || t > MAX_DIST
+					{
+						break;
+					}
+				}
+
+				return t;
+			}
+
+
+			fn calculate_normal(p: vec3f) -> vec3f
+			{
+				let small_step = vec3f(0.001, 0.0, 0.0);
+
+				let gradient_x = map(p + small_step.xyy) - map(p - small_step.xyy);
+				let gradient_y = map(p + small_step.yxy) - map(p - small_step.yxy);
+				let gradient_z = map(p + small_step.yyx) - map(p - small_step.yyx);
+
+				let normal = vec3f(gradient_x, gradient_y, gradient_z);
+
+				return normalize(normal);
 			}
 
 			@vertex
@@ -71,23 +106,17 @@ public:
 				//let cameraPos = vec3f(0.0, 1.82, 0.83);
 				let cameraPos = vec3f(0.0, 0.0, -3.0); // ray origin
 				let rayDirection = normalize(vec3f(in.uv, 1.0));
-
-				var t = 0.0; // total distance travelled form cameras ray origin
-				var color = vec3f(0.0, 0.0, 0.0);
-				for (var i = 0; i < 80; i++)
+				let distanceTravelled = rayMarch(rayDirection, cameraPos);
+				let currentPosition = cameraPos + rayDirection * distanceTravelled;
+				
+				var color = vec3f(0.0);
+				if distanceTravelled < MAX_DIST
 				{
-					let p = cameraPos + rayDirection * t;
-					let d = map(p);
-					t = t + d;
-
-					let one = f32(i);
-					color = vec3f(t * 0.25);
-
-					if d < 0.001 || t > 100.0
-					{
-						break;
-					}
+					let normal = calculate_normal(currentPosition);
+					color = normal * 0.5 + 0.5;
+					//color = vec3f(distanceTravelled * 0.25);
 				}
+				
 				return vec4f(color, 1.0);
 			}
 
