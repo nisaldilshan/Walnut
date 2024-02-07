@@ -56,7 +56,7 @@ public:
 
 			fn map(currentRayPosition: vec3f) -> f32 
 			{
-				let radius = 0.3;
+				let radius = 0.5;
 				let pos = vec3f(0.5, 0.0, 0.0);
   				return length(currentRayPosition - pos) - radius;
 			}
@@ -103,7 +103,6 @@ public:
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				//let cameraPos = vec3f(0.0, 1.82, 0.83);
 				let cameraPos = vec3f(0.0, 0.0, -3.0); // ray origin
 				let rayDirection = normalize(vec3f(in.uv, 1.0));
 				let distanceTravelled = rayMarch(rayDirection, cameraPos);
@@ -112,9 +111,13 @@ public:
 				var color = vec3f(0.0);
 				if distanceTravelled < MAX_DIST
 				{
+					let lightPos = vec3f(0.0, 1.82, 0.83);
 					let normal = calculate_normal(currentPosition);
-					color = normal * 0.5 + 0.5;
+					let directionToLight = normalize(currentPosition - lightPos);
+					let diffuseIntensity = max(0.0, dot(normal, directionToLight));
+					//color = normal * 0.5 + 0.5;
 					//color = vec3f(distanceTravelled * 0.25);
+					color = vec3f(1.0, 0.0, 0.0) * diffuseIntensity;
 				}
 				
 				return vec4f(color, 1.0);
