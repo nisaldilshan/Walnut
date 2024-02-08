@@ -357,11 +357,12 @@ uint32_t WebGPURenderer3D::GetOffset(const uint32_t& uniformIndex, const uint32_
     return uniformStride * uniformIndex;
 }
 
-void WebGPURenderer3D::CreateUniformBuffer(size_t maxUniformIndex, UniformBuf::UniformType type, uint32_t sizeOfUniform)
+void WebGPURenderer3D::CreateUniformBuffer(size_t bufferLength, UniformBuf::UniformType type, uint32_t sizeOfUniform)
 {
     // Create uniform buffer
     // The buffer will only contain 1 float with the value of uTime
     wgpu::BufferDescriptor bufferDesc;
+    const size_t maxUniformIndex = bufferLength - 1;
     bufferDesc.size = sizeOfUniform + GetOffset(maxUniformIndex, sizeOfUniform);
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;

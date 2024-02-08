@@ -173,7 +173,7 @@ public:
 			textureBindingLayout.texture.sampleType = wgpu::TextureSampleType::Float;
 			textureBindingLayout.texture.viewDimension = wgpu::TextureViewDimension::_2D;
 
-			m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms));
+			m_renderer->CreateUniformBuffer(2, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms));
 
 			constexpr uint32_t texWidth = 256;
 			constexpr uint32_t texHeight = 256;
