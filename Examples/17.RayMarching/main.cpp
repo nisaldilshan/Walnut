@@ -2,8 +2,10 @@
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Random.h"
 #include <Walnut/Timer.h>
+#include <GLFW/glfw3.h>
 
 #include "../Common/Renderer3D.h"
+#include "../Common/Camera.h"
 
 /**
  * A structure that describes the data layout in the vertex buffer
@@ -14,6 +16,12 @@ struct VertexAttributes {
 	glm::vec2 uv;
 };
 
+struct MyUniforms {
+	glm::vec3 cameraWorldPosition;
+    float time;
+};
+static_assert(sizeof(MyUniforms) % 16 == 0);
+
 class Renderer3DLayer : public Walnut::Layer
 {
 public:
@@ -21,6 +29,7 @@ public:
 	{
 		m_renderer.reset();
 		m_renderer = std::make_shared<Renderer3D>();
+		m_camera = std::make_unique<Camera::PerspectiveCamera>(30.0f, 0.01f, 100.0f);
 	}
 
 	virtual void OnDetach() override
@@ -39,6 +48,7 @@ public:
             m_viewportHeight != m_renderer->GetHeight())
         {
 			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
+			m_camera->SetViewportSize((float)m_viewportWidth, (float)m_viewportHeight);
 
 			const char* shaderSource = R"(
 			
@@ -52,12 +62,17 @@ public:
 				@location(0) uv: vec2f,
 			};
 
+			struct MyUniforms {
+				cameraWorldPosition: vec3f,
+				time: f32,
+			};
+
 			const MAX_DIST = 100.0; 
 
 			fn map(currentRayPosition: vec3f) -> f32 
 			{
 				let radius = 0.5;
-				let pos = vec3f(0.5, 0.0, 0.0);
+				let pos = vec3f(uMyUniforms.time/10, 0.0, 0.0);
   				return length(currentRayPosition - pos) - radius;
 			}
 
@@ -93,6 +108,8 @@ public:
 				return normalize(normal);
 			}
 
+			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
+
 			@vertex
 			fn vs_main(in: VertexInput) -> VertexOutput {
 				var out: VertexOutput;
@@ -103,7 +120,8 @@ public:
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				let cameraPos = vec3f(0.0, 0.0, -3.0); // ray origin
+				//let cameraPos = vec3f(0.0, 0.0, -3.0); // ray origin
+				let cameraPos = uMyUniforms.cameraWorldPosition;
 				let rayDirection = normalize(vec3f(in.uv, 1.0));
 				let distanceTravelled = rayMarch(rayDirection, cameraPos);
 				let currentPosition = cameraPos + rayDirection * distanceTravelled;
@@ -161,12 +179,34 @@ public:
 
 			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * 4, vertexBufferLayout);
 
+			// Create binding layouts
+			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(1, wgpu::Default);
+			// The uniform buffer binding that we already had
+			wgpu::BindGroupLayoutEntry& uniformBindingLayout = bindingLayoutEntries[0];
+			uniformBindingLayout.setDefault();
+			uniformBindingLayout.binding = 0;
+			uniformBindingLayout.visibility = wgpu::ShaderStage::Fragment;
+			uniformBindingLayout.buffer.type = wgpu::BufferBindingType::Uniform;
+			uniformBindingLayout.buffer.minBindingSize = sizeof(MyUniforms);
+			uniformBindingLayout.buffer.hasDynamicOffset = true;
+
+			m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms), uniformBindingLayout.binding);
+			m_renderer->CreateBindGroup(bindingLayoutEntries);
+
 			m_renderer->Init();
         }
+
+		m_camera->OnUpdate();
 
 		if (m_renderer)
 		{
 			m_renderer->BeginRenderPass();
+
+			const float time = static_cast<float>(glfwGetTime());
+			auto ssss = m_camera->GetViewMatrix();
+			m_myUniformData.cameraWorldPosition = m_camera->GetPosition();
+			m_myUniformData.time = time;
+			m_renderer->SetUniformBufferData(UniformBuf::UniformType::ModelViewProjection, &m_myUniformData, 0);
        		m_renderer->Render(0);
 			m_renderer->EndRenderPass();
 		}
@@ -197,6 +237,8 @@ private:
     uint32_t m_viewportWidth = 0;
     uint32_t m_viewportHeight = 0;
     float m_lastRenderTime = 0.0f;
+	MyUniforms m_myUniformData;
+	std::unique_ptr<Camera::PerspectiveCamera> m_camera;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
