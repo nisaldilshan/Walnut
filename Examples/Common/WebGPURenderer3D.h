@@ -24,7 +24,7 @@ namespace GraphicsAPI
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetClearColor(glm::vec4 clearColor);
         void CreateBindGroup(const std::vector<wgpu::BindGroupLayoutEntry>& bindGroupLayoutEntries);
-        void CreateUniformBuffer(size_t bufferLength, UniformBuf::UniformType type, uint32_t sizeOfUniform);
+        void CreateUniformBuffer(size_t bufferLength, UniformBuf::UniformType type, uint32_t sizeOfUniform, uint32_t bindingIndex);
         void CreateDepthTexture();
         void CreateTexture(uint32_t textureWidth, uint32_t textureHeight, const void* textureData, uint32_t mipMapLevelCount);
         void CreateTextureSampler();
@@ -59,7 +59,7 @@ namespace GraphicsAPI
         wgpu::BindGroupLayout m_bindGroupLayout = nullptr;
         wgpu::PipelineLayout m_pipelineLayout = nullptr;
 
-        std::unordered_map<UniformBuf::UniformType, std::pair<wgpu::Buffer, uint32_t>> m_uniformBuffers;
+        std::unordered_map<UniformBuf::UniformType, std::tuple<uint32_t, wgpu::Buffer, uint32_t>> m_uniformBuffers;
         wgpu::BindGroup m_bindGroup = nullptr;
 
         wgpu::CommandEncoder m_currentCommandEncoder = nullptr;

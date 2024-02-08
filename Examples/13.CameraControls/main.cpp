@@ -245,7 +245,7 @@ private:
 		samplerBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 		samplerBindingLayout.sampler.type = wgpu::SamplerBindingType::Filtering;
 
-		m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms));
+		m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms), uniformBindingLayout.binding);
 
 		m_renderer->CreateBindGroup(bindingLayoutEntries);
 		m_renderer->Init();
