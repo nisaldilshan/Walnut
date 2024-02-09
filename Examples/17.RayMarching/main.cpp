@@ -69,11 +69,25 @@ public:
 
 			const MAX_DIST = 100.0; 
 
-			fn map(currentRayPosition: vec3f) -> f32 
+			fn sdSphere(currentRayPosition: vec3f) -> f32
 			{
 				let radius = 0.5;
 				let pos = vec3f(uMyUniforms.time/10, 0.0, 0.0);
   				return length(currentRayPosition - pos) - radius;
+			}
+
+			fn sdCube(currentRayPosition: vec3f) -> f32
+			{
+				let size = 0.5;
+				let q = abs(currentRayPosition) - size;
+  				return length(max(q, vec3f(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0);
+			}
+
+			fn map(currentRayPosition: vec3f) -> f32 
+			{
+				let sphere = sdSphere(currentRayPosition);
+				let cube = sdCube(currentRayPosition);
+				return min(sphere, cube);
 			}
 
 			fn rayMarch(rayDirection: vec3f, cameraPos: vec3f) -> f32
