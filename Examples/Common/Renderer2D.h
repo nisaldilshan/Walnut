@@ -24,10 +24,11 @@ typedef WebGPURenderer2D RendererType;
 class Renderer2D
 {
 public:
-    Renderer2D(uint32_t width, uint32_t height, Walnut::ImageFormat format);
+    Renderer2D();
     ~Renderer2D();
 
     void Init();
+    void OnResize(uint32_t width, uint32_t height);
     void SetShader(const char* shaderSource);
     void SetStandaloneShader(const char* shaderSource, uint32_t vertexShaderCallCount);
     void SetVertexBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);

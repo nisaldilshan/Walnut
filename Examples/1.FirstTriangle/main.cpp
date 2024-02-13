@@ -10,6 +10,7 @@ class Renderer2DLayer : public Walnut::Layer
 public:
 	virtual void OnAttach() override
 	{
+		m_renderer = std::make_shared<Renderer2D>();
 	}
 
 	virtual void OnDetach() override
@@ -27,8 +28,7 @@ public:
             m_viewportWidth != m_renderer->GetWidth() ||
             m_viewportHeight != m_renderer->GetHeight())
         {
-			m_renderer.reset();
-			m_renderer = std::make_shared<Renderer2D>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
 
 			const char* shaderSource = R"(
 				@vertex

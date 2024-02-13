@@ -2,11 +2,16 @@
 
 #include "WebGPURenderer2D.h"
 
-Renderer2D::Renderer2D(uint32_t width, uint32_t height, Walnut::ImageFormat format)
-    : m_Width(width)
-    , m_Height(height)
+Renderer2D::Renderer2D()
+    : m_Width(0)
+    , m_Height(0)
     , m_rendererBackend(std::make_unique<GraphicsAPI::WebGPURenderer2D>())
+{}
+
+void Renderer2D::OnResize(uint32_t width, uint32_t height)
 {
+    m_Width = width;
+    m_Height = height;
     m_rendererBackend->CreateTextureToRenderInto(m_Width, m_Height);
 }
 
