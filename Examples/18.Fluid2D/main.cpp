@@ -141,7 +141,7 @@ public:
 			const float time = static_cast<float>(glfwGetTime());
 			m_myUniformData.time = time;
 			// m_renderer->SetUniformBufferData(UniformBuf::UniformType::ModelViewProjection, &m_myUniformData, 0);
-       		// m_renderer->Render(0);
+       		m_renderer->Render();
 			m_renderer->EndRenderPass();
 		}
 
