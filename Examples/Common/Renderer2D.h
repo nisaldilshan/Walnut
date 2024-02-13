@@ -31,7 +31,7 @@ public:
     void OnResize(uint32_t width, uint32_t height);
     void SetShader(const char* shaderSource);
     void SetStandaloneShader(const char* shaderSource, uint32_t vertexShaderCallCount);
-    void SetVertexBufferData(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
+    void SetVertexBufferData(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout);
     void SetIndexBufferData(const std::vector<uint16_t>& bufferData);
     void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
     void SetSizeOfUniform(uint32_t sizeOfUniform);

@@ -101,7 +101,7 @@ public:
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
-			m_renderer->SetVertexBufferData(vertexData, vertexBufferLayout);
+			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * 4, vertexBufferLayout);
 
 			// Index Buffer
 			// This is a list of indices referencing positions in the pointData

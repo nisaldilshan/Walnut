@@ -151,11 +151,11 @@ void WebGPURenderer2D::CreatePipeline()
     std::cout << "Render pipeline: " << m_pipeline << std::endl;
 }
 
-void WebGPURenderer2D::CreateVertexBuffer(const std::vector<float> &bufferData, wgpu::VertexBufferLayout bufferLayout)
+void WebGPURenderer2D::CreateVertexBuffer(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout)
 {
     std::cout << "Creating vertex buffer..." << std::endl;
-    m_vertexCount = bufferData.size() / (bufferLayout.arrayStride / sizeof(float));
-    m_vertexBufferSize = bufferData.size() * sizeof(float);
+    m_vertexCount = bufferLength / bufferLayout.arrayStride;
+    m_vertexBufferSize = bufferLength;
     m_vertexBufferLayout = bufferLayout;
     wgpu::BufferDescriptor bufferDesc;
     bufferDesc.size = m_vertexBufferSize;
@@ -165,13 +165,13 @@ void WebGPURenderer2D::CreateVertexBuffer(const std::vector<float> &bufferData, 
     m_vertexBuffer = WebGPU::GetDevice().createBuffer(bufferDesc);
 
     // Upload vertex data to the buffer
-    WebGPU::GetQueue().writeBuffer(m_vertexBuffer, 0, bufferData.data(), bufferDesc.size);
+    WebGPU::GetQueue().writeBuffer(m_vertexBuffer, 0, bufferData, bufferDesc.size);
     std::cout << "Vertex buffer: " << m_vertexBuffer << std::endl;
 }
 
 void WebGPURenderer2D::CreateIndexBuffer(const std::vector<uint16_t> &bufferData)
 {
-    std::cout << "Creating vertex buffer..." << std::endl;
+    std::cout << "Creating index buffer..." << std::endl;
 
     m_indexCount = bufferData.size();
 

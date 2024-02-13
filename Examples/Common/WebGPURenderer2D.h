@@ -17,7 +17,7 @@ namespace GraphicsAPI
         void CreateShaders(const char* shaderSource);
         void CreateStandaloneShader(const char *shaderSource, uint32_t vertexShaderCallCount);
         void CreatePipeline();
-        void CreateVertexBuffer(const std::vector<float>& bufferData, wgpu::VertexBufferLayout bufferLayout);
+        void CreateVertexBuffer(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout);
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
         void SetSizeOfUniform(uint32_t sizeOfUniform);

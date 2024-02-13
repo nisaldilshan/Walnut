@@ -64,61 +64,6 @@ public:
 				time: f32,
 			};
 
-			const MAX_DIST = 100.0; 
-
-			fn sdSphere(currentRayPosition: vec3f) -> f32
-			{
-				let radius = 0.5;
-				let pos = vec3f(uMyUniforms.time/10, 0.0, 0.0);
-  				return length(currentRayPosition - pos) - radius;
-			}
-
-			fn sdCube(currentRayPosition: vec3f) -> f32
-			{
-				let size = 0.5;
-				let q = abs(currentRayPosition) - size;
-  				return length(max(q, vec3f(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0);
-			}
-
-			fn map(currentRayPosition: vec3f) -> f32 
-			{
-				let sphere = sdSphere(currentRayPosition);
-				let cube = sdCube(currentRayPosition);
-				return min(sphere, cube);
-			}
-
-			fn rayMarch(rayDirection: vec3f, cameraPos: vec3f) -> f32
-			{
-				var t = 0.0; // total distance travelled form cameras ray origin
-				for (var i = 0; i < 80; i++)
-				{
-					let p = cameraPos + rayDirection * t;
-					let d = map(p);
-					t = t + d;
-
-					if d < 0.001 || t > MAX_DIST
-					{
-						break;
-					}
-				}
-
-				return t;
-			}
-
-
-			fn calculate_normal(p: vec3f) -> vec3f
-			{
-				let small_step = vec3f(0.001, 0.0, 0.0);
-
-				let gradient_x = map(p + small_step.xyy) - map(p - small_step.xyy);
-				let gradient_y = map(p + small_step.yxy) - map(p - small_step.yxy);
-				let gradient_z = map(p + small_step.yyx) - map(p - small_step.yyx);
-
-				let normal = vec3f(gradient_x, gradient_y, gradient_z);
-
-				return normalize(normal);
-			}
-
 			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
 
 			@vertex
@@ -131,25 +76,7 @@ public:
 
 			@fragment
 			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				//let cameraPos = vec3f(0.0, 0.0, -3.0); // ray origin
-				let cameraPos = uMyUniforms.cameraWorldPosition;
-				let rayDirection = normalize(vec3f(in.uv, 1.0));
-				let distanceTravelled = rayMarch(rayDirection, cameraPos);
-				let currentPosition = cameraPos + rayDirection * distanceTravelled;
-				
-				var color = vec3f(0.0);
-				if distanceTravelled < MAX_DIST
-				{
-					let lightPos = vec3f(0.0, 1.82, 0.83);
-					let normal = calculate_normal(currentPosition);
-					let directionToLight = normalize(currentPosition - lightPos);
-					let diffuseIntensity = max(0.0, dot(normal, directionToLight));
-					//color = normal * 0.5 + 0.5;
-					//color = vec3f(distanceTravelled * 0.25);
-					color = vec3f(1.0, 0.0, 0.0) * diffuseIntensity;
-				}
-				
-				return vec4f(color, 1.0);
+				return vec4f(1.0, 1.0, 1.0, 1.0);
 			}
 
 			)";
@@ -188,7 +115,7 @@ public:
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
-			//m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * 4, vertexBufferLayout);
+			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * 4, vertexBufferLayout);
 
 			// Create binding layouts
 			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(1, wgpu::Default);

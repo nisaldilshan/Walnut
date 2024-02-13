@@ -137,7 +137,7 @@ public:
 			vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
 
-			m_renderer->SetVertexBufferData(vertexData, vertexBufferLayout);
+			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * 4, vertexBufferLayout);
 			m_renderer->SetIndexBufferData(indexData);
 
 			// Create binding layout (don't forget to = Default)
