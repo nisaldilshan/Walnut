@@ -2,6 +2,7 @@
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Random.h"
 #include <Walnut/Timer.h>
+#include <Walnut/Image.h>
 #include <GLFW/glfw3.h>
 
 #include "../Common/Renderer2D.h"
@@ -28,6 +29,42 @@ public:
 	{
 		m_renderer.reset();
 		m_renderer = std::make_shared<Renderer2D>();
+
+		const char* shaderSource = R"(
+		struct VertexInput {
+			@location(0) position: vec3f,
+			@location(1) uv: vec2f,
+		};
+
+		struct VertexOutput {
+			@builtin(position) position: vec4f,
+			@location(0) uv: vec2f,
+		};
+
+		struct MyUniforms {
+			cameraWorldPosition: vec3f,
+			time: f32,
+		};
+
+		@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
+
+		@vertex
+		fn vs_main(in: VertexInput) -> VertexOutput {
+			var out: VertexOutput;
+			out.position = vec4f(in.position, 1.0);
+			out.uv = in.uv;
+			return out;
+		}
+
+		@fragment
+		fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+			return vec4f(1.0, 1.0, 1.0, 1.0);
+		}
+
+		)";
+		m_renderer->SetShader(shaderSource);
+
+		m_finalImage = std::make_shared<Walnut::Image>(1, 1, Walnut::ImageFormat::RGBA);
 	}
 
 	virtual void OnDetach() override
@@ -35,52 +72,13 @@ public:
 
 	}
 
-	virtual void OnUpdate(float ts) override
+	void GPUSolve()
 	{
-        Walnut::Timer timer;
-		if (m_viewportWidth == 0 || m_viewportHeight == 0)
-			return;
-
-        if (!m_renderer ||
+		if (!m_renderer ||
             m_viewportWidth != m_renderer->GetWidth() ||
             m_viewportHeight != m_renderer->GetHeight())
         {
 			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
-
-			const char* shaderSource = R"(
-			
-			struct VertexInput {
-				@location(0) position: vec3f,
-				@location(1) uv: vec2f,
-			};
-
-			struct VertexOutput {
-				@builtin(position) position: vec4f,
-				@location(0) uv: vec2f,
-			};
-
-			struct MyUniforms {
-				cameraWorldPosition: vec3f,
-				time: f32,
-			};
-
-			@group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
-
-			@vertex
-			fn vs_main(in: VertexInput) -> VertexOutput {
-				var out: VertexOutput;
-				out.position = vec4f(in.position, 1.0);
-				out.uv = in.uv;
-				return out;
-			}
-
-			@fragment
-			fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-				return vec4f(1.0, 1.0, 1.0, 1.0);
-			}
-
-			)";
-			m_renderer->SetShader(shaderSource);
 
 			// Vertex buffer
 			// There are 2 floats per vertex, one for x and one for y.
@@ -144,6 +142,45 @@ public:
        		m_renderer->Render();
 			m_renderer->EndRenderPass();
 		}
+	}
+
+	void CPUSolve()
+	{
+		if (!m_imageData)
+		{
+			m_imageData = new uint32_t[m_viewportWidth * m_viewportHeight];
+			m_finalImage->Resize(m_viewportWidth, m_viewportHeight);
+		}
+
+		if (m_viewportWidth != m_finalImage->GetWidth() || m_viewportHeight != m_finalImage->GetHeight())
+		{
+			delete[] m_imageData;
+			m_imageData = new uint32_t[m_viewportWidth * m_viewportHeight];
+			m_finalImage->Resize(m_viewportWidth, m_viewportHeight);
+		}
+
+		for (size_t i = 0; i < m_viewportWidth * m_viewportHeight; i++)
+		{
+			m_imageData[i] = Walnut::Random::UInt();
+			m_imageData[i] |= 0xff000000; // remove randomnes from alpha channel
+		}
+		m_finalImage->SetData(m_imageData);
+	}
+
+	virtual void OnUpdate(float ts) override
+	{
+        Walnut::Timer timer;
+		if (m_viewportWidth == 0 || m_viewportHeight == 0)
+			return;
+
+        if (m_hWSolver)
+		{
+			GPUSolve();
+		}
+		else
+		{
+			CPUSolve();
+		}
 
         m_lastRenderTime = timer.ElapsedMillis();
 	}
@@ -158,8 +195,28 @@ public:
         ImGui::Begin("Viewport");
 		m_viewportWidth = ImGui::GetContentRegionAvail().x;
         m_viewportHeight = ImGui::GetContentRegionAvail().y;
-        if (m_renderer)
-            ImGui::Image(m_renderer->GetDescriptorSet(), {(float)m_renderer->GetWidth(),(float)m_renderer->GetWidth()});
+
+		if (m_hWSolver)
+		{
+			if (m_renderer)
+            	ImGui::Image(m_renderer->GetDescriptorSet(), {(float)m_renderer->GetWidth(),(float)m_renderer->GetWidth()});
+			else
+				assert(false);
+		}
+		else
+		{
+			if (m_finalImage)
+			{
+				ImVec2 uv_min = ImVec2(1, 0);                 // Top-left
+				ImVec2 uv_max = ImVec2(0, 1); 
+				float aspectRatio = (float)m_finalImage->GetWidth() / (float)m_finalImage->GetHeight();
+				float viewHeight = (float)m_finalImage->GetHeight();
+				ImGui::Image((void*)m_finalImage->GetDescriptorSet(), { aspectRatio * viewHeight, viewHeight }, uv_min, uv_max);
+			}
+			else
+				assert(false);
+		}
+        
 		ImGui::End();
         ImGui::PopStyleVar();
 
@@ -172,6 +229,10 @@ private:
     uint32_t m_viewportHeight = 0;
     float m_lastRenderTime = 0.0f;
 	MyUniforms m_myUniformData;
+
+	bool m_hWSolver = false;
+	uint32_t* m_imageData = nullptr;
+	std::shared_ptr<Walnut::Image> m_finalImage = nullptr;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
