@@ -43,7 +43,7 @@ private:
     float m_nearClip = 0.0f;
     float m_farClip = 0.0f;
 
-    float m_Pitch = -2.0f;
+    float m_Pitch = 0.0f; // this was -2.0
     float m_Yaw = 0.0f;
 
     float m_viewportWidth = 0;
