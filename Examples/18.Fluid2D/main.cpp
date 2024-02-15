@@ -85,13 +85,13 @@ public:
 			// But in the end this is just a bunch of floats to the eyes of the GPU,
 			// the *layout* will tell how to interpret this.
 			const std::vector<float> vertexData = {
-				-0.9, -0.9, 0.0, -1.0 , -1.0,
-				+0.9, -0.9, 0.0, 1.0 , -1.0,
-				+0.9, +0.9, 0.0, 1.0 , 1.0,
+				-0.999, -0.999, 0.0, -1.0 , -1.0,
+				+0.999, -0.999, 0.0, 1.0 , -1.0,
+				+0.999, +0.999, 0.0, 1.0 , 1.0,
 
-				-0.9, -0.9, 0.0, -1.0 , -1.0,
-				-0.9, +0.9, 0.0, -1.0 , 1.0,
-				+0.9, +0.9, 0.0, 1.0 , 1.0,
+				-0.999, -0.999, 0.0, -1.0 , -1.0,
+				-0.999, +0.999, 0.0, -1.0 , 1.0,
+				+0.999, +0.999, 0.0, 1.0 , 1.0,
 			};
 
 			std::vector<wgpu::VertexAttribute> vertexAttribs(2);
@@ -189,6 +189,10 @@ public:
 	{
 		ImGui::Begin("Settings");
         ImGui::Text("Last render: %.3fms", m_lastRenderTime);
+
+
+		ImGui::Checkbox("HW", &m_hWSolver);
+
 		ImGui::End();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
