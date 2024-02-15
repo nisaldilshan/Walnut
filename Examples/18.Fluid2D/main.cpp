@@ -155,11 +155,11 @@ public:
 		if (m_viewportWidth != m_finalImage->GetWidth() || m_viewportHeight != m_finalImage->GetHeight())
 		{
 			delete[] m_imageData;
-			m_imageData = new uint32_t[m_viewportWidth * m_viewportHeight];
-			m_finalImage->Resize(m_viewportWidth, m_viewportHeight);
+			m_imageData = new uint32_t[m_viewportWidth * m_viewportWidth];
+			m_finalImage->Resize(m_viewportWidth, m_viewportWidth);
 		}
 
-		for (size_t i = 0; i < m_viewportWidth * m_viewportHeight; i++)
+		for (size_t i = 0; i < m_viewportWidth * m_viewportWidth; i++)
 		{
 			m_imageData[i] = Walnut::Random::UInt();
 			m_imageData[i] |= 0xff000000; // remove randomnes from alpha channel
