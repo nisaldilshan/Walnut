@@ -56,9 +56,32 @@ public:
 			return out;
 		}
 
+		fn hash22(p: vec2u) -> vec2u {
+			var v = p * 1664525u + 1013904223u;
+			v.x += v.y * 1664525u; v.y += v.x * 1664525u;
+			v ^= v >> vec2u(16u);
+			v.x += v.y * 1664525u; v.y += v.x * 1664525u;
+			v ^= v >> vec2u(16u);
+			return v;
+		}
+
+		fn rand22(f: vec2f) -> vec2f { return vec2f(hash22(bitcast<vec2u>(f))) / f32(0xffffffff); }
+
+		fn noise2(n: vec2f) -> f32 {
+			let d = vec2f(0., 1.);
+			let b = floor(n);
+			let f = smoothstep(vec2f(0.), vec2f(1.), fract(n));
+
+			let mix1 = mix(rand22(b), rand22(b + d.yx), f.x);
+			let mix2 = mix(rand22(b + d.xx), rand22(b + d.yy), f.x);
+			let finalmix = mix(mix1, mix2, f.y);
+			return finalmix.x;
+		}
+
 		@fragment
 		fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-			return vec4f(1.0, 1.0, 1.0, 1.0);
+			let noise = noise2(in.uv);
+			return vec4f(noise, noise, noise, 1.0);
 		}
 
 		)";
@@ -74,11 +97,16 @@ public:
 
 	void GPUSolve()
 	{
+		// uint32_t renderWidth = m_viewportWidth;
+		// uint32_t renderHeight = m_viewportHeight;
+		uint32_t renderWidth = 256;
+		uint32_t renderHeight = 256;
+
 		if (!m_renderer ||
-            m_viewportWidth != m_renderer->GetWidth() ||
-            m_viewportHeight != m_renderer->GetHeight())
+            renderWidth != m_renderer->GetWidth() ||
+            renderHeight != m_renderer->GetHeight())
         {
-			m_renderer->OnResize(m_viewportWidth, m_viewportHeight);
+			m_renderer->OnResize(renderWidth, renderHeight);
 
 			// Vertex buffer
 			// There are 2 floats per vertex, one for x and one for y.
@@ -114,6 +142,14 @@ public:
 
 
 			m_renderer->SetVertexBufferData(vertexData.data(), vertexData.size() * 4, vertexBufferLayout);
+			// Create binding layout (don't forget to = Default)
+			wgpu::BindGroupLayoutEntry bGLayoutEntry = wgpu::Default;
+			// The binding index as used in the @binding attribute in the shader
+			bGLayoutEntry.binding = 0;
+			// The stage that needs to access this resource
+			bGLayoutEntry.visibility = wgpu::ShaderStage::Vertex;
+			bGLayoutEntry.buffer.type = wgpu::BufferBindingType::Uniform;
+			bGLayoutEntry.buffer.minBindingSize = sizeof(MyUniforms);
 
 			// Create binding layouts
 			std::vector<wgpu::BindGroupLayoutEntry> bindingLayoutEntries(1, wgpu::Default);
@@ -124,10 +160,10 @@ public:
 			uniformBindingLayout.visibility = wgpu::ShaderStage::Fragment;
 			uniformBindingLayout.buffer.type = wgpu::BufferBindingType::Uniform;
 			uniformBindingLayout.buffer.minBindingSize = sizeof(MyUniforms);
-			uniformBindingLayout.buffer.hasDynamicOffset = true;
+			uniformBindingLayout.buffer.hasDynamicOffset = false;
 
-			//m_renderer->CreateUniformBuffer(1, UniformBuf::UniformType::ModelViewProjection, sizeof(MyUniforms), uniformBindingLayout.binding);
-			//m_renderer->CreateBindGroup(bindingLayoutEntries);
+			m_renderer->SetBindGroupLayoutEntry(uniformBindingLayout);
+			m_renderer->CreateUniformBuffer(1, sizeof(MyUniforms));
 
 			m_renderer->Init();
         }
@@ -138,7 +174,7 @@ public:
 
 			const float time = static_cast<float>(glfwGetTime());
 			m_myUniformData.time = time;
-			// m_renderer->SetUniformBufferData(UniformBuf::UniformType::ModelViewProjection, &m_myUniformData, 0);
+			m_renderer->SetUniformBufferData(&m_myUniformData, 0);
        		m_renderer->Render();
 			m_renderer->EndRenderPass();
 		}
@@ -146,20 +182,24 @@ public:
 
 	void CPUSolve()
 	{
+		// uint32_t renderWidth = m_viewportWidth;
+		// uint32_t renderHeight = m_viewportHeight;
+		uint32_t renderWidth = 256;
+		uint32_t renderHeight = 256;
 		if (!m_imageData)
 		{
-			m_imageData = new uint32_t[m_viewportWidth * m_viewportHeight];
-			m_finalImage->Resize(m_viewportWidth, m_viewportHeight);
+			m_imageData = new uint32_t[renderWidth * renderHeight];
+			m_finalImage->Resize(renderWidth, renderHeight);
 		}
 
-		if (m_viewportWidth != m_finalImage->GetWidth() || m_viewportHeight != m_finalImage->GetHeight())
+		if (renderWidth != m_finalImage->GetWidth() || renderHeight != m_finalImage->GetHeight())
 		{
 			delete[] m_imageData;
-			m_imageData = new uint32_t[m_viewportWidth * m_viewportWidth];
-			m_finalImage->Resize(m_viewportWidth, m_viewportWidth);
+			m_imageData = new uint32_t[renderWidth * renderWidth];
+			m_finalImage->Resize(renderWidth, renderWidth);
 		}
 
-		for (size_t i = 0; i < m_viewportWidth * m_viewportWidth; i++)
+		for (size_t i = 0; i < renderWidth * renderWidth; i++)
 		{
 			m_imageData[i] = Walnut::Random::UInt();
 			m_imageData[i] |= 0xff000000; // remove randomnes from alpha channel
