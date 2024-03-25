@@ -117,7 +117,7 @@ public:
 		if (m_renderer)
 		{
 			m_renderer->BeginRenderPass();
-			m_renderer->RenderIndexed(0);
+			m_renderer->RenderIndexed(0, 0);
 			m_renderer->EndRenderPass();
 		}
        		

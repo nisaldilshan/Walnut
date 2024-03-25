@@ -50,14 +50,9 @@ void Renderer2D::SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLay
     m_rendererBackend->SetBindGroupLayoutEntry(bindGroupLayoutEntry);
 }
 
-void Renderer2D::SetSizeOfUniform(uint32_t sizeOfUniform)
+void Renderer2D::CreateUniformBuffer(size_t bufferLength, uint32_t sizeOfUniform)
 {
-    m_rendererBackend->SetSizeOfUniform(sizeOfUniform);
-}
-
-void Renderer2D::CreateUniformBuffer(size_t dynamicOffsetCount)
-{
-    m_rendererBackend->CreateUniformBuffer(dynamicOffsetCount);
+    m_rendererBackend->CreateUniformBuffer(bufferLength, sizeOfUniform);
 }
 
 void Renderer2D::SetUniformBufferData(const void* bufferData, uint32_t uniformIndex)
@@ -80,9 +75,9 @@ void Renderer2D::Render()
     m_rendererBackend->Render();
 }
 
-void Renderer2D::RenderIndexed(uint32_t uniformIndex)
+void Renderer2D::RenderIndexed(uint32_t uniformIndex, uint32_t dynamicOffsetCount)
 {
-    m_rendererBackend->RenderIndexed(uniformIndex);
+    m_rendererBackend->RenderIndexed(uniformIndex, dynamicOffsetCount);
 }
 
 void Renderer2D::BeginRenderPass()

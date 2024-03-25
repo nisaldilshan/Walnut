@@ -20,20 +20,19 @@ namespace GraphicsAPI
         void CreateVertexBuffer(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout);
         void CreateIndexBuffer(const std::vector<uint16_t> &bufferData);
         void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
-        void SetSizeOfUniform(uint32_t sizeOfUniform);
         void CreateBindGroup();
-        void CreateUniformBuffer(size_t dynamicOffsetCount);
+        void CreateUniformBuffer(size_t bufferLength, uint32_t sizeOfUniform);
         void SetUniformData(const void* bufferData, uint32_t uniformIndex);
         void SimpleRender();
         void Render();
-        void RenderIndexed(uint32_t uniformIndex);
+        void RenderIndexed(uint32_t uniformIndex, uint32_t dynamicOffsetCount);
         ImTextureID GetDescriptorSet();
         void BeginRenderPass();
         void EndRenderPass();
         
     private:
         void SubmitCommandBuffer();
-        uint32_t GetOffset(uint32_t uniformIndex);
+        uint32_t GetOffset(const uint32_t& uniformIndex, const uint32_t& sizeOfUniform);
 
         wgpu::ShaderModule m_shaderModule = nullptr;
         wgpu::RenderPipeline m_pipeline = nullptr;
@@ -51,12 +50,10 @@ namespace GraphicsAPI
         wgpu::PipelineLayout m_pipelineLayout = nullptr;
         wgpu::Buffer m_uniformBuffer = nullptr;
         wgpu::BindGroup m_bindGroup = nullptr;
-        size_t m_dynamicOffsetCount = 0;
         uint32_t m_sizeOfUniform = 0;
 
         wgpu::CommandEncoder m_currentCommandEncoder = nullptr;
         wgpu::RenderPassEncoder m_renderPass = nullptr;
-        wgpu::Limits m_deviceLimits;
 
         uint32_t m_width, m_height;
     };

@@ -34,15 +34,14 @@ public:
     void SetVertexBufferData(const void* bufferData, uint32_t bufferLength, wgpu::VertexBufferLayout bufferLayout);
     void SetIndexBufferData(const std::vector<uint16_t>& bufferData);
     void SetBindGroupLayoutEntry(wgpu::BindGroupLayoutEntry bindGroupLayoutEntry);
-    void SetSizeOfUniform(uint32_t sizeOfUniform);
-    void CreateUniformBuffer(size_t dynamicOffsetCount);
+    void CreateUniformBuffer(size_t bufferLength, uint32_t sizeOfUniform);
     void SetUniformBufferData(const void* bufferData, uint32_t uniformIndex);
     void* GetDescriptorSet();
     uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
     void SimpleRender();
     void Render();
-    void RenderIndexed(uint32_t uniformIndex);
+    void RenderIndexed(uint32_t uniformIndex, uint32_t dynamicOffsetCount);
     void BeginRenderPass();
     void EndRenderPass();
 

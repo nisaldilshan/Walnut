@@ -147,11 +147,11 @@ public:
 			bGLayoutEntry.visibility = wgpu::ShaderStage::Vertex;
 			bGLayoutEntry.buffer.type = wgpu::BufferBindingType::Uniform;
 			bGLayoutEntry.buffer.minBindingSize = sizeof(MyUniforms);
+			// Make this binding dynamic so we can offset it between draw calls
+			bGLayoutEntry.buffer.hasDynamicOffset = true;
 
-			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
-
-			m_renderer->CreateUniformBuffer(0);
+			m_renderer->CreateUniformBuffer(1, sizeof(MyUniforms));
 
 			m_renderer->Init();
         }
@@ -163,7 +163,7 @@ public:
 			m_uniformData.time = static_cast<float>(glfwGetTime()); // glfwGetTime returns a double
 			m_renderer->SetUniformBufferData(&m_uniformData, 0);
 
-			m_renderer->RenderIndexed(0);
+			m_renderer->RenderIndexed(0, 1);
 			m_renderer->EndRenderPass();
 		}
        		

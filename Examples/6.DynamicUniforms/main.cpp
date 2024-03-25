@@ -151,10 +151,8 @@ public:
 			// Make this binding dynamic so we can offset it between draw calls
 			bGLayoutEntry.buffer.hasDynamicOffset = true;
 
-			m_renderer->SetSizeOfUniform(sizeof(MyUniforms));
 			m_renderer->SetBindGroupLayoutEntry(bGLayoutEntry);
-
-			m_renderer->CreateUniformBuffer(1);
+			m_renderer->CreateUniformBuffer(2, sizeof(MyUniforms));
 
 			m_renderer->Init();	
         }
@@ -174,8 +172,8 @@ public:
 			m_renderer->SetUniformBufferData(&m_uniformData, 1);
 			//                               				^^^^^^^^^^^^^ beware of the non-null offset!
 
-			m_renderer->RenderIndexed(0);
-			m_renderer->RenderIndexed(1);
+			m_renderer->RenderIndexed(0, 1);
+			m_renderer->RenderIndexed(1, 1);
 			m_renderer->EndRenderPass();
 		}
        		
