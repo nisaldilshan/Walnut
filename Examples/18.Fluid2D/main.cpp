@@ -12,7 +12,7 @@
  * We do not instantiate it but use it in `sizeof` and `offsetof`
  */
 struct VertexAttributes {
-	glm::vec3 position;
+	glm::vec2 position;
 	glm::vec2 uv;
 };
 
@@ -32,7 +32,7 @@ public:
 
 		const char* shaderSource = R"(
 		struct VertexInput {
-			@location(0) position: vec3f,
+			@location(0) position: vec2f,
 			@location(1) uv: vec2f,
 		};
 
@@ -51,7 +51,7 @@ public:
 		@vertex
 		fn vs_main(in: VertexInput) -> VertexOutput {
 			var out: VertexOutput;
-			out.position = vec4f(in.position, 1.0);
+			out.position = vec4f(in.position, 0.0, 1.0);
 			out.uv = in.uv;
 			return out;
 		}
@@ -75,13 +75,15 @@ public:
 			let mix1 = mix(rand22(b), rand22(b + d.yx), f.x);
 			let mix2 = mix(rand22(b + d.xx), rand22(b + d.yy), f.x);
 			let finalmix = mix(mix1, mix2, f.y);
-			return finalmix.x;
+			return (finalmix.x + finalmix.y)/2;
 		}
 
 		@fragment
 		fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-			let noise = noise2(in.uv);
-			return vec4f(noise, noise, noise, 1.0);
+			let noise_1 = noise2(vec2f(in.position.x + uMyUniforms.time*10000, in.position.y + uMyUniforms.time*30000));
+			let noise_2 = noise2(vec2f(in.position.x + uMyUniforms.time*20000, in.position.y + uMyUniforms.time*10000));
+			let noise_3 = noise2(vec2f(in.position.x + uMyUniforms.time*30000, in.position.y + uMyUniforms.time*20000));
+			return vec4f(noise_1, noise_2, noise_3, 1.0);
 		}
 
 		)";
@@ -113,20 +115,20 @@ public:
 			// But in the end this is just a bunch of floats to the eyes of the GPU,
 			// the *layout* will tell how to interpret this.
 			const std::vector<float> vertexData = {
-				-0.999, -0.999, 0.0, -1.0 , -1.0,
-				+0.999, -0.999, 0.0, 1.0 , -1.0,
-				+0.999, +0.999, 0.0, 1.0 , 1.0,
+				-0.999, -0.999, -1.0 , -1.0,
+				+0.999, -0.999, 1.0 , -1.0,
+				+0.999, +0.999, 1.0 , 1.0,
 
-				-0.999, -0.999, 0.0, -1.0 , -1.0,
-				-0.999, +0.999, 0.0, -1.0 , 1.0,
-				+0.999, +0.999, 0.0, 1.0 , 1.0,
+				-0.999, -0.999, -1.0 , -1.0,
+				-0.999, +0.999, -1.0 , 1.0,
+				+0.999, +0.999, 1.0 , 1.0,
 			};
 
 			std::vector<wgpu::VertexAttribute> vertexAttribs(2);
 
 			// Position attribute
 			vertexAttribs[0].shaderLocation = 0;
-			vertexAttribs[0].format = wgpu::VertexFormat::Float32x3;
+			vertexAttribs[0].format = wgpu::VertexFormat::Float32x2;
 			vertexAttribs[0].offset = 0;
 
 			// UV attribute
