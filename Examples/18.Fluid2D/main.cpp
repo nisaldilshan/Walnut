@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "../Common/Renderer2D.h"
+#include "FluidSolver2D.h"
 
 /**
  * A structure that describes the data layout in the vertex buffer

@@ -1,4 +1,5 @@
 add_executable(Fluid2D 
+            FluidSolver2D.cpp
             main.cpp
 )
 

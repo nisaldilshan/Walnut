@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 // Implementation of "Real-Time Fluid Dynamics for Games" paper by Jos Stam (GDC-2003)
 // References :
@@ -7,13 +8,14 @@
     // https://mikeash.com/pyblog/fluid-simulation-for-dummies.html
     // https://www.youtube.com/watch?v=alhpH6ECFvQ
 
-class FluidSolver
+class FluidSolver2D
 {
 public:
-    FluidSolver(uint32_t size);
-    ~FluidSolver();
+    FluidSolver2D(uint32_t size);
+    ~FluidSolver2D();
 private:
-    /* data */
+    void FluidCubeAddDensity(int x, int y, int z, float amount);
+    void FluidCubeAddVelocity(int x, int y, int z, float amountX, float amountY, float amountZ);
 };
 
 
