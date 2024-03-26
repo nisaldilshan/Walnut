@@ -10,7 +10,7 @@ FluidSolver2D::~FluidSolver2D()
 {
 }
 
-static void set_bnd(int b, float *x, int N)
+static void set_bnd(int b, std::vector<float>& x, int N)
 {
     //set edges
     for(int i = 1; i < N - 1; i++) {
@@ -33,7 +33,7 @@ static void set_bnd(int b, float *x, int N)
                                 + x[IX(N-1, N-2)]);
 }
 
-static void lin_solve(int b, float *x, float *x0, float a, float c, int iter, int N)
+static void lin_solve(int b, std::vector<float>& x, std::vector<float>& x0, float a, float c, int iter, int N)
 {
     float cRecip = 1.0 / c;
     for (int k = 0; k < iter; k++) {
@@ -52,10 +52,39 @@ static void lin_solve(int b, float *x, float *x0, float a, float c, int iter, in
     }
 }
 
-static void diffuse (int b, float *x, float *x0, float diff, float dt, int iter, int N)
+static void diffuse (int b, std::vector<float>& x, std::vector<float>& x0, float diff, float dt, int iter, int N)
 {
     float a = dt * diff * (N - 2) * (N - 2);
     lin_solve(b, x, x0, a, 1 + 6 * a, iter, N);
+}
+
+static void project(std::vector<float>& velocX, std::vector<float>& velocY, std::vector<float>& p, std::vector<float>& div, int iter, int N)
+{
+    for (int j = 1; j < N - 1; j++) {
+        for (int i = 1; i < N - 1; i++) {
+            div[IX(i, j)] = -0.5f*(
+                     velocX[IX(i+1, j  )]
+                    -velocX[IX(i-1, j  )]
+                    +velocY[IX(i  , j+1)]
+                    -velocY[IX(i  , j-1)]
+                )/N;
+            p[IX(i, j)] = 0;
+        }
+    }
+    set_bnd(0, div, N); 
+    set_bnd(0, p, N);
+    lin_solve(0, p, div, 1, 6, iter, N);
+    
+    for (int j = 1; j < N - 1; j++) {
+        for (int i = 1; i < N - 1; i++) {
+            velocX[IX(i, j)] -= 0.5f * (  p[IX(i+1, j)]
+                                         -p[IX(i-1, j)]) * N;
+            velocY[IX(i, j)] -= 0.5f * (  p[IX(i, j+1)]
+                                         -p[IX(i, j-1)]) * N;
+        }
+    }
+    set_bnd(1, velocX, N);
+    set_bnd(2, velocY, N);
 }
 
 void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
@@ -64,15 +93,9 @@ void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
     float visc     = cube.visc;
     float diff     = cube.diff;
     float dt       = cube.dt;
-    float *Vx      = cube.Vx;
-    float *Vy      = cube.Vy;
-    float *Vx0     = cube.Vx0;
-    float *Vy0     = cube.Vy0;
-    float *s       = cube.s;
-    float *density = cube.density;
     
-    diffuse(1, Vx0, Vx, visc, dt, 4, N);
-    diffuse(2, Vy0, Vy, visc, dt, 4, N);
+    diffuse(1, cube.Vx0, cube.Vx, visc, dt, 4, N);
+    diffuse(2, cube.Vy0, cube.Vy, visc, dt, 4, N);
     
     // project(Vx0, Vy0, Vz0, Vx, Vy, 4, N);
     
@@ -82,7 +105,7 @@ void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
     
     // project(Vx, Vy, Vz, Vx0, Vy0, 4, N);
     
-    diffuse(0, s, density, diff, dt, 4, N);
+    diffuse(0, cube.s, cube.density, diff, dt, 4, N);
     // advect(0, density, s, Vx, Vy, Vz, dt, N);
 }
 

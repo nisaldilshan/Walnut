@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <vector>
 
 // Implementation of "Real-Time Fluid Dynamics for Games" paper by Jos Stam (GDC-2003)
 // References :
@@ -14,14 +15,14 @@ struct FluidPlane {
     float diff;
     float visc;
     
-    float *s;
-    float *density;
+    std::vector<float> s;
+    std::vector<float> density;
     
-    float *Vx;
-    float *Vy;
+    std::vector<float> Vx;
+    std::vector<float> Vy;
 
-    float *Vx0;
-    float *Vy0;
+    std::vector<float> Vx0;
+    std::vector<float> Vy0;
 };
 
 class FluidSolver2D
