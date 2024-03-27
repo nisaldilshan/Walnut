@@ -87,6 +87,56 @@ static void project(std::vector<float>& velocX, std::vector<float>& velocY, std:
     set_bnd(2, velocY, N);
 }
 
+static void advect(int b, std::vector<float>& d, std::vector<float>& d0,  std::vector<float>& velocX, std::vector<float>& velocY, float dt, int N)
+{
+    float i0, i1, j0, j1;
+    
+    float dtx = dt * (N - 2);
+    float dty = dt * (N - 2);
+    
+    float s0, s1, t0, t1;
+    float tmp1, tmp2, x, y;
+    
+    float Nfloat = N;
+    float ifloat, jfloat;
+    int i, j;
+    
+
+    for(j = 1, jfloat = 1; j < N - 1; j++, jfloat++) { 
+        for(i = 1, ifloat = 1; i < N - 1; i++, ifloat++) {
+            tmp1 = dtx * velocX[IX(i, j)];
+            tmp2 = dty * velocY[IX(i, j)];
+            x    = ifloat - tmp1; 
+            y    = jfloat - tmp2;
+            
+            if(x < 0.5f) x = 0.5f; 
+            if(x > Nfloat + 0.5f) x = Nfloat + 0.5f; 
+            i0 = floorf(x); 
+            i1 = i0 + 1.0f;
+            if(y < 0.5f) y = 0.5f; 
+            if(y > Nfloat + 0.5f) y = Nfloat + 0.5f; 
+            j0 = floorf(y);
+            j1 = j0 + 1.0f; 
+            
+            s1 = x - i0; 
+            s0 = 1.0f - s1; 
+            t1 = y - j0; 
+            t0 = 1.0f - t1;
+            
+            int i0i = i0;
+            int i1i = i1;
+            int j0i = j0;
+            int j1i = j1;
+            
+            d[IX(i, j)] = 
+            
+                s0 * ( t0 * d0[IX(i0i, j0i)]  +  t1 * d0[IX(i0i, j1i)])
+              + s1 * ( t0 * d0[IX(i1i, j0i)]  +  t1 * d0[IX(i1i, j1i)]);
+        }
+    }
+    set_bnd(b, d, N);
+}
+
 void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
 {
     int N          = cube.size;
@@ -97,16 +147,15 @@ void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
     diffuse(1, cube.Vx0, cube.Vx, visc, dt, 4, N);
     diffuse(2, cube.Vy0, cube.Vy, visc, dt, 4, N);
     
-    // project(Vx0, Vy0, Vz0, Vx, Vy, 4, N);
+    project(cube.Vx0, cube.Vy0, cube.Vx, cube.Vy, 4, N);
     
-    // advect(1, Vx, Vx0, Vx0, Vy0, Vz0, dt, N);
-    // advect(2, Vy, Vy0, Vx0, Vy0, Vz0, dt, N);
-    // advect(3, Vz, Vz0, Vx0, Vy0, Vz0, dt, N);
+    advect(1, cube.Vx, cube.Vx0, cube.Vx0, cube.Vy0, dt, N);
+    advect(2, cube.Vy, cube.Vy0, cube.Vx0, cube.Vy0, dt, N);
     
-    // project(Vx, Vy, Vz, Vx0, Vy0, 4, N);
+    project(cube.Vx, cube.Vy, cube.Vx0, cube.Vy0, 4, N);
     
     diffuse(0, cube.s, cube.density, diff, dt, 4, N);
-    // advect(0, density, s, Vx, Vy, Vz, dt, N);
+    advect(0, cube.density, cube.s, cube.Vx, cube.Vy, dt, N);
 }
 
 void FluidSolver2D::FluidPlaneAddDensity(int x, int y, float amount)
