@@ -91,6 +91,8 @@ public:
 		m_renderer->SetShader(shaderSource);
 
 		m_finalImage = std::make_shared<Walnut::Image>(1, 1, Walnut::ImageFormat::RGBA);
+		m_fluid = std::make_unique<FluidPlane>(256);
+		m_solver = std::make_unique<FluidSolver2D>();
 	}
 
 	virtual void OnDetach() override
@@ -202,10 +204,18 @@ public:
 			m_finalImage->Resize(renderWidth, renderWidth);
 		}
 
+		m_solver->FluidPlaneAddDensity(*m_fluid, 128, 128, 500.0f);
+		m_solver->FluidPlaneAddVelocity(*m_fluid, 128, 128, 5.0f, 5.0f);
+		m_solver->FluidSolveStep(*m_fluid);
+
 		for (size_t i = 0; i < renderWidth * renderWidth; i++)
 		{
-			m_imageData[i] = Walnut::Random::UInt();
-			m_imageData[i] |= 0xff000000; // remove randomnes from alpha channel
+			uint8_t red = m_fluid->density[i];
+			uint8_t green = m_fluid->density[i];
+			uint8_t blue = m_fluid->density[i];
+			constexpr uint8_t alpha = 255;
+        	uint32_t result = (alpha << 24) | (blue << 16) | (green << 8) | red;
+			m_imageData[i] = result;
 		}
 		m_finalImage->SetData(m_imageData);
 	}
@@ -280,6 +290,8 @@ private:
 	bool m_hWSolver = false;
 	uint32_t* m_imageData = nullptr;
 	std::shared_ptr<Walnut::Image> m_finalImage = nullptr;
+	std::unique_ptr<FluidPlane> m_fluid;
+	std::unique_ptr<FluidSolver2D> m_solver;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)

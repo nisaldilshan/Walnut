@@ -2,14 +2,6 @@
 
 #define IX(x, y) ((x) + (y) * N)
 
-FluidSolver2D::FluidSolver2D(uint32_t size)
-{
-}
-
-FluidSolver2D::~FluidSolver2D()
-{
-}
-
 static void set_bnd(int b, std::vector<float>& x, int N)
 {
     //set edges
@@ -158,18 +150,17 @@ void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
     advect(0, cube.density, cube.s, cube.Vx, cube.Vy, dt, N);
 }
 
-void FluidSolver2D::FluidPlaneAddDensity(int x, int y, float amount)
+void FluidSolver2D::FluidPlaneAddDensity(FluidPlane& cube, int x, int y, float amount)
 {
-    // int N = cube.size;
-    // cube.density[IX(x, y, z)] += amount;
+    int N = cube.size;
+    cube.density[IX(x, y)] += amount;
 }
 
-void FluidSolver2D::FluidPlaneAddVelocity(int x, int y, float amountX, float amountY)
+void FluidSolver2D::FluidPlaneAddVelocity(FluidPlane& cube, int x, int y, float amountX, float amountY)
 {
-    // int N = cube.size;
-    // int index = IX(x, y, z);
+    int N = cube.size;
+    int index = IX(x, y);
     
-    // cube.Vx[index] += amountX;
-    // cube.Vy[index] += amountY;
-    // cube.Vz[index] += amountZ;
+    cube.Vx[index] += amountX;
+    cube.Vy[index] += amountY;
 }

@@ -10,10 +10,21 @@
     // https://www.youtube.com/watch?v=alhpH6ECFvQ
 
 struct FluidPlane {
-    int size;
-    float dt;
-    float diff;
-    float visc;
+    FluidPlane(std::size_t size)
+        : size(size)
+    {
+        s.resize(size * size);
+        density.resize(size * size);
+        Vx.resize(size * size);
+        Vy.resize(size * size);
+        Vx0.resize(size * size);
+        Vy0.resize(size * size);
+    }
+
+    std::size_t size;
+    float dt = 0.2f;
+    float diff = 0.0f;
+    float visc = 0.0000001f;
     
     std::vector<float> s;
     std::vector<float> density;
@@ -28,12 +39,13 @@ struct FluidPlane {
 class FluidSolver2D
 {
 public:
-    FluidSolver2D(uint32_t size);
-    ~FluidSolver2D();
-private:
+    FluidSolver2D() = default;
+    ~FluidSolver2D() = default;
     void FluidSolveStep(FluidPlane& cube);
-    void FluidPlaneAddDensity(int x, int y, float amount);
-    void FluidPlaneAddVelocity(int x, int y, float amountX, float amountY);
+    void FluidPlaneAddDensity(FluidPlane& cube, int x, int y, float amount);
+    void FluidPlaneAddVelocity(FluidPlane& cube, int x, int y, float amountX, float amountY);
+private:
+    
 };
 
 
