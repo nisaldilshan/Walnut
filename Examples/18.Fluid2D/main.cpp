@@ -205,7 +205,15 @@ public:
 		}
 
 		m_solver->FluidPlaneAddDensity(*m_fluid, 128, 128, 500.0f);
-		m_solver->FluidPlaneAddVelocity(*m_fluid, 128, 128, 5.0f, 5.0f);
+		m_solver->FluidPlaneAddDensity(*m_fluid, 126, 128, 500.0f);
+		m_solver->FluidPlaneAddDensity(*m_fluid, 130, 128, 500.0f);
+		m_solver->FluidPlaneAddDensity(*m_fluid, 128, 126, 500.0f);
+		m_solver->FluidPlaneAddDensity(*m_fluid, 128, 130, 500.0f);
+
+		m_solver->FluidPlaneAddVelocity(*m_fluid, 110, 110, 1.0f, 1.0f);
+		m_solver->FluidPlaneAddVelocity(*m_fluid, 110, 110, 2.0f, 3.0f);
+		m_solver->FluidPlaneAddVelocity(*m_fluid, 110, 110, 3.0f, 2.0f);
+
 		m_solver->FluidSolveStep(*m_fluid);
 
 		for (size_t i = 0; i < renderWidth * renderWidth; i++)

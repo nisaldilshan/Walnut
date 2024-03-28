@@ -22,8 +22,8 @@ struct FluidPlane {
     }
 
     std::size_t size;
-    float dt = 0.2f;
-    float diff = 0.0f;
+    float dt = 0.1f;
+    float diff = 0.0000001f;
     float visc = 0.0000001f;
     
     std::vector<float> s;
