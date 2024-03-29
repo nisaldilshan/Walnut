@@ -132,12 +132,10 @@ static void advect(int b, std::vector<float>& d, std::vector<float>& d0,  std::v
 void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
 {
     int N          = cube.size;
-    float visc     = cube.visc;
-    float diff     = cube.diff;
     float dt       = cube.dt;
     
-    diffuse(1, cube.Vx0, cube.Vx, visc, dt, 4, N);
-    diffuse(2, cube.Vy0, cube.Vy, visc, dt, 4, N);
+    diffuse(1, cube.Vx0, cube.Vx, cube.viscosity, dt, 4, N);
+    diffuse(2, cube.Vy0, cube.Vy, cube.viscosity, dt, 4, N);
     
     project(cube.Vx0, cube.Vy0, cube.Vx, cube.Vy, 4, N);
     
@@ -146,8 +144,8 @@ void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
     
     project(cube.Vx, cube.Vy, cube.Vx0, cube.Vy0, 4, N);
     
-    diffuse(0, cube.s, cube.density, diff, dt, 4, N);
-    advect(0, cube.density, cube.s, cube.Vx, cube.Vy, dt, N);
+    diffuse(0, cube.density0, cube.density, cube.diffusion, dt, 4, N);
+    advect(0, cube.density, cube.density0, cube.Vx, cube.Vy, dt, N);
 }
 
 void FluidSolver2D::FluidPlaneAddDensity(FluidPlane& cube, int x, int y, float amount)
