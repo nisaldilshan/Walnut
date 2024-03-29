@@ -23,6 +23,8 @@ struct MyUniforms {
 };
 static_assert(sizeof(MyUniforms) % 16 == 0);
 
+constexpr uint32_t simulationDimension = 512;
+
 class Renderer2DLayer : public Walnut::Layer
 {
 public:
@@ -91,7 +93,7 @@ public:
 		m_renderer->SetShader(shaderSource);
 
 		m_finalImage = std::make_shared<Walnut::Image>(1, 1, Walnut::ImageFormat::RGBA);
-		m_fluid = std::make_unique<FluidPlane>(256);
+		m_fluid = std::make_unique<FluidPlane>(simulationDimension);
 		m_solver = std::make_unique<FluidSolver2D>();
 	}
 
@@ -104,8 +106,8 @@ public:
 	{
 		// uint32_t renderWidth = m_viewportWidth;
 		// uint32_t renderHeight = m_viewportHeight;
-		uint32_t renderWidth = 256;
-		uint32_t renderHeight = 256;
+		uint32_t renderWidth = simulationDimension;
+		uint32_t renderHeight = simulationDimension;
 
 		if (!m_renderer ||
             renderWidth != m_renderer->GetWidth() ||
@@ -189,8 +191,8 @@ public:
 	{
 		// uint32_t renderWidth = m_viewportWidth;
 		// uint32_t renderHeight = m_viewportHeight;
-		uint32_t renderWidth = 256;
-		uint32_t renderHeight = 256;
+		uint32_t renderWidth = simulationDimension;
+		uint32_t renderHeight = simulationDimension;
 		if (!m_imageData)
 		{
 			m_imageData = new uint32_t[renderWidth * renderHeight];

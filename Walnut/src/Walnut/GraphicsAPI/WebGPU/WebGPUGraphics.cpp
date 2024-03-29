@@ -39,6 +39,7 @@ namespace GraphicsAPI
 		assert(g_instance);
         std::cout << "Requesting adapter..." << std::endl;
         wgpu::RequestAdapterOptions adapterOpts{};
+		adapterOpts.nextInChain = nullptr;
 		adapterOpts.compatibleSurface = g_surface;
 		wgpu::Adapter adapter = g_instance.requestAdapter(adapterOpts);
 		std::cout << "Got adapter: " << adapter << std::endl;
@@ -84,8 +85,14 @@ namespace GraphicsAPI
 		requiredLimits.limits.maxComputeInvocationsPerWorkgroup = 32;
 		requiredLimits.limits.maxComputeWorkgroupsPerDimension = 2;
 
+		const char* const enabledToggles[] = {};
+		wgpu::DawnTogglesDescriptor deviceTogglesDesc;
+		deviceTogglesDesc.disabledToggles = enabledToggles;
+		deviceTogglesDesc.disabledTogglesCount = 0;
+
 		wgpu::DeviceDescriptor deviceDesc;
 		deviceDesc.label = "My Device";
+		deviceDesc.nextInChain = reinterpret_cast<wgpu::ChainedStruct*>(&deviceTogglesDesc);
 		deviceDesc.requiredFeaturesCount = 0;
 		deviceDesc.requiredLimits = &requiredLimits;
 		deviceDesc.defaultQueue.label = "The default queue";

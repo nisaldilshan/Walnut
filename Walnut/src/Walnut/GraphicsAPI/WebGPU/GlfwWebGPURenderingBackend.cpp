@@ -63,7 +63,12 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::ConfigureImGui()
     {
         ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
-        ImGui_ImplWGPU_Init(GraphicsAPI::WebGPU::GetDevice(), 3, GraphicsAPI::WebGPU::GetSwapChainFormat(), wgpu::TextureFormat::Undefined);
+
+        ImGui_ImplWGPU_InitInfo initInfo{};
+        initInfo.Device = GraphicsAPI::WebGPU::GetDevice();
+        initInfo.NumFramesInFlight = 3;
+        initInfo.RenderTargetFormat = GraphicsAPI::WebGPU::GetSwapChainFormat();
+        ImGui_ImplWGPU_Init(&initInfo);
     }
 
     void GlfwWebGPURenderingBackend::StartImGuiFrame()
