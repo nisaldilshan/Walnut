@@ -1,0 +1,240 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FirstTriangle",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/FirstTriangle",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "VertexBuffers",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/VertexBuffers",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "VertexAttributes",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/VertexAttributes",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "IndexBuffers",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/IndexBuffers",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "UniformBuffers",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/UniformBuffers",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "DynamicUniforms",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/DynamicUniforms",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "First3DShape",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/First3DShape",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "TransformationMatrices",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/TransformationMatrices",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "BasicShading",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/BasicShading",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "FirstTexture",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/FirstTexture",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "TextureSampler",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/TextureSampler",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "TextureLoader",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/TextureLoader",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "CameraControls",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/CameraControls",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "Lighting",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Lighting",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "NormalMapping",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/NormalMapping",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "RayMarching",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/RayMarching",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "Fluid2D",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Fluid2D",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "App Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/App",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "env": { 
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+            },
+        },
+        {
+            "name": "(lldb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/App",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "environment": [{
+                "name": "DYLD_LIBRARY_PATH",
+                "value": "${workspaceFolder}/build/lib"
+            }],
+            "externalConsole": false,
+            "MIMode": "lldb",
+        }
+
+    ]
+}

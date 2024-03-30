@@ -8,7 +8,7 @@
 #include <thread>
 
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+#include <Walnut/GLM/GLM.h>
 
 #include "RenderingBackend.h"
 

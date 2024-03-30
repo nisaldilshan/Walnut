@@ -8,13 +8,7 @@
 
 #include "WebGPUGraphics.h"
 
-wgpu::Instance m_instance = nullptr;
-wgpu::TextureFormat m_swapChainFormat = wgpu::TextureFormat::Undefined;
 wgpu::SwapChain m_swapChain = nullptr;
-wgpu::TextureFormat m_depthTextureFormat = wgpu::TextureFormat::Depth24Plus;
-wgpu::Texture m_depthTexture = nullptr;
-wgpu::TextureView m_depthTextureView = nullptr;
-
 
 namespace Walnut
 {
@@ -22,14 +16,9 @@ namespace Walnut
     {
         m_windowHandle = windowHandle;
 
-        m_instance = createInstance(wgpu::InstanceDescriptor{});
-		if (!m_instance) {
-			std::cerr << "Could not initialize WebGPU!" << std::endl;
-		}
-
-		
-		GraphicsAPI::WebGPU::CreateSurface(m_instance, m_windowHandle);
-        GraphicsAPI::WebGPU::CreateDevice(m_instance);
+		GraphicsAPI::WebGPU::CreateInstance(wgpu::InstanceDescriptor{});
+		GraphicsAPI::WebGPU::CreateSurface(m_windowHandle);
+        GraphicsAPI::WebGPU::CreateDevice();
 
         auto device = GraphicsAPI::WebGPU::GetDevice();
         if (device == nullptr)
@@ -45,12 +34,6 @@ namespace Walnut
 			std::cout << std::endl;
 		});
 
-#ifdef WEBGPU_BACKEND_WGPU
-		m_swapChainFormat = m_surface.getPreferredFormat(adapter);
-#else
-		m_swapChainFormat = wgpu::TextureFormat::BGRA8Unorm;
-#endif
-
     }
     void GlfwWebGPURenderingBackend::SetupGraphicsAPI()
     {
@@ -63,40 +46,12 @@ namespace Walnut
 		swapChainDesc.width = static_cast<uint32_t>(width);
 		swapChainDesc.height = static_cast<uint32_t>(height);
 		swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		swapChainDesc.format = m_swapChainFormat;
+		swapChainDesc.format = GraphicsAPI::WebGPU::GetSwapChainFormat();
 		swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
 		m_swapChain = GraphicsAPI::WebGPU::GetDevice().createSwapChain(GraphicsAPI::WebGPU::GetSurface(), swapChainDesc);
 		std::cout << "Swapchain: " << m_swapChain << std::endl;
 		if (m_swapChain == nullptr)
             std::cerr << "Could not initialize WebGPU SwapChain!" << std::endl;
-
-        // Create the depth texture
-		wgpu::TextureDescriptor depthTextureDesc;
-		depthTextureDesc.dimension = wgpu::TextureDimension::_2D;
-		depthTextureDesc.format = m_depthTextureFormat;
-		depthTextureDesc.mipLevelCount = 1;
-		depthTextureDesc.sampleCount = 1;
-		depthTextureDesc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
-		depthTextureDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		depthTextureDesc.viewFormatCount = 1;
-		depthTextureDesc.viewFormats = (WGPUTextureFormat*)&m_depthTextureFormat;
-		m_depthTexture = GraphicsAPI::WebGPU::GetDevice().createTexture(depthTextureDesc);
-		std::cout << "Depth texture: " << m_depthTexture << std::endl;
-
-		// Create the view of the depth texture manipulated by the rasterizer
-		wgpu::TextureViewDescriptor depthTextureViewDesc;
-		depthTextureViewDesc.aspect = wgpu::TextureAspect::DepthOnly;
-		depthTextureViewDesc.baseArrayLayer = 0;
-		depthTextureViewDesc.arrayLayerCount = 1;
-		depthTextureViewDesc.baseMipLevel = 0;
-		depthTextureViewDesc.mipLevelCount = 1;
-		depthTextureViewDesc.dimension = wgpu::TextureViewDimension::_2D;
-		depthTextureViewDesc.format = m_depthTextureFormat;
-		m_depthTextureView = m_depthTexture.createView(depthTextureViewDesc);
-		std::cout << "Depth texture view: " << m_depthTextureView << std::endl;
-
-		if (m_depthTextureView == nullptr)
-            std::cerr << "Could not initialize WebGPU DepthTexture!" << std::endl;
     }
     bool GlfwWebGPURenderingBackend::NeedToResizeWindow()
     {
@@ -108,7 +63,12 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::ConfigureImGui()
     {
         ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
-        ImGui_ImplWGPU_Init(GraphicsAPI::WebGPU::GetDevice(), 3, m_swapChainFormat, m_depthTextureFormat);
+
+        ImGui_ImplWGPU_InitInfo initInfo{};
+        initInfo.Device = GraphicsAPI::WebGPU::GetDevice();
+        initInfo.NumFramesInFlight = 3;
+        initInfo.RenderTargetFormat = GraphicsAPI::WebGPU::GetSwapChainFormat();
+        ImGui_ImplWGPU_Init(&initInfo);
     }
 
     void GlfwWebGPURenderingBackend::StartImGuiFrame()
@@ -144,24 +104,6 @@ namespace Walnut
         renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-        wgpu::RenderPassDepthStencilAttachment depthStencilAttachment;
-        depthStencilAttachment.view = m_depthTextureView;
-        depthStencilAttachment.depthClearValue = 1.0f;
-        depthStencilAttachment.depthLoadOp = wgpu::LoadOp::Clear;
-        depthStencilAttachment.depthStoreOp = wgpu::StoreOp::Store;
-        depthStencilAttachment.depthReadOnly = false;
-        depthStencilAttachment.stencilClearValue = 0;
-#ifdef WEBGPU_BACKEND_WGPU
-        depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Clear;
-        depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Store;
-#else
-        depthStencilAttachment.stencilLoadOp = wgpu::LoadOp::Undefined;
-        depthStencilAttachment.stencilStoreOp = wgpu::StoreOp::Undefined;
-#endif
-        depthStencilAttachment.stencilReadOnly = true;
-
-        renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
 
         renderPassDesc.timestampWriteCount = 0;
         renderPassDesc.timestampWrites = nullptr;
