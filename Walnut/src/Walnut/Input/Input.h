@@ -2,6 +2,8 @@
 
 #include "KeyCodes.h"
 
+#include <glm/ext.hpp>
+
 namespace Walnut {
 
 	class Input
