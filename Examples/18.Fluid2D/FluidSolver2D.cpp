@@ -2,6 +2,8 @@
 
 #define IX(x, y) ((x) + (y) * N)
 
+constexpr uint32_t linearSolveIterations = 4;
+
 static void set_bnd(int b, std::vector<float>& x, int N)
 {
     //set edges
@@ -25,10 +27,10 @@ static void set_bnd(int b, std::vector<float>& x, int N)
                                 + x[IX(N-1, N-2)]);
 }
 
-static void lin_solve(int b, std::vector<float>& x, std::vector<float>& x0, float a, float c, int iter, int N)
+static void lin_solve(int b, std::vector<float>& x, std::vector<float>& x0, float a, float c, int N)
 {
     float cRecip = 1.0 / c;
-    for (int k = 0; k < iter; k++) {
+    for (int k = 0; k < linearSolveIterations; k++) {
         for (int j = 1; j < N - 1; j++) {
             for (int i = 1; i < N - 1; i++) {
                 x[IX(i, j)] =
@@ -44,43 +46,48 @@ static void lin_solve(int b, std::vector<float>& x, std::vector<float>& x0, floa
     }
 }
 
-static void diffuse (int b, std::vector<float>& x, std::vector<float>& x0, float diff, float dt, int iter, int N)
+FluidSolver2D::FluidSolver2D(FluidPlane& fluid)
+    : m_fluid(fluid)
 {
-    float a = dt * diff * (N - 2) * (N - 2);
-    lin_solve(b, x, x0, a, 1 + 6 * a, iter, N);
 }
 
-static void project(std::vector<float>& velocX, std::vector<float>& velocY, std::vector<float>& p, std::vector<float>& div, int iter, int N)
+void FluidSolver2D::FluidSolveStep()
 {
-    for (int j = 1; j < N - 1; j++) {
-        for (int i = 1; i < N - 1; i++) {
-            div[IX(i, j)] = -0.5f*(
-                     velocX[IX(i+1, j  )]
-                    -velocX[IX(i-1, j  )]
-                    +velocY[IX(i  , j+1)]
-                    -velocY[IX(i  , j-1)]
-                )/N;
-            p[IX(i, j)] = 0;
-        }
-    }
-    set_bnd(0, div, N); 
-    set_bnd(0, p, N);
-    lin_solve(0, p, div, 1, 6, iter, N);
+    int N          = m_fluid.size;
+    float dt       = m_fluid.dt;
     
-    for (int j = 1; j < N - 1; j++) {
-        for (int i = 1; i < N - 1; i++) {
-            velocX[IX(i, j)] -= 0.5f * (  p[IX(i+1, j)]
-                                         -p[IX(i-1, j)]) * N;
-            velocY[IX(i, j)] -= 0.5f * (  p[IX(i, j+1)]
-                                         -p[IX(i, j-1)]) * N;
-        }
-    }
-    set_bnd(1, velocX, N);
-    set_bnd(2, velocY, N);
+    Diffuse(1, m_fluid.Vx0, m_fluid.Vx, m_fluid.viscosity, dt);
+    Diffuse(2, m_fluid.Vy0, m_fluid.Vy, m_fluid.viscosity, dt);
+    
+    Project(m_fluid.Vx0, m_fluid.Vy0, m_fluid.Vx, m_fluid.Vy);
+    
+    Advect(1, m_fluid.Vx, m_fluid.Vx0, m_fluid.Vx0, m_fluid.Vy0, dt);
+    Advect(2, m_fluid.Vy, m_fluid.Vy0, m_fluid.Vx0, m_fluid.Vy0, dt);
+    
+    Project(m_fluid.Vx, m_fluid.Vy, m_fluid.Vx0, m_fluid.Vy0);
+    
+    Diffuse(0, m_fluid.density0, m_fluid.density, m_fluid.diffusion, dt);
+    Advect(0, m_fluid.density, m_fluid.density0, m_fluid.Vx, m_fluid.Vy, dt);
 }
 
-static void advect(int b, std::vector<float>& d, std::vector<float>& d0,  std::vector<float>& velocX, std::vector<float>& velocY, float dt, int N)
+void FluidSolver2D::FluidPlaneAddDensity(int x, int y, float amount)
 {
+    const int N = m_fluid.size;
+    m_fluid.density[IX(x, y)] += amount;
+}
+
+void FluidSolver2D::FluidPlaneAddVelocity(int x, int y, float amountX, float amountY)
+{
+    const int N = m_fluid.size;
+    int index = IX(x, y);
+    
+    m_fluid.Vx[index] += amountX;
+    m_fluid.Vy[index] += amountY;
+}
+
+void FluidSolver2D::Advect(int b, std::vector<float> &d, std::vector<float> &d0, std::vector<float> &velocX, std::vector<float> &velocY, float dt)
+{
+    const int N = m_fluid.size;
     float i0, i1, j0, j1;
     
     float dtx = dt * (N - 2);
@@ -129,36 +136,39 @@ static void advect(int b, std::vector<float>& d, std::vector<float>& d0,  std::v
     set_bnd(b, d, N);
 }
 
-void FluidSolver2D::FluidSolveStep(FluidPlane& cube)
+void FluidSolver2D::Diffuse(int b, std::vector<float>& x, std::vector<float>& x0, float diff, float dt)
 {
-    int N          = cube.size;
-    float dt       = cube.dt;
-    
-    diffuse(1, cube.Vx0, cube.Vx, cube.viscosity, dt, 4, N);
-    diffuse(2, cube.Vy0, cube.Vy, cube.viscosity, dt, 4, N);
-    
-    project(cube.Vx0, cube.Vy0, cube.Vx, cube.Vy, 4, N);
-    
-    advect(1, cube.Vx, cube.Vx0, cube.Vx0, cube.Vy0, dt, N);
-    advect(2, cube.Vy, cube.Vy0, cube.Vx0, cube.Vy0, dt, N);
-    
-    project(cube.Vx, cube.Vy, cube.Vx0, cube.Vy0, 4, N);
-    
-    diffuse(0, cube.density0, cube.density, cube.diffusion, dt, 4, N);
-    advect(0, cube.density, cube.density0, cube.Vx, cube.Vy, dt, N);
+    const int N = m_fluid.size;
+    float a = dt * diff * (N - 2) * (N - 2);
+    lin_solve(b, x, x0, a, 1 + 6 * a, N);
 }
 
-void FluidSolver2D::FluidPlaneAddDensity(FluidPlane& cube, int x, int y, float amount)
+void FluidSolver2D::Project(std::vector<float>& velocX, std::vector<float>& velocY, std::vector<float>& p, std::vector<float>& div)
 {
-    int N = cube.size;
-    cube.density[IX(x, y)] += amount;
-}
-
-void FluidSolver2D::FluidPlaneAddVelocity(FluidPlane& cube, int x, int y, float amountX, float amountY)
-{
-    int N = cube.size;
-    int index = IX(x, y);
+    const int N = m_fluid.size;
+    for (int j = 1; j < N - 1; j++) {
+        for (int i = 1; i < N - 1; i++) {
+            div[IX(i, j)] = -0.5f*(
+                     velocX[IX(i+1, j  )]
+                    -velocX[IX(i-1, j  )]
+                    +velocY[IX(i  , j+1)]
+                    -velocY[IX(i  , j-1)]
+                )/N;
+            p[IX(i, j)] = 0;
+        }
+    }
+    set_bnd(0, div, N); 
+    set_bnd(0, p, N);
+    lin_solve(0, p, div, 1, 6, N);
     
-    cube.Vx[index] += amountX;
-    cube.Vy[index] += amountY;
+    for (int j = 1; j < N - 1; j++) {
+        for (int i = 1; i < N - 1; i++) {
+            velocX[IX(i, j)] -= 0.5f * (  p[IX(i+1, j)]
+                                         -p[IX(i-1, j)]) * N;
+            velocY[IX(i, j)] -= 0.5f * (  p[IX(i, j+1)]
+                                         -p[IX(i, j-1)]) * N;
+        }
+    }
+    set_bnd(1, velocX, N);
+    set_bnd(2, velocY, N);
 }

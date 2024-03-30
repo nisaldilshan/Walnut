@@ -42,13 +42,17 @@ struct FluidPlane {
 class FluidSolver2D
 {
 public:
-    FluidSolver2D() = default;
+    FluidSolver2D(FluidPlane& cube);
     ~FluidSolver2D() = default;
-    void FluidSolveStep(FluidPlane& cube);
-    void FluidPlaneAddDensity(FluidPlane& cube, int x, int y, float amount);
-    void FluidPlaneAddVelocity(FluidPlane& cube, int x, int y, float amountX, float amountY);
+    void FluidSolveStep();
+    void FluidPlaneAddDensity(int x, int y, float amount);
+    void FluidPlaneAddVelocity(int x, int y, float amountX, float amountY);
 private:
-    
+    void Advect(int b, std::vector<float>& d, std::vector<float>& d0,  std::vector<float>& velocX, std::vector<float>& velocY, float dt);
+    void Diffuse(int b, std::vector<float>& x, std::vector<float>& x0, float diff, float dt);
+    void Project(std::vector<float>& velocX, std::vector<float>& velocY, std::vector<float>& p, std::vector<float>& div);
+
+    FluidPlane& m_fluid;
 };
 
 

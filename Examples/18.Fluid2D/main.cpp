@@ -94,7 +94,7 @@ public:
 
 		m_finalImage = std::make_shared<Walnut::Image>(1, 1, Walnut::ImageFormat::RGBA);
 		m_fluid = std::make_unique<FluidPlane>(simulationDimension);
-		m_solver = std::make_unique<FluidSolver2D>();
+		m_solver = std::make_unique<FluidSolver2D>(*m_fluid);
 	}
 
 	virtual void OnDetach() override
@@ -206,17 +206,17 @@ public:
 			m_finalImage->Resize(renderWidth, renderWidth);
 		}
 
-		m_solver->FluidPlaneAddDensity(*m_fluid, 128, 128, 500.0f);
-		m_solver->FluidPlaneAddDensity(*m_fluid, 126, 128, 500.0f);
-		m_solver->FluidPlaneAddDensity(*m_fluid, 130, 128, 500.0f);
-		m_solver->FluidPlaneAddDensity(*m_fluid, 128, 126, 500.0f);
-		m_solver->FluidPlaneAddDensity(*m_fluid, 128, 130, 500.0f);
+		m_solver->FluidPlaneAddDensity(128, 128, 500.0f);
+		m_solver->FluidPlaneAddDensity(126, 128, 500.0f);
+		m_solver->FluidPlaneAddDensity(130, 128, 500.0f);
+		m_solver->FluidPlaneAddDensity(128, 126, 500.0f);
+		m_solver->FluidPlaneAddDensity(128, 130, 500.0f);
 
-		m_solver->FluidPlaneAddVelocity(*m_fluid, 110, 110, 1.0f, 1.0f);
-		m_solver->FluidPlaneAddVelocity(*m_fluid, 110, 110, 2.0f, 3.0f);
-		m_solver->FluidPlaneAddVelocity(*m_fluid, 110, 110, 3.0f, 2.0f);
+		m_solver->FluidPlaneAddVelocity(110, 110, 1.0f, 1.0f);
+		m_solver->FluidPlaneAddVelocity(110, 110, 2.0f, 3.0f);
+		m_solver->FluidPlaneAddVelocity(110, 110, 3.0f, 2.0f);
 
-		m_solver->FluidSolveStep(*m_fluid);
+		m_solver->FluidSolveStep();
 
 		for (size_t i = 0; i < renderWidth * renderWidth; i++)
 		{
