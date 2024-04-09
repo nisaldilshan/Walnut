@@ -49,14 +49,16 @@ size_t VulkanImage::CreateUploadBuffer(size_t upload_size)
     return alignedSize;
 }
 
-void VulkanImage::CreateImage(int vulkanFormat, uint32_t width, uint32_t height)
+void VulkanImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height)
 {
     m_width = width;
     m_height = height;
+    m_imageFormat = Walnut::Utils::WalnutFormatToVulkanFormat(imageFormat);
+
     VkImageCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     info.imageType = VK_IMAGE_TYPE_2D;
-    info.format = (VkFormat)vulkanFormat;
+    info.format = m_imageFormat;
     info.extent.width = m_width;
     info.extent.height = m_height;
     info.extent.depth = 1;
@@ -81,14 +83,14 @@ void VulkanImage::CreateImage(int vulkanFormat, uint32_t width, uint32_t height)
     Vulkan::check_vk_result(err);
 }
 
-void VulkanImage::CreateImageView(int vulkanFormat)
+void VulkanImage::CreateImageView()
 {
     VkResult err;
     VkImageViewCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     info.image = m_Image;
     info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    info.format = (VkFormat)vulkanFormat;
+    info.format = m_imageFormat;
     info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     info.subresourceRange.levelCount = 1;
     info.subresourceRange.layerCount = 1;

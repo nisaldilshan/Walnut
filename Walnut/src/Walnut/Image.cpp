@@ -92,17 +92,14 @@ namespace Walnut {
 
 	void Image::AllocateMemory(uint64_t size)
 	{
-		typedef int VkFormat;
-		VkFormat vulkanFormat = Utils::WalnutFormatToVulkanFormat(m_Format);
-
 		// Create the Image
 		{
-			m_rendererBackendImage->CreateImage(vulkanFormat, m_Width, m_Height);
+			m_rendererBackendImage->CreateImage(m_Format, m_Width, m_Height);
 		}
 
 		// Create the Image View:
 		{
-			m_rendererBackendImage->CreateImageView(vulkanFormat);
+			m_rendererBackendImage->CreateImageView();
 		}
 
 		// Create sampler:

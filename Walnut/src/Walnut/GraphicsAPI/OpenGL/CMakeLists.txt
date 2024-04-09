@@ -9,6 +9,8 @@ add_library (walnut-graphics-opengl STATIC
                     OpenGLImage.cpp   
                 )
 
+target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
+
 target_link_libraries(walnut-graphics-opengl PUBLIC glfw3 glad)
 
 message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})

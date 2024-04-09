@@ -394,7 +394,11 @@ void Vulkan::ConfigureRendererBackend(GLFWwindow* window)
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     init_info.Allocator = g_Allocator;
     init_info.CheckVkResultFn = check_vk_result;
-    ImGui_ImplVulkan_Init(&init_info, g_MainWindowData.RenderPass);
+
+	ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
+	init_info.RenderPass = wd->RenderPass;
+
+    ImGui_ImplVulkan_Init(&init_info);
 }
 
 void Vulkan::UploadFonts()
@@ -411,8 +415,6 @@ void Vulkan::UploadFonts()
     err = vkBeginCommandBuffer(command_buffer, &begin_info);
     check_vk_result(err);
 
-    ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-
     VkSubmitInfo end_info = {};
     end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     end_info.commandBufferCount = 1;
@@ -424,7 +426,6 @@ void Vulkan::UploadFonts()
 
     err = vkDeviceWaitIdle(g_Device);
     check_vk_result(err);
-    ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
 VkCommandBuffer Vulkan::GetCommandBuffer(bool begin)

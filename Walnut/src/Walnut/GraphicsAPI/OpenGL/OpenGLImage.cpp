@@ -6,10 +6,9 @@ namespace Walnut
 {
 namespace Utils
 {
-    typedef int VkFormat;
-    VkFormat WalnutFormatToVulkanFormat(ImageFormat format)
+    int WalnutFormatToOpenGLFormat(ImageFormat format)
     {
-        return (VkFormat)0;
+        return 0;
     }
 }
 
@@ -23,7 +22,7 @@ size_t OpenGLImage::CreateUploadBuffer(size_t upload_size)
     return 1;
 }
 
-void OpenGLImage::CreateImage(int vulkanFormat, uint32_t width, uint32_t height)
+void OpenGLImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height)
 {
     m_Width = width;
     m_Height = height;
@@ -41,7 +40,7 @@ void OpenGLImage::CreateImage(int vulkanFormat, uint32_t width, uint32_t height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Linear Filtering
 }
 
-void OpenGLImage::CreateImageView(int vulkanFormat)
+void OpenGLImage::CreateImageView()
 {
 }
 

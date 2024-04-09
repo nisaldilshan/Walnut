@@ -9,10 +9,5 @@ namespace Walnut {
 		RGBA32F
 	};
 
-namespace Utils
-{
-    typedef int VkFormat;
-    VkFormat WalnutFormatToVulkanFormat(ImageFormat format);
-} // namespace Utils
     
 }

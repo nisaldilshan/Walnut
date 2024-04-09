@@ -6,6 +6,9 @@ add_library (walnut-graphics-webgpu STATIC
                     GlfwWebGPURenderingBackend.cpp
                     WebGPUImage.cpp
                 )
+
+target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)                
+
 if(MSVC)
 #for Windows static libs are in _deps\dawn-build\src\dawn in build folder of WEBGPU
 target_link_libraries(walnut-graphics-webgpu PUBLIC 

@@ -1,15 +1,21 @@
 #include "WebGPUImage.h"
 
-#include "../../ImageFormat.h"
-
 namespace Walnut
 {
 namespace Utils
 {
-    typedef int VkFormat;
-    VkFormat WalnutFormatToVulkanFormat(ImageFormat format)
+    wgpu::TextureFormat WalnutFormatToWebGPUFormat(ImageFormat format)
     {
-        return (VkFormat)0;
+        switch (format)
+        {
+        case ImageFormat::RGBA:
+            return wgpu::TextureFormat::RGBA8Unorm;
+        case ImageFormat::RGBA32F:
+            return wgpu::TextureFormat::RGBA32Uint;
+        case ImageFormat::None:
+            assert(false);
+            return wgpu::TextureFormat::Undefined;
+        }
     }
 }
 
@@ -23,10 +29,11 @@ size_t WebGPUImage::CreateUploadBuffer(size_t upload_size)
     return 1;
 }
 
-void WebGPUImage::CreateImage(int vulkanFormat, uint32_t width, uint32_t height)
+void WebGPUImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height)
 {
     m_width = width;
     m_height = height;
+    m_textureFormat = Walnut::Utils::WalnutFormatToWebGPUFormat(imageFormat);
     
     wgpu::TextureDescriptor tex_desc = {};
     tex_desc.label = "Dear ImGui Font Texture";
@@ -35,16 +42,16 @@ void WebGPUImage::CreateImage(int vulkanFormat, uint32_t width, uint32_t height)
     tex_desc.size.height = height;
     tex_desc.size.depthOrArrayLayers = 1;
     tex_desc.sampleCount = 1;
-    tex_desc.format = WGPUTextureFormat_RGBA8Unorm;
+    tex_desc.format = m_textureFormat;
     tex_desc.mipLevelCount = 1;
     tex_desc.usage = WGPUTextureUsage_CopyDst | WGPUTextureUsage_TextureBinding;
     m_texture = WebGPU::GetDevice().createTexture(tex_desc);
 }
 
-void WebGPUImage::CreateImageView(int vulkanFormat)
+void WebGPUImage::CreateImageView()
 {
     wgpu::TextureViewDescriptor tex_view_desc = {};
-    tex_view_desc.format = WGPUTextureFormat_RGBA8Unorm;
+    tex_view_desc.format = m_textureFormat;
     tex_view_desc.dimension = WGPUTextureViewDimension_2D;
     tex_view_desc.baseMipLevel = 0;
     tex_view_desc.mipLevelCount = 1;
