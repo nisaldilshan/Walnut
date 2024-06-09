@@ -33,7 +33,7 @@ class Walnut(ConanFile):
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
-                self.requires("moltenvk/1.2.2")
+                self.requires("moltenvk/1.2.9")
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Linux':

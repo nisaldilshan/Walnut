@@ -10,6 +10,12 @@ class MoltenVKConan(ConanFile):
     url = 'https://github.com/KhronosGroup/MoltenVK'
     topics = ('apple', 'metal', 'moltenvk', 'vulkan')
     settings = 'os', 'compiler', 'build_type', 'arch'
+    options = {
+        'shared': [True, False]
+    }
+    default_options = {
+        'shared': False
+    }
 
     def requirements(self):
         pass
@@ -37,11 +43,20 @@ class MoltenVKConan(ConanFile):
         pass
 
     def package(self):
-        self.copy(pattern="_deps/dawn-build/gen/include/dawn/webgpu.h", dst="include/webgpu", keep_path=False)
-        self.copy(pattern="include/webgpu/webgpu.hpp", dst="include/webgpu", keep_path=False)
-        self.copy(pattern="*libwebgpu_dawn.a", dst="lib", keep_path=False)
-        self.copy(pattern="*libwebgpu_dawn.dylib", dst="lib", keep_path=False)
+        self.copy(pattern="MoltenVK/include/MoltenVK/*", dst="include/MoltenVK/", keep_path=False)
+        self.copy(pattern="MoltenVK/include/vk_video/*", dst="include/vk_video/", keep_path=False)
+        self.copy(pattern="MoltenVK/include/vulkan/*", dst="include/vulkan/", keep_path=False)
+
+        if self.options.shared:
+            self.copy(pattern="MoltenVK/dynamic/dylib/macOS/*", dst="lib/", keep_path=False)
+        else:
+            self.copy(pattern="MoltenVK/static/MoltenVK.xcframework/*", dst="lib/", keep_path=False)
 
     def package_info(self):
-        pass
+        self.cpp_info.libs = ["MoltenVK"]
+        self.cpp_info.frameworks = ["Metal", "Foundation", "CoreFoundation", "QuartzCore", "IOSurface", "CoreGraphics"]
+        if self.settings.os == "Macos":
+            self.cpp_info.frameworks.extend(["AppKit", "IOKit"])
+        elif self.settings.os in ["iOS", "tvOS"]:
+            self.cpp_info.frameworks.append("UIKit")
 
