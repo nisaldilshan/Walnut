@@ -1,7 +1,8 @@
 from conans import ConanFile, tools
+from conan.tools.files import download
 
 class MoltenVKConan(ConanFile):
-    name = 'MoltenVK'
+    name = 'moltenvk'
     version = '1.2.9'
     license = 'Apache-2.0'
     author = 'The Khronos Group'
@@ -17,7 +18,8 @@ class MoltenVKConan(ConanFile):
         pass
 
     def source(self):
-        self.run("git clone --depth=1 " + self.url + ".git --branch {} .".format(self.options.branch))
+        download(self, self.url + '/releases/download/v' + self.version + '/MoltenVK-macos.tar', 'MoltenVK-macos.tar')
+        tools.unzip('MoltenVK-macos.tar', strip_root=True)
 
     def configure(self):
         pass
