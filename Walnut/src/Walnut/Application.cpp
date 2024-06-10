@@ -118,6 +118,12 @@ namespace Walnut {
 		m_RenderingBackend->Init(windowHandle);
 		m_RenderingBackend->SetupGraphicsAPI();
 
+		glfwSetWindowUserPointer(windowHandle, this);
+		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow *win, int width, int height) {
+			auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
+			std::cout << "Resized window to: x=" << width << ", y=" << height << ", TimeStamp: " << app->GetTime() << std::endl;
+		});
+
 		// Create Framebuffers
 		int w, h;
 		glfwGetFramebufferSize(windowHandle, &w, &h);

@@ -29,7 +29,7 @@ class Walnut(ConanFile):
     def requirements(self):
         print("Using rendering backend " + str(self.options.rendering_backend));
         if self.settings.os == 'Macos':
-            self.requires("glfw/3.3.8")
+            self.requires("glfw/3.4")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
@@ -37,7 +37,7 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Linux':
-            self.requires("glfw/3.3.8")
+            self.requires("glfw/3.4")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
@@ -46,7 +46,7 @@ class Walnut(ConanFile):
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Windows':
             self.short_paths=True
-            self.requires("glfw/3.3.8")
+            self.requires("glfw/3.4")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
