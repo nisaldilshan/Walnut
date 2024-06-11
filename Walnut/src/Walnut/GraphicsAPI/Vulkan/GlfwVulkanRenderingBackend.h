@@ -9,8 +9,6 @@ class GlfwVulkanRenderingBackend : public RenderingBackend
 public:
 	void Init(GLFWwindow* windowHandle) override;
 
-	void SetupGraphicsAPI() override;
-
 	void SetupWindow(int width, int height) override;
 
 	bool NeedToResizeWindow() override;

@@ -16,10 +16,7 @@ namespace Walnut
 
         m_extensions = glfwGetRequiredInstanceExtensions(&m_extensions_count);
         m_windowHandle = windowHandle;
-    }
 
-    void GlfwVulkanRenderingBackend::SetupGraphicsAPI()
-    {
         // Setup Vulkan
         GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
         // Create Window Surface

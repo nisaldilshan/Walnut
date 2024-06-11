@@ -22,7 +22,6 @@ namespace Walnut {
 		virtual void Shutdown() = 0;
 		virtual void Cleanup() = 0;
 
-        virtual void SetupGraphicsAPI() = 0;
 		virtual GLFWwindow* GetWindowHandle() = 0;
 		virtual void SetupWindow(int width, int height) = 0;
 		virtual bool NeedToResizeWindow() = 0;
