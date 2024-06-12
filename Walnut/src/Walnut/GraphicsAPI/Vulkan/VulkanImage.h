@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include "VulkanGraphics.h"
 #include <Walnut/ImageFormat.h>
 
 namespace GraphicsAPI
@@ -18,7 +18,7 @@ namespace GraphicsAPI
         void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
         void CreateSampler();
         void CreateDescriptorSet();
-        VkDescriptorSet GetDescriptorSet();
+        ImTextureID GetDescriptorSet();
         bool ImageAvailable();
         void ResourceFree();
         VkBuffer GetStagingBuffer();
