@@ -52,9 +52,12 @@ public:
 	static void SetClearColor(ImVec4 clear_color);
 	static void FreeGraphicsResources();
 	static void SubmitResourceFree(std::function<void()> func);
+
+	static VkInstance GetInstance();
 	static VkDevice GetDevice();
 	static VkPhysicalDevice GetPhysicalDevice();
-	
+	static uint32_t GetQueueFamilyIndex();
+	static VkQueue GetDeviceQueue();
 };
 
 

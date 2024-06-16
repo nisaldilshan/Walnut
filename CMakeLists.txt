@@ -20,15 +20,19 @@ message(STATUS "CMAKE_CXX_COMPILER " + ${CMAKE_CXX_COMPILER})
 message(STATUS "CMAKE_CXX_COMPILER_ID " + ${CMAKE_CXX_COMPILER_ID})
 message(STATUS "CMAKE_CXX_COMPILER_VERSION " + ${CMAKE_CXX_COMPILER_VERSION})
 message(STATUS "CMAKE_CXX_COMPILER_LOADED " + ${CMAKE_CXX_COMPILER_LOADED})
+message("-- CMAKE_BUILD_TYPE=" "${CMAKE_BUILD_TYPE}")
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting build type to 'Debug' as none was specified.")
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-else()
-    message("-- CMAKE_BUILD_TYPE=" "${CMAKE_BUILD_TYPE}")
+    set(CMAKE_BUILD_TYPE "Debug")
 endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Setting _DEBUG")
+    add_compile_definitions(_DEBUG)
+endif()
+
+
 
 message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
@@ -125,4 +129,3 @@ endif()
 
 
 add_subdirectory(WalnutApp)
-add_subdirectory(Examples)

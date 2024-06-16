@@ -533,6 +533,11 @@ void Vulkan::SubmitResourceFree(std::function<void()> func)
 	s_ResourceFreeQueue[s_CurrentFrameIndex].emplace_back(func);
 }
 
+VkInstance Vulkan::GetInstance()
+{
+    return g_Instance;
+}
+
 VkDevice Vulkan::GetDevice()
 {
 	return g_Device;
@@ -543,15 +548,15 @@ VkPhysicalDevice Vulkan::GetPhysicalDevice()
 	return g_PhysicalDevice;
 }
 
+uint32_t Vulkan::GetQueueFamilyIndex()
+{
+    return g_QueueFamily;
+}
 
-
-
-
-
-
-
-
-
+VkQueue Vulkan::GetDeviceQueue()
+{
+    return g_Queue;
+}
 
 // IMAGE
 
