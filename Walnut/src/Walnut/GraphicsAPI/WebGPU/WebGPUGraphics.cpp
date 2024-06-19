@@ -85,16 +85,13 @@ namespace GraphicsAPI
 		requiredLimits.limits.maxComputeInvocationsPerWorkgroup = 32;
 		requiredLimits.limits.maxComputeWorkgroupsPerDimension = 2;
 
-		const char* const enabledToggles[] = {};
-		wgpu::DawnTogglesDescriptor deviceTogglesDesc;
-		deviceTogglesDesc.disabledToggles = enabledToggles;
-		deviceTogglesDesc.disabledTogglesCount = 0;
 
 		wgpu::DeviceDescriptor deviceDesc;
 		deviceDesc.label = "My Device";
-		deviceDesc.nextInChain = reinterpret_cast<wgpu::ChainedStruct*>(&deviceTogglesDesc);
-		deviceDesc.requiredFeaturesCount = 0;
+		deviceDesc.nextInChain = nullptr;
+		deviceDesc.requiredFeatureCount = 0;
 		deviceDesc.requiredLimits = &requiredLimits;
+		deviceDesc.defaultQueue.nextInChain = nullptr;
 		deviceDesc.defaultQueue.label = "The default queue";
 		g_device = adapter.requestDevice(deviceDesc);
 		adapter.release();

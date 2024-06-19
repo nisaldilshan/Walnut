@@ -16,7 +16,20 @@ namespace Walnut
     {
         m_windowHandle = windowHandle;
 
-		GraphicsAPI::WebGPU::CreateInstance(wgpu::InstanceDescriptor{});
+        std::vector<const char*> enabledToggles = {
+            "allow_unsafe_apis",
+        };
+		wgpu::DawnTogglesDescriptor dawnToggles;
+        dawnToggles.chain.next = nullptr;
+        dawnToggles.chain.sType = wgpu::SType::DawnTogglesDescriptor;
+		dawnToggles.enabledToggles = enabledToggles.data();
+        dawnToggles.enabledToggleCount = enabledToggles.size();
+        dawnToggles.disabledToggleCount = 0;
+
+        wgpu::InstanceDescriptor instanceDesc{};
+        instanceDesc.nextInChain = &dawnToggles.chain;
+
+		GraphicsAPI::WebGPU::CreateInstance(instanceDesc);
 		GraphicsAPI::WebGPU::CreateSurface(m_windowHandle);
         GraphicsAPI::WebGPU::CreateDevice();
 
@@ -34,9 +47,6 @@ namespace Walnut
 			std::cout << std::endl;
 		});
 
-    }
-    void GlfwWebGPURenderingBackend::SetupGraphicsAPI()
-    {
     }
 
     void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)
@@ -94,19 +104,20 @@ namespace Walnut
         commandEncoderDesc.label = "Command Encoder";
         wgpu::CommandEncoder encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
         
-        wgpu::RenderPassDescriptor renderPassDesc{};
 
         wgpu::RenderPassColorAttachment renderPassColorAttachment{};
         renderPassColorAttachment.view = nextTexture;
+        renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
         renderPassColorAttachment.resolveTarget = nullptr;
         renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
         renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
         renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
+
+        wgpu::RenderPassDescriptor renderPassDesc{};
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-        renderPassDesc.timestampWriteCount = 0;
         renderPassDesc.timestampWrites = nullptr;
+        renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
         wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
         ImGui_ImplWGPU_RenderDrawData(draw_data, renderPass);

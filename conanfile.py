@@ -35,7 +35,7 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "Vulkan":
                 self.requires("moltenvk/1.2.9")
             elif self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest@nisaldilshan/testing")
+                self.requires("WebGPU/latest")
         elif self.settings.os == 'Linux':
             self.requires("glfw/3.4")
             if self.options.rendering_backend == "OpenGL":
@@ -43,7 +43,7 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-headers/1.3.239.0")
             elif self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest@nisaldilshan/testing")
+                self.requires("WebGPU/latest")
         elif self.settings.os == 'Windows':
             self.short_paths=True
             self.requires("glfw/3.4")
@@ -52,7 +52,7 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "Vulkan":
                 raise ConanInvalidConfiguration("Vulkan renderer is not implemented in Windows")
             elif self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest@nisaldilshan/testing")
+                self.requires("WebGPU/latest")
         elif self.settings.os == 'Emscripten':
             if self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
