@@ -32,10 +32,8 @@ target_link_libraries(walnut-graphics-webgpu PUBLIC
                                         ${CMAKE_SOURCE_DIR}/WalnutApp/absl_raw_logging_internal.lib
                                         ${CMAKE_SOURCE_DIR}/WalnutApp/SPIRV-Tools.lib
                                         )
-else()
+elseif(APPLE)
 target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu ${CONAN_LIB_DIRS_WEBGPU}/libwebgpu_dawn.dylib)
-endif()
-
 target_link_libraries(walnut-graphics-webgpu PUBLIC
     "-framework Metal"
     "-framework MetalKit"
@@ -44,4 +42,11 @@ target_link_libraries(walnut-graphics-webgpu PUBLIC
     "-framework QuartzCore"
     "-framework IOSurface"
 )
+
+else()
+message(STATUS "CONAN_LIB_DIRS_WEBGPU " + ${CONAN_LIB_DIRS_WEBGPU})
+target_link_directories(walnut-graphics-webgpu PUBLIC ${CONAN_LIB_DIRS_WEBGPU})
+target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu webgpu_dawn)
+endif()
+
 #target_link_libraries(walnut-graphics-webgpu PUBLIC ${CONAN_LIBS}) # this line was added to export glfw, imgui stuff to the application levels
