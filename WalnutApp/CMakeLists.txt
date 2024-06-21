@@ -1,7 +1,6 @@
 add_executable(App src/WalnutApp.cpp)
 
 target_include_directories(App PRIVATE ../Walnut/src)
-target_link_directories(App PUBLIC ${CONAN_LIB_DIRS_WEBGPU})
 target_link_libraries(App PRIVATE walnut webgpu_dawn) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
 
 if (IS_EMSCRIPTEN)
