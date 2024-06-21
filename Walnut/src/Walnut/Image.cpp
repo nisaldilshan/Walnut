@@ -71,7 +71,7 @@ namespace Walnut {
 		m_Width = width;
 		m_Height = height;
 		
-		AllocateMemory(m_Width * m_Height * Utils::BytesPerPixel(m_Format));
+		AllocateMemory();
 		SetData(data);
 		stbi_image_free(data);
 	}
@@ -80,7 +80,7 @@ namespace Walnut {
 		: m_Width(width), m_Height(height), m_Format(format)
 		, m_rendererBackendImage(Utils::CreateBackendImage())
 	{
-		AllocateMemory(m_Width * m_Height * Utils::BytesPerPixel(m_Format));
+		AllocateMemory();
 		if (data)
 			SetData(data);
 	}
@@ -90,7 +90,7 @@ namespace Walnut {
 		Release();
 	}
 
-	void Image::AllocateMemory(uint64_t size)
+	void Image::AllocateMemory()
 	{
 		// Create the Image
 		{
@@ -148,7 +148,7 @@ namespace Walnut {
 		m_Height = height;
 
 		Release();
-		AllocateMemory(m_Width * m_Height * Utils::BytesPerPixel(m_Format));
+		AllocateMemory();
 	}
 
 }

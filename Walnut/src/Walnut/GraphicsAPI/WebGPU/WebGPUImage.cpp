@@ -90,7 +90,7 @@ void WebGPUImage::UploadToBuffer(const void *data, size_t uploadSize, size_t ali
     wgpu::TextureDataLayout layout = {};
     layout.offset = 0;
 
-    int size_pp = 4; // maybe size per pixel ?
+    int size_pp = 4; // size per pixel
     layout.bytesPerRow = m_width * size_pp;
     layout.rowsPerImage = m_height;
     WGPUExtent3D size = { (uint32_t)m_width, (uint32_t)m_height, 1 };
