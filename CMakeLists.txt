@@ -22,18 +22,6 @@ message(STATUS "CMAKE_CXX_COMPILER_VERSION " + ${CMAKE_CXX_COMPILER_VERSION})
 message(STATUS "CMAKE_CXX_COMPILER_LOADED " + ${CMAKE_CXX_COMPILER_LOADED})
 message("-- CMAKE_BUILD_TYPE=" "${CMAKE_BUILD_TYPE}")
 
-if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "Setting build type to 'Debug' as none was specified.")
-    set(CMAKE_BUILD_TYPE "Debug")
-endif()
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Setting _DEBUG")
-    add_compile_definitions(_DEBUG)
-endif()
-
-
-
 message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
