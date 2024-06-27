@@ -49,7 +49,6 @@ else()
 endif()
 
 #### ENGINE ###
-if(MSVC)
 add_library (walnut SHARED
                 Walnut/src/Walnut/Application.cpp
                 Walnut/src/Walnut/Image.cpp
@@ -57,23 +56,11 @@ add_library (walnut SHARED
                 Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
             )
-else()
-add_library (walnut SHARED
-                Walnut/src/Walnut/Application.cpp
-                Walnut/src/Walnut/Image.cpp
-                Walnut/src/Walnut/Random.cpp
-                Walnut/src/Walnut/Input/Input.cpp
-                Walnut/src/Walnut/RenderingBackend.cpp
-            )
-endif()
+
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
 target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
-# if(MSVC)
-#     target_include_directories(walnut PUBLIC "C:\\VulkanSDK\\1.3.250.1\\Include")
-#     target_link_directories(walnut INTERFACE "C:\\VulkanSDK\\1.3.250.1\\Lib")
-# endif()
-#target_link_libraries(walnut PRIVATE ${CONAN_LIBS})
+
 if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
     add_compile_definitions(RENDERER_BACKEND=1)
@@ -84,9 +71,7 @@ else()
     target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
     add_compile_definitions(RENDERER_BACKEND=3)
 endif()
-# if(MSVC)
-#     target_link_libraries(walnut INTERFACE vulkan-1.lib)
-# endif()
+
 string(COMPARE EQUAL "${CMAKE_SYSTEM_NAME}" "Emscripten" IS_EMSCRIPTEN)
 if (IS_EMSCRIPTEN)
     message("This is an Emscripten Build")

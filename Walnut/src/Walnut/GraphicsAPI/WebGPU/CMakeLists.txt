@@ -1,4 +1,8 @@
+if(WIN32)
+add_library (walnut-imgui-part1 SHARED imgui-webgpu-part1.cpp)
+else()
 add_library (walnut-imgui-part1 STATIC imgui-webgpu-part1.cpp)
+endif()
 
 add_library (walnut-graphics-webgpu STATIC
                     ImGuiBuildWGPU.cpp
@@ -9,7 +13,7 @@ add_library (walnut-graphics-webgpu STATIC
 
 target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)                
 
-if(MSVC)
+if(WIN32)
 target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu 
                             absl_bad_any_cast_impl.lib
                             absl_bad_optional_access.lib
