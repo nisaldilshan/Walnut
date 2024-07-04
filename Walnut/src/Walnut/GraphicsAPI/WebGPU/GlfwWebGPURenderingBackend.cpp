@@ -8,7 +8,7 @@
 
 #include "WebGPUGraphics.h"
 
-wgpu::SwapChain m_swapChain = nullptr;
+wgpu::SwapChain g_swapChain = nullptr;
 
 namespace Walnut
 {
@@ -58,9 +58,9 @@ namespace Walnut
 		swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment;
 		swapChainDesc.format = GraphicsAPI::WebGPU::GetSwapChainFormat();
 		swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
-		m_swapChain = GraphicsAPI::WebGPU::GetDevice().createSwapChain(GraphicsAPI::WebGPU::GetSurface(), swapChainDesc);
-		std::cout << "Swapchain: " << m_swapChain << std::endl;
-		if (m_swapChain == nullptr)
+		g_swapChain = GraphicsAPI::WebGPU::GetDevice().createSwapChain(GraphicsAPI::WebGPU::GetSurface(), swapChainDesc);
+		std::cout << "Swapchain: " << g_swapChain << std::endl;
+		if (g_swapChain == nullptr)
             std::cerr << "Could not initialize WebGPU SwapChain!" << std::endl;
     }
     bool GlfwWebGPURenderingBackend::NeedToResizeWindow()
@@ -94,7 +94,7 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::FrameRender(ImDrawData *draw_data)
     {
-        wgpu::TextureView nextTexture = m_swapChain.getCurrentTextureView();
+        wgpu::TextureView nextTexture = g_swapChain.getCurrentTextureView();
         if (!nextTexture) {
             std::cerr << "Cannot acquire next swap chain texture" << std::endl;
             return;
@@ -134,7 +134,7 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::FramePresent()
     {
-        m_swapChain.present();
+        g_swapChain.present();
 
 #ifdef WEBGPU_BACKEND_WGPU
 #else
@@ -150,6 +150,12 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::Shutdown()
     {
+        ImGui_ImplWGPU_Shutdown();
+        if (g_swapChain)
+        {
+            g_swapChain.release();
+            g_swapChain = nullptr;
+        }
     }
     void GlfwWebGPURenderingBackend::Cleanup()
     {
