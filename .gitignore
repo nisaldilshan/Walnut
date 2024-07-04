@@ -18,3 +18,8 @@ build-linux
 
 cmake-build-debug-visual-studio
 .idea
+CMakeUserPresets.json
+conan.lock
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
