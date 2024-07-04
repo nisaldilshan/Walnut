@@ -8,10 +8,10 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/App",
+            "program": "${workspaceFolder}/build/WalnutApp/App",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/bin",
+            "cwd": "${workspaceFolder}/build/WalnutApp",
             "environment": [],
             "console": "integratedTerminal"
         },
@@ -19,12 +19,12 @@
             "name": "App Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/App",
+            "program": "${workspaceFolder}/build/WalnutApp/App",
             "args": [],
             "stopOnEntry": false,
-            "cwd": "${workspaceFolder}/build/bin",
+            "cwd": "${workspaceFolder}/build/WalnutApp",
             "env": { 
-                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build/lib",
+                "DYLD_LIBRARY_PATH" : "${workspaceFolder}/build",
             },
         }
 

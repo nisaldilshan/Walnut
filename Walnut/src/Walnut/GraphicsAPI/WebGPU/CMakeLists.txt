@@ -2,6 +2,7 @@ if(WIN32)
 add_library (walnut-imgui-part1 SHARED imgui-webgpu-part1.cpp)
 else()
 add_library (walnut-imgui-part1 STATIC imgui-webgpu-part1.cpp)
+target_link_libraries(walnut-imgui-part1 PRIVATE imgui::imgui)
 endif()
 
 add_library (walnut-graphics-webgpu STATIC
@@ -171,5 +172,5 @@ target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webg
                             webgpu_dawn.lib
                     )
 else()
-target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu webgpu_dawn)
+target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu WebGPU::WebGPU imgui::imgui glm::glm)
 endif()

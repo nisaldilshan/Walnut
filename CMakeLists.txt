@@ -26,8 +26,11 @@ message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(KEEP_RPATHS)
+find_package(imgui REQUIRED)
+find_package(WebGPU REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(glm REQUIRED)
+find_package(stb REQUIRED)
 
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
@@ -59,7 +62,7 @@ add_library (walnut SHARED
 
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
-target_include_directories(walnut PRIVATE ${CONAN_INCLUDE_DIRS})
+target_link_libraries(walnut PRIVATE stb::stb)
 
 if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)

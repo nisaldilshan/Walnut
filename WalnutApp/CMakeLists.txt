@@ -5,7 +5,7 @@ target_include_directories(App PRIVATE ../Walnut/src)
 if (WIN32)
 target_link_libraries(App PRIVATE walnut walnut-imgui-part1)
 else()
-target_link_libraries(App PRIVATE walnut webgpu_dawn) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
+target_link_libraries(App PRIVATE walnut WebGPU::WebGPU glm::glm imgui::imgui) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
 endif()
 
 if (IS_EMSCRIPTEN)

@@ -1,6 +1,7 @@
 from conan.errors import ConanInvalidSystemRequirements
 from conan.errors import ConanInvalidConfiguration
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, tools
+from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
 
 class Walnut(ConanFile):
     name = "walnut"
@@ -10,7 +11,6 @@ class Walnut(ConanFile):
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
     settings = "os", "compiler", "build_type", "arch"
     requires = ("stb/20200203", "imgui/latest@nisaldilshan/docking", "glm/0.9.9.8", "tinyobjloader/2.0.0-rc10")
-    generators = "cmake"
     build_policy = "missing"
     options = {
         "rendering_backend": ["OpenGL", "Vulkan", "WebGPU"],
@@ -25,6 +25,7 @@ class Walnut(ConanFile):
         "glad:gl_profile": "core",
         "glad:gl_version": 4.1
     }
+    generators = "VirtualBuildEnv"
 
     def requirements(self):
         print("Using rendering backend " + str(self.options.rendering_backend));
@@ -59,14 +60,23 @@ class Walnut(ConanFile):
         else:
             raise ConanInvalidSystemRequirements("Unsupported Platform")
 
+    def build_requirements(self):
+        pass
+
     def source(self):
         git = tools.Git()
         git.clone(self.url + ".git", "master")
 
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.variables["RENDERER"] = self.options.rendering_backend
+        tc.generate()
+        deps = CMakeDeps(self)
+        deps.generate()
+
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True
-        cmake.definitions["RENDERER"] = self.options.rendering_backend
         cmake.configure()
         cmake.build()
 
@@ -89,9 +99,6 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/Timer.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/RenderingBackend.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/ExportConfig.h", dst="include/Walnut", keep_path=False)
-        # imgui_header = str(self.deps_cpp_info["imgui"].include_paths[0]) + "/imgui_impl_glfw.h"
-        # print("logs " + imgui_header);
-        # self.copy(pattern="/Users/nisal/.conan/data/imgui/latest/nisaldilshan/docking/package/5c91a8b3216ac0ed6c294940851231d60f21ef32/include/imgui_impl_glfw.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/Input.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/KeyCodes.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
@@ -106,3 +113,9 @@ class Walnut(ConanFile):
         self.copy(pattern="*.a", dst="lib", keep_path=False)
         self.copy(pattern="*.lib", dst="lib", keep_path=False)
         self.copy(pattern="*.pdb", dst="lib", keep_path=False)
+
+    def layout(self):
+        self.folders.source = "."
+        self.folders.build = "build"
+        self.folders.generators = "build"
+        self.folders.imports = self.folders.build
