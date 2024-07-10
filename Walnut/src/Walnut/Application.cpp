@@ -67,6 +67,11 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
+	void Application::OnWindowResize(int width, int height)
+    {
+		std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
+    }
+
 	void Application::Init()
 	{
 		// Setup GLFW window
@@ -120,7 +125,8 @@ namespace Walnut {
 		glfwSetWindowUserPointer(windowHandle, this);
 		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow *win, int width, int height) {
 			auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
-			std::cout << "Resized window to: x=" << width << ", y=" << height << ", TimeStamp: " << app->GetTime() << std::endl;
+			assert(app);
+			app->OnWindowResize(width, height);
 		});
 
 		// Create Framebuffers
@@ -243,7 +249,7 @@ namespace Walnut {
 		ImGui::End();
 	}
 
-	void updateGui() 
+    void updateGui() 
 	{
 		static float f = 0.0f;
 		static int counter = 0;

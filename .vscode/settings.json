@@ -96,6 +96,7 @@
         "regex": "cpp",
         "scoped_allocator": "cpp",
         "set": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "execution": "cpp"
     }
 }

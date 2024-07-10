@@ -29,7 +29,6 @@ namespace Walnut {
 	public:
 		Application(const ApplicationSpecification& applicationSpecification = ApplicationSpecification());
 		~Application();
-
 		static Application& Get();
 
 		void MainLoop();
@@ -44,29 +43,24 @@ namespace Walnut {
 		}
 
 		void PushLayer(const std::shared_ptr<Layer>& layer) { m_LayerStack.emplace_back(layer); layer->OnAttach(); }
-
 		void Close();
-
 		float GetTime();
 		GLFWwindow* GetWindowHandle() const;
 
-		static void SubmitGraphicsResourceFree(); // std::function<void()>&& func
 	private:
 		void Init();
 		void Shutdown();
 		void SetupImGui();
+		void OnWindowResize(int width, int height);
 
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;
 		bool m_Running = false;
-
 		float m_TimeStep = 0.0f;
 		float m_FrameTime = 0.0f;
 		float m_LastFrameTime = 0.0f;
-
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::function<void()> m_MenubarCallback;
-
 	};
 
 	// Implemented by CLIENT
