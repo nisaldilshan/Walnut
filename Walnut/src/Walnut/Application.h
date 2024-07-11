@@ -50,8 +50,8 @@ namespace Walnut {
 	private:
 		void Init();
 		void Shutdown();
-		void SetupImGui();
-		void OnWindowResize(int width, int height);
+		void SetupImGuiForOneIteration();
+		void OnWindowResize(GLFWwindow *win, int width, int height);
 
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;

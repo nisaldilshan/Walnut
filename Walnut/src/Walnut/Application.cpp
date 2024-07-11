@@ -67,9 +67,15 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
-	void Application::OnWindowResize(int width, int height)
+	void Application::OnWindowResize(GLFWwindow *win, int width, int height)
     {
 		std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
+		// Create Framebuffers
+		{
+			int w, h;
+			glfwGetFramebufferSize(win, &w, &h);
+			m_RenderingBackend->SetupWindow(w, h);
+		}
     }
 
 	void Application::Init()
@@ -123,17 +129,19 @@ namespace Walnut {
 		m_RenderingBackend->Init(windowHandle);
 
 		glfwSetWindowUserPointer(windowHandle, this);
-		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow *win, int width, int height) {
+		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {
 			auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
 			assert(app);
-			app->OnWindowResize(width, height);
+			app->OnWindowResize(win, width, height);
 		});
 
 		// Create Framebuffers
-		int w, h;
-		glfwGetFramebufferSize(windowHandle, &w, &h);
-		m_RenderingBackend->SetupWindow(w, h);
-
+		{
+			int w, h;
+			glfwGetFramebufferSize(windowHandle, &w, &h);
+			m_RenderingBackend->SetupWindow(w, h);
+		}
+		
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -190,7 +198,7 @@ namespace Walnut {
 		g_ApplicationRunning = false;
 	}
 
-	void Application::SetupImGui()
+	void Application::SetupImGuiForOneIteration()
 	{
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
@@ -298,9 +306,7 @@ namespace Walnut {
 		}
 
 		m_RenderingBackend->StartImGuiFrame();
-		SetupImGui();
-
-
+		SetupImGuiForOneIteration();
 		ImGui::EndFrame();
 
 		// Rendering

@@ -51,6 +51,13 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)
     {
+        if (g_swapChain)
+        {
+            std::cout << "Deleting previous swapchain..." << std::endl; // delete if already have a swapchain
+            g_swapChain.release();
+            g_swapChain = nullptr;
+        }
+
         std::cout << "Creating swapchain..." << std::endl;
 		wgpu::SwapChainDescriptor swapChainDesc;
 		swapChainDesc.width = static_cast<uint32_t>(width);

@@ -379,7 +379,6 @@ void Vulkan::FramePresent()
 
 void Vulkan::ConfigureRendererBackend(GLFWwindow* window)
 {
-    ImGui_ImplGlfw_InitForVulkan(window, true);
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.Instance = g_Instance;
     init_info.PhysicalDevice = g_PhysicalDevice;

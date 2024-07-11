@@ -41,6 +41,7 @@ namespace Walnut
 
     void GlfwVulkanRenderingBackend::ConfigureImGui()
     {
+        ImGui_ImplGlfw_InitForVulkan(window, true);
         GraphicsAPI::Vulkan::ConfigureRendererBackend(m_windowHandle);
     }
 
