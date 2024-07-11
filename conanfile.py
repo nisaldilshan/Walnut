@@ -57,6 +57,9 @@ class Walnut(ConanFile):
         elif self.settings.os == 'Emscripten':
             if self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
+        elif self.settings.os == 'Android':
+            if self.options.rendering_backend == "OpenGL":
+                self.requires("glad/0.1.33")
         else:
             raise ConanInvalidSystemRequirements("Unsupported Platform")
 
