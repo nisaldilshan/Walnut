@@ -17,10 +17,6 @@ namespace Walnut
 		
 	}
 
-	void GlfwOpenGLRenderingBackend::SetupGraphicsAPI()
-	{
-	}
-
 	void GlfwOpenGLRenderingBackend::SetupWindow(int width, int height)
 	{
 		GraphicsAPI::OpenGL::SetupViewport(width, height);

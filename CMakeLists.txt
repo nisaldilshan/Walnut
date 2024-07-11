@@ -27,7 +27,6 @@ message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
-find_package(WebGPU REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(stb REQUIRED)
@@ -40,11 +39,13 @@ option(RENDERER "Renderer to be used" "WebGPU")
 
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
+    find_package(glad REQUIRED)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/OpenGL)
 elseif(RENDERER STREQUAL "Vulkan")
     find_package (Vulkan REQUIRED)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/Vulkan)
 elseif(RENDERER STREQUAL "WebGPU")
+    find_package(WebGPU REQUIRED)
     add_subdirectory(vendor/glfw3webgpu)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)
 else()
@@ -62,7 +63,7 @@ add_library (walnut SHARED
 
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
-target_link_libraries(walnut PRIVATE stb::stb)
+target_link_libraries(walnut PRIVATE stb::stb glm::glm)
 
 if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
