@@ -8,8 +8,6 @@
 #define GLFW_INCLUDE_NONE
 #endif
 
-#include <GLFW/glfw3.h>
-
 #ifndef __EMSCRIPTEN__
 #include <glad/glad.h>
 #endif
@@ -65,15 +63,12 @@ inline void CheckGLError()
     }
 }
 
-void OpenGL::SetupOpenGL(GLFWwindow *windowHandle)
+void OpenGL::SetupOpenGL(LoaderFuncType loaderFunc)
 {
-    GLenum internalFormat = GL_RGBA8;
-
-    glfwMakeContextCurrent(windowHandle);
     
 #ifdef __EMSCRIPTEN__
 #else
-    int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+    int status = gladLoadGLLoader((GLADloadproc)loaderFunc);
     gladLoadGL();
     if (!status)
     {

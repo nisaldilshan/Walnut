@@ -14,7 +14,8 @@ add_library (walnut-graphics-opengl STATIC
 
 target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
 
-target_link_libraries(walnut-graphics-opengl PUBLIC glfw glad::glad imgui::imgui)
+#target_link_libraries(walnut-graphics-opengl PUBLIC glfw glad::glad imgui::imgui)
+target_link_libraries(walnut-graphics-opengl PUBLIC SDL2::SDL2 glad::glad imgui::imgui)
 
 message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
 message(STATUS "X11_LIBRARIES= " ${X11_LIBRARIES})

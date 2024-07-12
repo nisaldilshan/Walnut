@@ -2,7 +2,9 @@
 
 #include <iostream>
 #include <imgui_impl_opengl3.h>
-#include <GLFW/glfw3.h>
+
+//#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 
 #include "../../RenderingBackend.h"
 #include "OpenGLGraphics.h"
@@ -13,8 +15,16 @@ namespace Walnut
 	void GlfwOpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
 	{
 		m_windowHandle = windowHandle;
-		
-		GraphicsAPI::OpenGL::SetupOpenGL(windowHandle);
+
+		//glfwMakeContextCurrent(m_windowHandle);
+		//GraphicsAPI::OpenGL::SetupOpenGL(glfwGetProcAddress);
+
+		auto maincontext = SDL_GL_CreateContext(m_windowHandle);
+		if (maincontext == NULL) 
+		sdl_die("Failed to create OpenGL context");
+
+
+		GraphicsAPI::OpenGL::SetupOpenGL(SDL_GL_GetProcAddress);
 		
 	}
 

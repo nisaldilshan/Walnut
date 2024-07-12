@@ -27,7 +27,6 @@ message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
-find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(stb REQUIRED)
 
@@ -36,9 +35,15 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 
 option(RENDERER "Renderer to be used" "WebGPU")
+set(WINDOWING_SYSTEM "SDL")
 
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
+    if (WINDOWING_SYSTEM STREQUAL "SDL")
+        find_package(SDL2 REQUIRED)
+    else()
+        find_package(glfw3 REQUIRED)
+    endif()
     find_package(glad REQUIRED)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/OpenGL)
 elseif(RENDERER STREQUAL "Vulkan")
@@ -54,7 +59,7 @@ endif()
 
 #### ENGINE ###
 add_library (walnut SHARED
-                Walnut/src/Walnut/Application.cpp
+                Walnut/src/Walnut/ApplicationSDL.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
