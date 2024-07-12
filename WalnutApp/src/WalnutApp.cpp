@@ -5,6 +5,8 @@
 #include <Walnut/RenderingBackend.h>
 #include <Walnut/Image.h>
 
+#include <imgui.h>
+
 class ExampleLayer : public Walnut::Layer
 {
 public:

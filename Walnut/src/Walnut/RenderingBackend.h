@@ -3,9 +3,11 @@
 #include <memory>
 #include <functional>
 
-#include <imgui_impl_glfw.h>
-
 #include "ExportConfig.h"
+#include "WindowHandle.h"
+
+class ImDrawData;
+class ImVec4;
 
 namespace Walnut {
 
@@ -18,11 +20,11 @@ namespace Walnut {
 		};
 		virtual ~RenderingBackend() = default;
 
-		virtual void Init(GLFWwindow* windowHandle) = 0;
+		virtual void Init(WindowHandleType* windowHandle) = 0;
 		virtual void Shutdown() = 0;
 		virtual void Cleanup() = 0;
 
-		virtual GLFWwindow* GetWindowHandle() = 0;
+		virtual WindowHandleType* GetWindowHandle() = 0;
 		virtual void SetupWindow(int width, int height) = 0;
 		virtual bool NeedToResizeWindow() = 0;
 		virtual void ResizeWindow(int width, int height) = 0;

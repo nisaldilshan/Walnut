@@ -8,10 +8,9 @@
 #include <functional>
 
 #include "ExportConfig.h"
+#include "WindowHandle.h"
 
 Walnut_API extern bool g_ApplicationRunning;
-
-struct GLFWwindow;
 
 namespace Walnut {
 
@@ -45,13 +44,13 @@ namespace Walnut {
 		void PushLayer(const std::shared_ptr<Layer>& layer) { m_LayerStack.emplace_back(layer); layer->OnAttach(); }
 		void Close();
 		float GetTime();
-		GLFWwindow* GetWindowHandle() const;
+		WindowHandleType* GetWindowHandle() const;
 
 	private:
 		void Init();
 		void Shutdown();
 		void SetupImGuiForOneIteration();
-		void OnWindowResize(GLFWwindow *win, int width, int height);
+		void OnWindowResize(WindowHandleType *win, int width, int height);
 
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;
