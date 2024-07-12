@@ -1,9 +1,21 @@
 #include "OpenGLGraphics.h"
 
-#include <iostream>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/emscripten.h>
+#define GLFW_INCLUDE_ES3
+#else
+#define GLFW_INCLUDE_NONE
+#endif
+
+#include <GLFW/glfw3.h>
+
 #ifndef __EMSCRIPTEN__
 #include <glad/glad.h>
 #endif
+
+
+#include <iostream>
 
 namespace GraphicsAPI
 {

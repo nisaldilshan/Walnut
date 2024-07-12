@@ -1,5 +1,7 @@
 #include "OpenGLImage.h"
 
+#include <imgui_impl_glfw.h>
+
 #include "../../ImageFormat.h"
 
 namespace Walnut
@@ -59,7 +61,7 @@ void OpenGLImage::CreateDescriptorSet()
 {
 }
 
-ImTextureID OpenGLImage::GetDescriptorSet()
+void* OpenGLImage::GetDescriptorSet()
 {
     return (ImTextureID)(intptr_t)m_texture;
 }
