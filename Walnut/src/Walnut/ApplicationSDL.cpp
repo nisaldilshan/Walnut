@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <thread>
+#include <imgui.h>
 
 #include <SDL2/SDL.h>
 #include <Walnut/GLM/GLM.h>
@@ -39,7 +40,7 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
-	void Application::OnWindowResize(GLFWwindow *win, int width, int height)
+	void Application::OnWindowResize(WindowHandleType *win, int width, int height)
     {
 		std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
 		// Create Framebuffers
@@ -54,7 +55,7 @@ namespace Walnut {
 	{
 		// Setup GLFW window
 		//glfwSetErrorCallback(glfw_error_callback);
-		if (!SDL_Init(SDL_INIT_VIDEO))
+		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		{
 			std::cerr << "Could not initalize GLFW!\n";
 			return;
@@ -66,10 +67,16 @@ namespace Walnut {
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #else
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // use GLFW_OPENGL_ANY_PROFILE for X11 sessions
+			// glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+			// glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+			// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+			// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // use GLFW_OPENGL_ANY_PROFILE for X11 sessions
+
+            //SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+            // SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+            // SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 #endif
 
 			// glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -78,19 +85,20 @@ namespace Walnut {
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
-			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+			//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
-			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-			glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+			// glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+			// glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		}
 		else
 		{
 			assert(false);
 		}
 
-		auto* windowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
+		//auto* windowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
+        auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_Specification.Width, m_Specification.Height, SDL_WINDOW_OPENGL);
 		if (!windowHandle)
 		{
 			std::cerr << "Could not create GLFW Window!\n";
@@ -100,17 +108,20 @@ namespace Walnut {
 
 		m_RenderingBackend->Init(windowHandle);
 
-		glfwSetWindowUserPointer(windowHandle, this);
-		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {
-			auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
-			assert(app);
-			app->OnWindowResize(win, width, height);
-		});
+		// glfwSetWindowUserPointer(windowHandle, this);
+		// glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {
+		// 	auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
+		// 	assert(app);
+		// 	app->OnWindowResize(win, width, height);
+		// });
 
 		// Create Framebuffers
 		{
-			int w, h;
-			glfwGetFramebufferSize(windowHandle, &w, &h);
+			// int w, h;
+			// glfwGetFramebufferSize(windowHandle, &w, &h);
+
+            int w,h;
+            SDL_GetWindowSize(windowHandle, &w, &h);
 			m_RenderingBackend->SetupWindow(w, h);
 		}
 		
@@ -159,7 +170,7 @@ namespace Walnut {
 
 		m_RenderingBackend->Shutdown();
 
-		ImGui_ImplGlfw_Shutdown();
+		//ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 
 		m_RenderingBackend->Cleanup();
@@ -263,7 +274,10 @@ namespace Walnut {
 		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
 		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
 		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-		glfwPollEvents();
+		//glfwPollEvents();
+
+        SDL_Event event;
+        SDL_PollEvent(&event);
 
 		for (auto& layer : m_LayerStack)
 			layer->OnUpdate(m_TimeStep);
@@ -272,7 +286,8 @@ namespace Walnut {
 		if (m_RenderingBackend->NeedToResizeWindow())
 		{
 			int width, height;
-			glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
+			//glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
+            SDL_GetWindowSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
 			if (width > 0 && height > 0)
 				m_RenderingBackend->ResizeWindow(width, height);
 		}
@@ -293,10 +308,12 @@ namespace Walnut {
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
+			//auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
+            auto* backupPtr = SDL_GL_GetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
+			//glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
+            SDL_GL_MakeCurrent(m_RenderingBackend->GetWindowHandle(), backupPtr);
 		}
 
 		// Present Main Platform Window
@@ -317,7 +334,7 @@ namespace Walnut {
 		m_Running = true;
 
 		// Main loop
-		while (!glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && m_Running)
+		while (m_Running) // !glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && 
 			MainLoop();
 	}
 
@@ -338,7 +355,7 @@ namespace Walnut {
         return (float)0;
 	}
 
-    GLFWwindow* Application::GetWindowHandle() const
+    WindowHandleType* Application::GetWindowHandle() const
     {
         return m_RenderingBackend->GetWindowHandle();
     }

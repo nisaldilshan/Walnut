@@ -1,10 +1,12 @@
 #include "GlfwOpenGLRenderingBackend.h"
 
 #include <iostream>
+
 #include <imgui_impl_opengl3.h>
 
-//#include <GLFW/glfw3.h>
-#include <SDL2/SDL.h>
+
+//#include <imgui_impl_glfw.h>
+#include <imgui_impl_sdl2.h>
 
 #include "../../RenderingBackend.h"
 #include "OpenGLGraphics.h"
@@ -12,17 +14,24 @@
 namespace Walnut
 {
 
-	void GlfwOpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
+	SDL_GLContext g_SDLcontext = NULL;
+
+	void GlfwOpenGLRenderingBackend::Init(WindowHandleType* windowHandle)
 	{
 		m_windowHandle = windowHandle;
+
+		g_SDLcontext = SDL_GL_CreateContext(m_windowHandle);
+		if (g_SDLcontext == NULL)
+		{
+			std::cout << "Failed to create SDL GL context" << std::endl;
+			return;
+		}
+		SDL_GL_MakeCurrent(m_windowHandle, g_SDLcontext);
 
 		//glfwMakeContextCurrent(m_windowHandle);
 		//GraphicsAPI::OpenGL::SetupOpenGL(glfwGetProcAddress);
 
-		auto maincontext = SDL_GL_CreateContext(m_windowHandle);
-		if (maincontext == NULL) 
-		sdl_die("Failed to create OpenGL context");
-
+		
 
 		GraphicsAPI::OpenGL::SetupOpenGL(SDL_GL_GetProcAddress);
 		
@@ -44,7 +53,8 @@ namespace Walnut
 
 	void GlfwOpenGLRenderingBackend::ConfigureImGui()
 	{
-		ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
+		//ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
+		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
 #ifdef __EMSCRIPTEN__
 		ImGui_ImplOpenGL3_Init("#version 300 es");
 #else
@@ -56,7 +66,7 @@ namespace Walnut
 	{
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 	}
 
@@ -71,10 +81,11 @@ namespace Walnut
 
 	void GlfwOpenGLRenderingBackend::FramePresent()
 	{
-		glfwSwapBuffers(m_windowHandle);
+		//glfwSwapBuffers(m_windowHandle);
+		SDL_GL_SwapWindow(m_windowHandle);
 	}
 
-	GLFWwindow *GlfwOpenGLRenderingBackend::GetWindowHandle()
+	WindowHandleType* GlfwOpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;
 	}
