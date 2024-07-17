@@ -60,20 +60,32 @@ else()
 endif()
 
 #### ENGINE ###
-add_library (walnut SHARED
+if(WIN32)
+add_library (walnut STATIC
                 Walnut/src/Walnut/ApplicationSDL.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
             )
+else()
+add_library (walnut SHARED
+                Walnut/src/Walnut/Application.cpp
+                Walnut/src/Walnut/Image.cpp
+                Walnut/src/Walnut/Random.cpp
+                Walnut/src/Walnut/Input/Input.cpp
+                Walnut/src/Walnut/RenderingBackend.cpp
+            )
+endif()
+
+
 
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
-target_link_libraries(walnut PRIVATE stb::stb glm::glm imgui::imgui)
+target_link_libraries(walnut PUBLIC stb::stb glm::glm imgui::imgui)
 
 if (RENDERER STREQUAL "OpenGL")
-    target_link_libraries(walnut PRIVATE walnut-graphics-opengl)
+    target_link_libraries(walnut PUBLIC walnut-graphics-opengl)
     add_compile_definitions(RENDERER_BACKEND=1)
 elseif (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
@@ -110,6 +122,13 @@ if(APPLE AND RENDERER STREQUAL "Vulkan")
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
                         COMMENT "Generating symbolic link for libvulkan.1!!!")
 endif()
+
+
+add_library(walnut-combined INTERFACE  "")
+set_target_properties(walnut-combined PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(walnut-combined INTERFACE 
+  "$<LINK_LIBRARY:WHOLE_ARCHIVE,walnut>"
+)
 
 
 add_subdirectory(WalnutApp)
