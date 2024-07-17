@@ -3,7 +3,7 @@ add_executable(App src/WalnutApp.cpp)
 target_include_directories(App PRIVATE ../Walnut/src)
 
 if (WIN32)
-target_link_libraries(App PRIVATE walnut walnut-imgui-part1)
+target_link_libraries(App PRIVATE walnut walnut-graphics-opengl SDL2::SDL2 glm::glm imgui::imgui)
 else()
 target_link_libraries(App PRIVATE walnut SDL2::SDL2 glm::glm imgui::imgui) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
 endif()

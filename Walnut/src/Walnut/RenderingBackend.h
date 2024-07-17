@@ -6,8 +6,6 @@
 #include "ExportConfig.h"
 #include "WindowHandle.h"
 
-class ImDrawData;
-class ImVec4;
 
 namespace Walnut {
 
@@ -31,9 +29,8 @@ namespace Walnut {
 		virtual void ConfigureImGui() = 0;
 		virtual void StartImGuiFrame() = 0;
 		virtual void UploadFonts() = 0;
-		virtual void FrameRender(ImDrawData* draw_data) = 0;
+		virtual void FrameRender(void* draw_data) = 0;
 		virtual void FramePresent() = 0;
-		virtual void SetClearColor(ImVec4 color) = 0;
 
 		static BACKEND GetBackend() { return s_backend; }
 		static std::unique_ptr<RenderingBackend> Create();

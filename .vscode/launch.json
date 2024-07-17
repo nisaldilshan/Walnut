@@ -8,10 +8,10 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/WalnutApp/App",
+            "program": "${workspaceFolder}/build/WalnutApp/Debug/App.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/WalnutApp",
+            "cwd": "${workspaceFolder}/build/WalnutApp/Debug",
             "environment": [],
             "console": "integratedTerminal"
         },

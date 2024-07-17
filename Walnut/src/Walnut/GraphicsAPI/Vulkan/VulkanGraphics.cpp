@@ -249,6 +249,7 @@ void Vulkan::SetupVulkanWindow(int width, int height)
 
     s_AllocatedCommandBuffers.resize(g_MainWindowData.ImageCount);
     s_ResourceFreeQueue.resize(g_MainWindowData.ImageCount);
+	SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
 }
 
 void Vulkan::CleanupVulkan()

@@ -47,7 +47,7 @@ class Walnut(ConanFile):
                 self.requires("WebGPU/latest")
         elif self.settings.os == 'Windows':
             self.short_paths=True
-            self.requires("glfw/3.4")
+            self.requires("sdl/2.30.5")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":

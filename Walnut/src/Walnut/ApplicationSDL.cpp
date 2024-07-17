@@ -300,7 +300,6 @@ namespace Walnut {
 		ImGui::Render();
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
 		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-		m_RenderingBackend->SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
 		if (!main_is_minimized)
 			m_RenderingBackend->FrameRender(main_draw_data);
 

@@ -74,9 +74,9 @@ namespace Walnut
 	{
 	}
 
-	void GlfwOpenGLRenderingBackend::FrameRender(ImDrawData *draw_data)
+	void GlfwOpenGLRenderingBackend::FrameRender(void* draw_data)
 	{
-		ImGui_ImplOpenGL3_RenderDrawData(draw_data);
+		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 
 	void GlfwOpenGLRenderingBackend::FramePresent()
@@ -95,10 +95,6 @@ namespace Walnut
 	}
 
 	void GlfwOpenGLRenderingBackend::Cleanup()
-	{
-	}
-
-	void GlfwOpenGLRenderingBackend::SetClearColor(ImVec4 color)
 	{
 	}
 

@@ -36,6 +36,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 
 option(RENDERER "Renderer to be used" "WebGPU")
 set(WINDOWING_SYSTEM "SDL")
+message(STATUS "RENDERER" + ${RENDERER})
 
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
@@ -69,7 +70,7 @@ add_library (walnut SHARED
 
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
-target_link_libraries(walnut PRIVATE stb::stb glm::glm)
+target_link_libraries(walnut PRIVATE stb::stb glm::glm imgui::imgui)
 
 if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PRIVATE walnut-graphics-opengl)

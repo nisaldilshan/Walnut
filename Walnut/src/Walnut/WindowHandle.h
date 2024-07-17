@@ -1,6 +1,7 @@
 #pragma once
 
 #ifdef USE_SDL
+//#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #else
 #endif

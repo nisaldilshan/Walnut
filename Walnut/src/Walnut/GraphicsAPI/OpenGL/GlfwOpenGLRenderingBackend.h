@@ -14,12 +14,11 @@ public:
 	void ConfigureImGui() override;
 	void StartImGuiFrame() override;
 	void UploadFonts() override;
-	void FrameRender(ImDrawData* draw_data) override;
+	void FrameRender(void* draw_data) override;
 	void FramePresent() override;
 	WindowHandleType* GetWindowHandle() override;
 	void Shutdown() override;
 	void Cleanup() override;
-	void SetClearColor(ImVec4 color) override;
 
 private:
 	uint32_t m_extensions_count = 0;

@@ -86,9 +86,4 @@ namespace Walnut
         GraphicsAPI::Vulkan::CleanupVulkan();
     }
 
-    void GlfwVulkanRenderingBackend::SetClearColor(ImVec4 color)
-    {
-        GraphicsAPI::Vulkan::SetClearColor(color);
-    }
-
 }

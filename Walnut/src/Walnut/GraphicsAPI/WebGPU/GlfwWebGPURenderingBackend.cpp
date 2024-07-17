@@ -167,7 +167,4 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::Cleanup()
     {
     }
-    void GlfwWebGPURenderingBackend::SetClearColor(ImVec4 color)
-    {
-    }
 }
