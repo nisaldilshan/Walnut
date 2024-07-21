@@ -6,6 +6,7 @@
 
 #include <SDL2/SDL.h>
 #include <Walnut/GLM/GLM.h>
+#include <imgui_impl_sdl2.h>
 
 #include "RenderingBackend.h"
 
@@ -277,7 +278,14 @@ namespace Walnut {
 		//glfwPollEvents();
 
         SDL_Event event;
-        SDL_PollEvent(&event);
+        while (SDL_PollEvent(&event))
+        {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            // if (event.type == SDL_QUIT)
+            //     done = true;
+            // if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+            //     done = true;
+        }
 
 		for (auto& layer : m_LayerStack)
 			layer->OnUpdate(m_TimeStep);
