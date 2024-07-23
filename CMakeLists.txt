@@ -70,7 +70,7 @@ add_library (walnut STATIC
             )
 else()
 add_library (walnut SHARED
-                Walnut/src/Walnut/Application.cpp
+                Walnut/src/Walnut/ApplicationSDL.cpp
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
@@ -131,4 +131,4 @@ target_link_libraries(walnut-combined INTERFACE
 )
 
 
-add_subdirectory(WalnutApp)
+#add_subdirectory(WalnutApp)

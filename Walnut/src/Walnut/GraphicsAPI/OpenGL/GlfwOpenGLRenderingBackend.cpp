@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#define IMGUI_IMPL_OPENGL_ES3 // this is needed only in Android
 #include <imgui_impl_opengl3.h>
 
 

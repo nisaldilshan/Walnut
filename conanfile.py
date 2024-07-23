@@ -5,7 +5,7 @@ from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
 
 class Walnut(ConanFile):
     name = "walnut"
-    version = "latest"
+    version = "mobile"
     url = "https://github.com/nisaldilshan/Walnut"
     homepage = "https://github.com/TheCherno/Walnut"
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
@@ -103,6 +103,7 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/Timer.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/RenderingBackend.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/ExportConfig.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/WindowHandle.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/Input.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/KeyCodes.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)
