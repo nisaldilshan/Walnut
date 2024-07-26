@@ -4,7 +4,6 @@
 #include <thread>
 #include <imgui.h>
 
-#include <SDL2/SDL.h>
 #include <Walnut/GLM/GLM.h>
 #include <imgui_impl_sdl2.h>
 
@@ -59,21 +58,23 @@ namespace Walnut {
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		{
 			std::cerr << "Could not initalize GLFW!\n";
+			assert(false);
 			return;
 		}
 
 		if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::OpenGL)
 		{
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+#elif defined(__ANDROID__)
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 #else
-			// glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-			// glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-			// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-			// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // use GLFW_OPENGL_ANY_PROFILE for X11 sessions
-
-            //SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+			//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -99,8 +100,10 @@ namespace Walnut {
 			assert(false);
 		}
 
-		//auto* windowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
-        auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_Specification.Width, m_Specification.Height, SDL_WINDOW_OPENGL);
+        auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), 
+											SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
+											m_Specification.Width, m_Specification.Height, 
+											SDL_WINDOW_OPENGL);
 		if (!windowHandle)
 		{
 			std::cerr << "Could not create GLFW Window!\n";

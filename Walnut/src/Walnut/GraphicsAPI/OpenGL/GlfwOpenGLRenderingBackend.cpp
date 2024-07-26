@@ -25,6 +25,7 @@ namespace Walnut
 		if (g_SDLcontext == NULL)
 		{
 			std::cout << "Failed to create SDL GL context" << std::endl;
+			assert(false);
 			return;
 		}
 		SDL_GL_MakeCurrent(m_windowHandle, g_SDLcontext);
@@ -56,8 +57,11 @@ namespace Walnut
 	{
 		//ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
 		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
 		ImGui_ImplOpenGL3_Init("#version 300 es");
+#elif defined(__ANDROID__)
+		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
+		assert(result);
 #else
 		ImGui_ImplOpenGL3_Init("#version 410");
 #endif
