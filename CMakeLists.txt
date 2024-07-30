@@ -131,4 +131,4 @@ target_link_libraries(walnut-combined INTERFACE
 )
 
 
-#add_subdirectory(WalnutApp)
+add_subdirectory(WalnutApp)

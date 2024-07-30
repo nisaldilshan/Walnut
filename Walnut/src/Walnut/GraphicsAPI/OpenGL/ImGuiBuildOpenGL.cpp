@@ -4,7 +4,9 @@
 #include <imgui_tables.cpp>
 #include <imgui_widgets.cpp>
 
-#define IMGUI_IMPL_OPENGL_ES3 // this is needed only in Android
+#if defined(__ANDROID__)
+#define IMGUI_IMPL_OPENGL_ES3
+#endif
 #include <imgui_impl_opengl3.cpp>
 
 //#include <imgui_impl_glfw.cpp>
