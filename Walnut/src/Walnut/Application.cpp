@@ -6,9 +6,10 @@
 
 #include <iostream>
 #include <thread>
+#include <imgui.h>
 
-#include <GLFW/glfw3.h>
 #include <Walnut/GLM/GLM.h>
+#include <imgui_impl_glfw.h>
 
 #include "RenderingBackend.h"
 

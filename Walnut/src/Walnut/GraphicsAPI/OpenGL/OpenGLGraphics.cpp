@@ -63,7 +63,7 @@ inline void CheckGLError()
     }
 }
 
-void OpenGL::SetupOpenGL(LoaderFuncType loaderFunc)
+void OpenGL::SetupOpenGL(void* loaderFunc)
 {
     
 #ifdef __EMSCRIPTEN__

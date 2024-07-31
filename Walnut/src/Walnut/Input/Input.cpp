@@ -2,8 +2,12 @@
 
 #include "Walnut/Application.h"
 
-//#include <GLFW/glfw3.h>
+#ifdef USE_SDL
 #include <SDL2/SDL.h>
+#else
+#include <GLFW/glfw3.h>
+#endif
+
 
 namespace Walnut {
 

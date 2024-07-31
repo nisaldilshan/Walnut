@@ -2,12 +2,9 @@
 
 #include <iostream>
 
-#define IMGUI_IMPL_OPENGL_ES3 // this is needed only in Android
 #include <imgui_impl_opengl3.h>
 
-
-//#include <imgui_impl_glfw.h>
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_glfw.h>
 
 #include "../../RenderingBackend.h"
 #include "OpenGLGraphics.h"
@@ -15,27 +12,12 @@
 namespace Walnut
 {
 
-	SDL_GLContext g_SDLcontext = NULL;
-
-	void GlfwOpenGLRenderingBackend::Init(WindowHandleType* windowHandle)
+	void GlfwOpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
 	{
 		m_windowHandle = windowHandle;
-
-		g_SDLcontext = SDL_GL_CreateContext(m_windowHandle);
-		if (g_SDLcontext == NULL)
-		{
-			std::cout << "Failed to create SDL GL context" << std::endl;
-			assert(false);
-			return;
-		}
-		SDL_GL_MakeCurrent(m_windowHandle, g_SDLcontext);
-
-		//glfwMakeContextCurrent(m_windowHandle);
-		//GraphicsAPI::OpenGL::SetupOpenGL(glfwGetProcAddress);
-
 		
-
-		GraphicsAPI::OpenGL::SetupOpenGL(SDL_GL_GetProcAddress);
+		glfwMakeContextCurrent(m_windowHandle);
+		GraphicsAPI::OpenGL::SetupOpenGL((void*)glfwGetProcAddress);
 		
 	}
 
@@ -55,13 +37,9 @@ namespace Walnut
 
 	void GlfwOpenGLRenderingBackend::ConfigureImGui()
 	{
-		//ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
-		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
-#if defined(__EMSCRIPTEN__)
+		ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
+#ifdef __EMSCRIPTEN__
 		ImGui_ImplOpenGL3_Init("#version 300 es");
-#elif defined(__ANDROID__)
-		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
-		assert(result);
 #else
 		ImGui_ImplOpenGL3_Init("#version 410");
 #endif
@@ -71,7 +49,7 @@ namespace Walnut
 	{
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 	}
 
@@ -86,8 +64,7 @@ namespace Walnut
 
 	void GlfwOpenGLRenderingBackend::FramePresent()
 	{
-		//glfwSwapBuffers(m_windowHandle);
-		SDL_GL_SwapWindow(m_windowHandle);
+		glfwSwapBuffers(m_windowHandle);
 	}
 
 	WindowHandleType* GlfwOpenGLRenderingBackend::GetWindowHandle()

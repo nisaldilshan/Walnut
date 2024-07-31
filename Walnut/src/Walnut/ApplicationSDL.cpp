@@ -1,5 +1,9 @@
 #include "Application.h"
 
+//
+// Adapted from Dear ImGui Vulkan example
+//
+
 #include <iostream>
 #include <thread>
 #include <imgui.h>

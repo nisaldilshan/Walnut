@@ -7,7 +7,7 @@ namespace GraphicsAPI
     class OpenGL
     {
     public:
-        static void SetupOpenGL(LoaderFuncType loaderFunc);
+        static void SetupOpenGL(void* loaderFunc);
         static void SetupViewport(int width, int height);
     };
 }

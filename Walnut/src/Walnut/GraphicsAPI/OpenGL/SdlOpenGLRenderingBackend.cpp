@@ -5,8 +5,6 @@
 #define IMGUI_IMPL_OPENGL_ES3 // this is needed only in Android
 #include <imgui_impl_opengl3.h>
 
-
-//#include <imgui_impl_glfw.h>
 #include <imgui_impl_sdl2.h>
 
 #include "../../RenderingBackend.h"
@@ -28,12 +26,7 @@ namespace Walnut
 			assert(false);
 			return;
 		}
-		SDL_GL_MakeCurrent(m_windowHandle, g_SDLcontext);
-
-		//glfwMakeContextCurrent(m_windowHandle);
-		//GraphicsAPI::OpenGL::SetupOpenGL(glfwGetProcAddress);
-
-		
+		SDL_GL_MakeCurrent(m_windowHandle, g_SDLcontext);		
 
 		GraphicsAPI::OpenGL::SetupOpenGL(SDL_GL_GetProcAddress);
 		
@@ -55,11 +48,8 @@ namespace Walnut
 
 	void GlfwOpenGLRenderingBackend::ConfigureImGui()
 	{
-		//ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
 		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
-#if defined(__EMSCRIPTEN__)
-		ImGui_ImplOpenGL3_Init("#version 300 es");
-#elif defined(__ANDROID__)
+#if defined(__ANDROID__)
 		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
 		assert(result);
 #else
@@ -86,7 +76,6 @@ namespace Walnut
 
 	void GlfwOpenGLRenderingBackend::FramePresent()
 	{
-		//glfwSwapBuffers(m_windowHandle);
 		SDL_GL_SwapWindow(m_windowHandle);
 	}
 
