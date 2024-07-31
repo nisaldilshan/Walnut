@@ -35,17 +35,19 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 
 option(RENDERER "Renderer to be used" "WebGPU")
-set(WINDOWING_SYSTEM "SDL")
+option(WINDOWING_SYSTEM "Windowing system to be used" "GLFW")
 message(STATUS "RENDERER" + ${RENDERER})
+message(STATUS "WINDOWING_SYSTEM" + ${WINDOWING_SYSTEM})
+
+if (WINDOWING_SYSTEM STREQUAL "SDL")
+    find_package(SDL2 REQUIRED)
+    add_compile_definitions(USE_SDL)
+else()
+    find_package(glfw3 REQUIRED)
+endif()
 
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
-    if (WINDOWING_SYSTEM STREQUAL "SDL")
-        find_package(SDL2 REQUIRED)
-        add_compile_definitions(USE_SDL)
-    else()
-        find_package(glfw3 REQUIRED)
-    endif()
     find_package(glad REQUIRED)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/OpenGL)
 elseif(RENDERER STREQUAL "Vulkan")
@@ -61,24 +63,23 @@ endif()
 
 #### ENGINE ###
 if(WIN32)
-add_library (walnut STATIC
-                Walnut/src/Walnut/ApplicationSDL.cpp
-                Walnut/src/Walnut/Image.cpp
-                Walnut/src/Walnut/Random.cpp
-                Walnut/src/Walnut/Input/Input.cpp
-                Walnut/src/Walnut/RenderingBackend.cpp
-            )
+add_library (walnut STATIC)
 else()
-add_library (walnut SHARED
-                Walnut/src/Walnut/ApplicationSDL.cpp
-                Walnut/src/Walnut/Image.cpp
-                Walnut/src/Walnut/Random.cpp
-                Walnut/src/Walnut/Input/Input.cpp
-                Walnut/src/Walnut/RenderingBackend.cpp
-            )
+add_library (walnut SHARED)
 endif()
 
+target_sources(walnut PRIVATE 
+                Walnut/src/Walnut/Image.cpp
+                Walnut/src/Walnut/Random.cpp
+                Walnut/src/Walnut/Input/Input.cpp
+                Walnut/src/Walnut/RenderingBackend.cpp
+)
 
+if (WINDOWING_SYSTEM STREQUAL "SDL")
+    target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp)
+else()
+    target_sources(walnut PRIVATE Walnut/src/Walnut/Application.cpp)
+endif()
 
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
