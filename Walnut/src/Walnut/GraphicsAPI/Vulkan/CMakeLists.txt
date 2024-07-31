@@ -7,7 +7,4 @@ add_library (walnut-graphics-vulkan STATIC
 
 target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)  
 
-target_link_libraries(walnut-graphics-vulkan PUBLIC ${CONAN_LIBS})
-if (NOT APPLE)
-    target_link_libraries(walnut-graphics-vulkan PRIVATE Vulkan::Vulkan)
-endif()
+target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui glfw Vulkan::Vulkan)

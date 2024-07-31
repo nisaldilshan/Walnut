@@ -29,6 +29,7 @@ set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
 find_package(glm REQUIRED)
 find_package(stb REQUIRED)
+find_package(moltenvk REQUIRED)
 
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
@@ -104,22 +105,15 @@ if (IS_EMSCRIPTEN)
     #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 endif()
 if(APPLE AND RENDERER STREQUAL "Vulkan")
-    ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-                        COMMAND rm -f bin/libMoltenVK.dylib
-                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
-                        COMMENT "Removing symbolic link libMoltenVK!!!")
-    ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-                        COMMAND rm -f bin/libvulkan.1.dylib
-                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
-                        COMMENT "Removing symbolic link libvulkan.1!!!")
+    message(STATUS "moltenvk_LIB_DIRS_DEBUG" + ${moltenvk_LIB_DIRS_DEBUG})
 
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-                        COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libMoltenVK.dylib
+                        COMMAND ln -sf ${moltenvk_LIB_DIRS_DEBUG}/libMoltenVK.dylib libMoltenVK.dylib
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
                         COMMENT "Generating symbolic link for libMoltenVK!!!")
 
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-                        COMMAND ln -s ${CONAN_LIB_DIRS_MOLTENVK}/libMoltenVK.dylib bin/libvulkan.1.dylib
+                        COMMAND ln -sf ${moltenvk_LIB_DIRS_DEBUG}/libMoltenVK.dylib libvulkan.1.dylib
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
                         COMMENT "Generating symbolic link for libvulkan.1!!!")
 endif()

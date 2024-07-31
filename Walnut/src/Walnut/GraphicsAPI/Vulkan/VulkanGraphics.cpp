@@ -271,7 +271,7 @@ void Vulkan::CleanupVulkanWindow()
 	ImGui_ImplVulkanH_DestroyWindow(g_Instance, g_Device, &g_MainWindowData, g_Allocator);
 }
 
-void Vulkan::FrameRender(ImDrawData* draw_data)
+void Vulkan::FrameRender(void* draw_data)
 {
 	VkResult err;
 
@@ -333,7 +333,7 @@ void Vulkan::FrameRender(ImDrawData* draw_data)
 	}
 
 	// Record dear imgui primitives into command buffer
-	ImGui_ImplVulkan_RenderDrawData(draw_data, fd->CommandBuffer);
+	ImGui_ImplVulkan_RenderDrawData((ImDrawData*)draw_data, fd->CommandBuffer);
 
 	// Submit command buffer
 	vkCmdEndRenderPass(fd->CommandBuffer);
