@@ -1,7 +1,5 @@
 #pragma once
 
-typedef void* (* LoaderFuncType)(const char *);
-
 namespace GraphicsAPI
 {
     class OpenGL

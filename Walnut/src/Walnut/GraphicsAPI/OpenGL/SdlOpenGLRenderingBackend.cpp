@@ -2,7 +2,9 @@
 
 #include <iostream>
 
-#define IMGUI_IMPL_OPENGL_ES3 // this is needed only in Android
+#if defined(__ANDROID__)
+#define IMGUI_IMPL_OPENGL_ES3
+#endif
 #include <imgui_impl_opengl3.h>
 
 #include <imgui_impl_sdl2.h>
@@ -28,7 +30,7 @@ namespace Walnut
 		}
 		SDL_GL_MakeCurrent(m_windowHandle, g_SDLcontext);		
 
-		GraphicsAPI::OpenGL::SetupOpenGL(SDL_GL_GetProcAddress);
+		GraphicsAPI::OpenGL::SetupOpenGL((void*)SDL_GL_GetProcAddress);
 		
 	}
 

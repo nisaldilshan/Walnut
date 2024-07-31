@@ -32,7 +32,6 @@ class Walnut(ConanFile):
     def requirements(self):
         print("Using rendering backend " + str(self.options.rendering_backend));
         if self.settings.os == 'Macos':
-            self.options.windowing_system = "SDL"
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
