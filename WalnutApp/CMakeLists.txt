@@ -4,9 +4,15 @@ target_include_directories(App PRIVATE ../Walnut/src)
 
 if (WIN32)
 target_link_libraries(App PRIVATE walnut-combined )
-target_link_libraries(App PRIVATE walnut-graphics-opengl SDL2::SDL2 glm::glm imgui::imgui)
+target_link_libraries(App PRIVATE walnut-graphics-opengl glm::glm imgui::imgui)
 else()
-target_link_libraries(App PRIVATE walnut SDL2::SDL2 glm::glm imgui::imgui) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
+target_link_libraries(App PRIVATE walnut glm::glm imgui::imgui) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
+endif()
+
+if (WINDOWING_SYSTEM STREQUAL "SDL")
+    target_link_libraries(App PUBLIC SDL2::SDL2)
+else()
+    target_link_libraries(App PUBLIC glfw)
 endif()
 
 if (IS_EMSCRIPTEN)

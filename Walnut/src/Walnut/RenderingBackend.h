@@ -6,7 +6,6 @@
 #include "ExportConfig.h"
 #include "WindowHandle.h"
 
-
 namespace Walnut {
 
 	class Walnut_API RenderingBackend

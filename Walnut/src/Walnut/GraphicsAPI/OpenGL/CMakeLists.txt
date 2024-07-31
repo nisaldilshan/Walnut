@@ -21,17 +21,18 @@ add_library (walnut-graphics-opengl STATIC
 target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
 target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui)
 
-#target_link_libraries(walnut-graphics-opengl PUBLIC glfw)
-target_link_libraries(walnut-graphics-opengl PUBLIC SDL2::SDL2)
-
+if (WINDOWING_SYSTEM STREQUAL "SDL")
+    target_link_libraries(walnut-graphics-opengl PUBLIC SDL2::SDL2)
+else()
+    target_link_libraries(walnut-graphics-opengl PUBLIC glfw)
+endif()
 
 
 if(ANDROID)
-target_link_libraries(walnut-graphics-opengl PUBLIC ${GLES3_LIBRARY})
+    target_link_libraries(walnut-graphics-opengl PUBLIC ${GLES3_LIBRARY})
 else()
-target_link_libraries(walnut-graphics-opengl PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+    target_link_libraries(walnut-graphics-opengl PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
 endif()
-
 
 
 if (APPLE)

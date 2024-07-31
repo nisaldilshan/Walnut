@@ -9,5 +9,8 @@
 #endif
 #include <imgui_impl_opengl3.cpp>
 
-//#include <imgui_impl_glfw.cpp>
+#ifdef USE_SDL
 #include <imgui_impl_sdl2.cpp>
+#else
+#include <imgui_impl_glfw.cpp>
+#endif

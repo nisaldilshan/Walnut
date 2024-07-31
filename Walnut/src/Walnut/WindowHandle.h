@@ -10,7 +10,6 @@
 #include <SDL2/SDL.h>
 #else
 #include <GLFW/glfw3.h>
-static_assert(false);
 #endif
 
 namespace Walnut {
