@@ -14,7 +14,6 @@ endif()
 add_library (walnut-graphics-opengl STATIC
                     ImGuiBuildOpenGL.cpp
                     OpenGLGraphics.cpp
-                    GlfwOpenGLRenderingBackend.cpp
                     OpenGLImage.cpp   
                 )
 
@@ -22,8 +21,10 @@ target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Wal
 target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
+    target_sources(walnut-graphics-opengl PRIVATE SdlOpenGLRenderingBackend.cpp)
     target_link_libraries(walnut-graphics-opengl PUBLIC SDL2::SDL2)
 else()
+target_sources(walnut-graphics-opengl PRIVATE GlfwOpenGLRenderingBackend.cpp)
     target_link_libraries(walnut-graphics-opengl PUBLIC glfw)
 endif()
 
