@@ -6,7 +6,7 @@ if (WIN32)
 target_link_libraries(App PRIVATE walnut-combined)
 
 else()
-#target_link_libraries(App PRIVATE walnut glm::glm imgui::imgui) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
+target_link_libraries(App PRIVATE walnut) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
 endif()
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
