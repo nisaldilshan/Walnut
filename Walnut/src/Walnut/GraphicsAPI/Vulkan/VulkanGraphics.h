@@ -39,7 +39,7 @@ public:
 	static void SetupVulkanWindow(int width, int height);
 	static void CleanupVulkan();
 	static void CleanupVulkanWindow();
-	static void FrameRender(ImDrawData* draw_data);
+	static void FrameRender(void* draw_data);
 	static void FramePresent();
 	static void ConfigureRendererBackend(GLFWwindow* window);
 	static void UploadFonts();

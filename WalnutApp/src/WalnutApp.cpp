@@ -5,6 +5,8 @@
 #include <Walnut/RenderingBackend.h>
 #include <Walnut/Image.h>
 
+#include <imgui.h>
+
 class ExampleLayer : public Walnut::Layer
 {
 public:
@@ -86,6 +88,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	app->PushLayer<ExampleLayer>();
 	app->SetMenubarCallback([app]()
 	{
+		assert(ImGui::GetCurrentContext()); // This will fail in windows if walnut shared lib is used
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("Exit"))

@@ -14,10 +14,12 @@ class Walnut(ConanFile):
     build_policy = "missing"
     options = {
         "rendering_backend": ["OpenGL", "Vulkan", "WebGPU"],
+        "windowing_system": ["GLFW", "SDL", "None"],
         'fPIC': [True, False]
     }
     default_options = {
         "rendering_backend": "WebGPU",
+        "windowing_system": "GLFW",
         'fPIC': True,
         "glad:no_loader": False,
         "glad:spec": "gl",
@@ -30,7 +32,6 @@ class Walnut(ConanFile):
     def requirements(self):
         print("Using rendering backend " + str(self.options.rendering_backend));
         if self.settings.os == 'Macos':
-            self.requires("glfw/3.4")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
@@ -38,7 +39,6 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest")
         elif self.settings.os == 'Linux':
-            self.requires("glfw/3.4")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
@@ -47,7 +47,6 @@ class Walnut(ConanFile):
                 self.requires("WebGPU/latest")
         elif self.settings.os == 'Windows':
             self.short_paths=True
-            self.requires("glfw/3.4")
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
@@ -58,10 +57,19 @@ class Walnut(ConanFile):
             if self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Android':
+            self.options.windowing_system = "SDL"
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
         else:
             raise ConanInvalidSystemRequirements("Unsupported Platform")
+
+        print("Using windowing system " + str(self.options.windowing_system));
+        if self.options.windowing_system == "GLFW":
+            self.requires("glfw/3.4")
+        elif self.options.windowing_system == "SDL":
+            self.requires("sdl/2.30.5")
+        else:
+            pass
 
     def build_requirements(self):
         pass
@@ -73,6 +81,7 @@ class Walnut(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["RENDERER"] = self.options.rendering_backend
+        tc.variables["WINDOWING_SYSTEM"] = self.options.windowing_system
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
@@ -102,6 +111,7 @@ class Walnut(ConanFile):
         self.copy(pattern="Walnut/src/Walnut/Timer.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/RenderingBackend.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/ExportConfig.h", dst="include/Walnut", keep_path=False)
+        self.copy(pattern="Walnut/src/Walnut/WindowHandle.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/Input.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Input/KeyCodes.h", dst="include/Walnut/Input", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/GraphicsAPI/Vulkan/VulkanImage.h", dst="include/Walnut/GraphicsAPI", keep_path=False)

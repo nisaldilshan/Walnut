@@ -1,27 +1,40 @@
-find_package (OpenGL REQUIRED)
-find_package(X11 REQUIRED)
+if(ANDROID)
+    find_path(GLES3_INCLUDE_DIR GLES3/gl3.h HINTS ${ANDROID_NDK})
+    find_library(GLES3_LIBRARY libGLESv3.so HINTS ${GLES3_INCLUDE_DIR}/../lib)
+    message(STATUS "GLES3_INCLUDE_DIR= " ${GLES3_INCLUDE_DIR})
+    message(STATUS "GLES3_LIBRARY= " ${GLES3_LIBRARY})
+else()
+    find_package (OpenGL REQUIRED)
+    find_package(X11 REQUIRED)
+    message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
+    message(STATUS "X11_LIBRARIES= " ${X11_LIBRARIES})
+endif()
 
-# can not compile until we use SDL in android
-# find_path(GLES2_INCLUDE_DIR GLES2/gl2.h HINTS ${ANDROID_NDK})
-# find_library(GLES2_LIBRARY libGLESv2.so HINTS ${GLES2_INCLUDE_DIR}/../lib)
 
 add_library (walnut-graphics-opengl STATIC
                     ImGuiBuildOpenGL.cpp
                     OpenGLGraphics.cpp
-                    GlfwOpenGLRenderingBackend.cpp
                     OpenGLImage.cpp   
                 )
 
 target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
+target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui)
 
-target_link_libraries(walnut-graphics-opengl PUBLIC glfw glad::glad imgui::imgui)
+if (WINDOWING_SYSTEM STREQUAL "SDL")
+    target_sources(walnut-graphics-opengl PRIVATE SdlOpenGLRenderingBackend.cpp)
+    target_link_libraries(walnut-graphics-opengl PUBLIC SDL2::SDL2)
+else()
+target_sources(walnut-graphics-opengl PRIVATE GlfwOpenGLRenderingBackend.cpp)
+    target_link_libraries(walnut-graphics-opengl PUBLIC glfw)
+endif()
 
-message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
-message(STATUS "X11_LIBRARIES= " ${X11_LIBRARIES})
 
-# message(STATUS "GLES2_INCLUDE_DIR= " ${GLES2_INCLUDE_DIR})
-# message(STATUS "GLES2_LIBRARY= " ${GLES2_LIBRARY})
-target_link_libraries(walnut-graphics-opengl PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+if(ANDROID)
+    target_link_libraries(walnut-graphics-opengl PUBLIC ${GLES3_LIBRARY})
+else()
+    target_link_libraries(walnut-graphics-opengl PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+endif()
+
 
 if (APPLE)
     target_link_libraries(walnut-graphics-opengl PUBLIC

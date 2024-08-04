@@ -41,7 +41,7 @@ namespace Walnut
 
     void GlfwVulkanRenderingBackend::ConfigureImGui()
     {
-        ImGui_ImplGlfw_InitForVulkan(window, true);
+        ImGui_ImplGlfw_InitForVulkan(m_windowHandle, true);
         GraphicsAPI::Vulkan::ConfigureRendererBackend(m_windowHandle);
     }
 
@@ -58,7 +58,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::UploadFonts();
     }
 
-    void GlfwVulkanRenderingBackend::FrameRender(ImDrawData *draw_data)
+    void GlfwVulkanRenderingBackend::FrameRender(void* draw_data)
     {
         GraphicsAPI::Vulkan::FrameRender(draw_data);
     }
@@ -84,11 +84,6 @@ namespace Walnut
     {
         GraphicsAPI::Vulkan::CleanupVulkanWindow();
         GraphicsAPI::Vulkan::CleanupVulkan();
-    }
-
-    void GlfwVulkanRenderingBackend::SetClearColor(ImVec4 color)
-    {
-        GraphicsAPI::Vulkan::SetClearColor(color);
     }
 
 }

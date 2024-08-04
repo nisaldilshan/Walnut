@@ -99,7 +99,7 @@ namespace Walnut
     {
     }
 
-    void GlfwWebGPURenderingBackend::FrameRender(ImDrawData *draw_data)
+    void GlfwWebGPURenderingBackend::FrameRender(void* draw_data)
     {
         wgpu::TextureView nextTexture = g_swapChain.getCurrentTextureView();
         if (!nextTexture) {
@@ -127,7 +127,7 @@ namespace Walnut
         renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
         wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
-        ImGui_ImplWGPU_RenderDrawData(draw_data, renderPass);
+        ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, renderPass);
 
         renderPass.end();
 
@@ -165,9 +165,6 @@ namespace Walnut
         }
     }
     void GlfwWebGPURenderingBackend::Cleanup()
-    {
-    }
-    void GlfwWebGPURenderingBackend::SetClearColor(ImVec4 color)
     {
     }
 }
