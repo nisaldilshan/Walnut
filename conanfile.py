@@ -5,7 +5,7 @@ from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
 
 class Walnut(ConanFile):
     name = "walnut"
-    version = "mobile"
+    version = "latest"
     url = "https://github.com/nisaldilshan/Walnut"
     homepage = "https://github.com/TheCherno/Walnut"
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
