@@ -2,8 +2,8 @@ if(WIN32)
 add_library (walnut-imgui-part1 SHARED imgui-webgpu-part1.cpp)
 else()
 add_library (walnut-imgui-part1 STATIC imgui-webgpu-part1.cpp)
-target_link_libraries(walnut-imgui-part1 PRIVATE imgui::imgui)
 endif()
+target_link_libraries(walnut-imgui-part1 PRIVATE imgui::imgui)
 
 add_library (walnut-graphics-webgpu STATIC
                     ImGuiBuildWGPU.cpp
@@ -12,10 +12,12 @@ add_library (walnut-graphics-webgpu STATIC
                     WebGPUImage.cpp
                 )
 
-target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)                
+target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
+target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu imgui::imgui glm::glm)               
 
 if(WIN32)
-target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu 
+target_link_directories(walnut-graphics-webgpu PUBLIC $<$<CONFIG:DEBUG>:${WebGPU_LIB_DIRS_DEBUG}>) # TODO: add lib dir for non debug configurations as well
+target_link_libraries(walnut-graphics-webgpu PUBLIC
                             absl_bad_any_cast_impl.lib
                             absl_bad_optional_access.lib
                             absl_bad_variant_access.lib
@@ -172,5 +174,5 @@ target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webg
                             webgpu_dawn.lib
                     )
 else()
-target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu WebGPU::WebGPU imgui::imgui glm::glm)
+target_link_libraries(walnut-graphics-webgpu PUBLIC WebGPU::WebGPU )
 endif()
