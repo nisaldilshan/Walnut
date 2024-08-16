@@ -46,6 +46,8 @@ namespace Walnut {
 		float GetTime();
 		WindowHandleType* GetWindowHandle() const;
 
+		void SetSleepAmount(std::chrono::milliseconds sleepAmount);
+
 	private:
 		void Init();
 		void Shutdown();
@@ -56,8 +58,9 @@ namespace Walnut {
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;
 		bool m_Running = false;
 		float m_TimeStep = 0.0f;
-		float m_FrameTime = 0.0f;
-		float m_LastFrameTime = 0.0f;
+		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
+		std::chrono::milliseconds m_SleepAmount;
+
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::function<void()> m_MenubarCallback;
 	};

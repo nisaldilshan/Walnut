@@ -26,6 +26,7 @@ namespace Walnut {
 	Application::Application(const ApplicationSpecification& specification)
 		: m_Specification(specification)
 		, m_RenderingBackend(std::move(RenderingBackend::Create()))
+		, m_SleepAmount(std::chrono::milliseconds(10))
 	{
 		s_Instance = this;
 
@@ -335,13 +336,10 @@ namespace Walnut {
 		if (!main_is_minimized)
 			m_RenderingBackend->FramePresent();
 
-		float time = GetTime();
-		m_FrameTime = time - m_LastFrameTime;
-		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
-		m_LastFrameTime = time;
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
+		const auto now = std::chrono::steady_clock::now();
+		const float timeDiff = std::chrono::duration_cast<std::chrono::duration<float>>(now - m_LastFrameTimePoint).count();
+		m_TimeStep = glm::min<float>(timeDiff, 0.1f);
+		m_LastFrameTimePoint = now;
 	}
 
 	void Application::Run()
@@ -350,7 +348,10 @@ namespace Walnut {
 
 		// Main loop
 		while (m_Running) // !glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && 
+		{
 			MainLoop();
+			std::this_thread::sleep_for(m_SleepAmount);
+		}
 	}
 
     void Application::SetMenubarCallback(const std::function<void()> &menubarCallback)
@@ -375,4 +376,8 @@ namespace Walnut {
         return m_RenderingBackend->GetWindowHandle();
     }
 
+    void Application::SetSleepAmount(std::chrono::milliseconds sleepAmount)
+    {
+		m_SleepAmount = sleepAmount;
+    }
 }

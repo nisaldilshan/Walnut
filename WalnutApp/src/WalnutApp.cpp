@@ -27,10 +27,13 @@ public:
 	{
 		ImGui::Begin("Settings");
         ImGui::Text("Last render: %.3fms", m_lastRenderTime);
-		if (ImGui::Button("Render"))
-        {
-            Render();
-        }
+
+		static int sleepAmountMs = 10;
+        auto sleepAmountChanged = ImGui::SliderInt("SleepTime (ms)", &sleepAmountMs, 0, 50);
+		if (sleepAmountChanged)
+		{
+			Walnut::Application::Get().SetSleepAmount(std::chrono::milliseconds(sleepAmountMs));
+		}
 		ImGui::End();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
