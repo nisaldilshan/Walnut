@@ -4,10 +4,15 @@ if(ANDROID)
     message(STATUS "GLES3_INCLUDE_DIR= " ${GLES3_INCLUDE_DIR})
     message(STATUS "GLES3_LIBRARY= " ${GLES3_LIBRARY})
 else()
-    find_package (OpenGL REQUIRED)
+
+find_package (OpenGL REQUIRED)
+message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
+if (EMSCRIPTEN)
+else()
+    find_package(glad REQUIRED)
     find_package(X11 REQUIRED)
-    message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
     message(STATUS "X11_LIBRARIES= " ${X11_LIBRARIES})
+endif()
 endif()
 
 
@@ -18,7 +23,7 @@ add_library (walnut-graphics-opengl STATIC
                 )
 
 target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
-target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui)
+target_link_libraries(walnut-graphics-opengl PUBLIC imgui::imgui)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut-graphics-opengl PRIVATE SdlOpenGLRenderingBackend.cpp)
@@ -33,6 +38,7 @@ if(ANDROID)
     target_link_libraries(walnut-graphics-opengl PUBLIC ${GLES3_LIBRARY})
 else()
     target_link_libraries(walnut-graphics-opengl PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+    set_target_properties(walnut-graphics-opengl PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3")
 endif()
 
 

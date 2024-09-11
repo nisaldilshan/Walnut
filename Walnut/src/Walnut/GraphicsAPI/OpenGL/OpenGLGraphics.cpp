@@ -1,12 +1,5 @@
 #include "OpenGLGraphics.h"
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/emscripten.h>
-#define GLFW_INCLUDE_ES3
-#else
-#define GLFW_INCLUDE_NONE
-#endif
 
 #ifndef __EMSCRIPTEN__
 #include <glad/glad.h>

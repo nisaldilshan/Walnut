@@ -54,6 +54,7 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest")
         elif self.settings.os == 'Emscripten':
+            self.options.windowing_system = "None"
             if self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest@nisaldilshan/testing")
         elif self.settings.os == 'Android':

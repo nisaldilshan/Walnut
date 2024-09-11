@@ -6,7 +6,7 @@ if (WIN32)
 target_link_libraries(App PRIVATE walnut-combined)
 
 else()
-target_link_libraries(App PRIVATE walnut) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
+target_link_libraries(App PRIVATE walnut)
 endif()
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
@@ -15,8 +15,9 @@ else()
     target_link_libraries(App PUBLIC glfw)
 endif()
 
-if (IS_EMSCRIPTEN)
-    #set_target_properties(App PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
+if (EMSCRIPTEN)
+    # Create a server like this "python3 -m http.server 8000 --bind 192.168.13.82" to serve the files
+    # HTML file have to be in the same directory that you execute above command
     set_target_properties(App PROPERTIES LINK_FLAGS 
         " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s GL_DEBUG=1 -s DEMANGLE_SUPPORT=1 -s GL_ASSERTIONS=1 -s SAFE_HEAP=1")
 endif()
