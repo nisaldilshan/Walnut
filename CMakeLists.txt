@@ -121,11 +121,11 @@ if(APPLE AND RENDERER STREQUAL "Vulkan")
 endif()
 
 
-add_library(walnut-combined INTERFACE  "")
-set_target_properties(walnut-combined PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(walnut-combined INTERFACE 
-  "$<LINK_LIBRARY:WHOLE_ARCHIVE,walnut>"
-)
+# add_library(walnut-combined INTERFACE "")
+# set_target_properties(walnut-combined PROPERTIES LINKER_LANGUAGE CXX)
+# target_link_libraries(walnut-combined INTERFACE 
+#   "$<LINK_LIBRARY:WHOLE_ARCHIVE,walnut>"
+# )
 
 
 add_subdirectory(WalnutApp)
