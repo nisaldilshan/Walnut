@@ -50,7 +50,8 @@ class Walnut(ConanFile):
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
-                self.requires("vulkan-loader/1.3.268.0")
+                self.requires("vulkan-loader/1.3.239.0")
+                self.requires("vulkan-validationlayers/1.3.239.0")
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest")
         elif self.settings.os == 'Emscripten':

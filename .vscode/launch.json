@@ -12,7 +12,7 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/WalnutApp/Debug",
-            "environment": [],
+            "environment": [ { "name": "VK_LAYER_PATH", "value": "C:/.conan/318e52/1/bin" } ],
             "console": "integratedTerminal"
         },
         {
