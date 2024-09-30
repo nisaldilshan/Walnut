@@ -2,7 +2,7 @@
 
 #ifdef USE_SDL
 #include <SDL2/SDL_platform.h>
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__iOS__)
 #include <SDL2/SDL_main.h>
 #else
 #define SDL_MAIN_HANDLED
