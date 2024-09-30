@@ -1,4 +1,4 @@
-#include "GlfwVulkanRenderingBackend.h"
+#include "VulkanRenderingBackend.h"
 #include <iostream>
 
 #include "VulkanGraphics.h"
@@ -6,7 +6,7 @@
 namespace Walnut
 {
 
-    void GlfwVulkanRenderingBackend::Init(GLFWwindow *windowHandle)
+    void VulkanRenderingBackend::Init(GLFWwindow *windowHandle)
     {
         if (!glfwVulkanSupported())
         {
@@ -23,29 +23,29 @@ namespace Walnut
         GraphicsAPI::Vulkan::AddWindowHandle(m_windowHandle);
     }
 
-    void GlfwVulkanRenderingBackend::SetupWindow(int width, int height)
+    void VulkanRenderingBackend::SetupWindow(int width, int height)
     {
         GraphicsAPI::Vulkan::SetupVulkanWindow(width, height);
     }
 
-    bool GlfwVulkanRenderingBackend::NeedToResizeWindow()
+    bool VulkanRenderingBackend::NeedToResizeWindow()
     {
         return GraphicsAPI::Vulkan::NeedSwapChainRebuild();
     }
 
-    void GlfwVulkanRenderingBackend::ResizeWindow(int width, int height)
+    void VulkanRenderingBackend::ResizeWindow(int width, int height)
     {
         GraphicsAPI::Vulkan::ResizeVulkanWindow(width, height);
         GraphicsAPI::Vulkan::SetSwapChainRebuildStatus(false);
     }
 
-    void GlfwVulkanRenderingBackend::ConfigureImGui()
+    void VulkanRenderingBackend::ConfigureImGui()
     {
         ImGui_ImplGlfw_InitForVulkan(m_windowHandle, true);
         GraphicsAPI::Vulkan::ConfigureRendererBackend(m_windowHandle);
     }
 
-    void GlfwVulkanRenderingBackend::StartImGuiFrame()
+    void VulkanRenderingBackend::StartImGuiFrame()
     {
 		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
@@ -53,34 +53,34 @@ namespace Walnut
 		ImGui::NewFrame();
     }
 
-    void GlfwVulkanRenderingBackend::UploadFonts()
+    void VulkanRenderingBackend::UploadFonts()
     {
         GraphicsAPI::Vulkan::UploadFonts();
     }
 
-    void GlfwVulkanRenderingBackend::FrameRender(void* draw_data)
+    void VulkanRenderingBackend::FrameRender(void* draw_data)
     {
         GraphicsAPI::Vulkan::FrameRender(draw_data);
     }
 
-    void GlfwVulkanRenderingBackend::FramePresent()
+    void VulkanRenderingBackend::FramePresent()
     {
         GraphicsAPI::Vulkan::FramePresent();
     }
 
-    GLFWwindow *GlfwVulkanRenderingBackend::GetWindowHandle()
+    GLFWwindow *VulkanRenderingBackend::GetWindowHandle()
     {
         return m_windowHandle;
     }
 
-    void GlfwVulkanRenderingBackend::Shutdown()
+    void VulkanRenderingBackend::Shutdown()
     {
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
         GraphicsAPI::Vulkan::FreeGraphicsResources();
         ImGui_ImplVulkan_Shutdown();
     }
 
-    void GlfwVulkanRenderingBackend::Cleanup()
+    void VulkanRenderingBackend::Cleanup()
     {
         GraphicsAPI::Vulkan::CleanupVulkanWindow();
         GraphicsAPI::Vulkan::CleanupVulkan();
