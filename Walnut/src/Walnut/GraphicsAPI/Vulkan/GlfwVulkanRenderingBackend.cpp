@@ -20,7 +20,9 @@ namespace Walnut
         // Setup Vulkan
         GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
         // Create Window Surface
-        GraphicsAPI::Vulkan::AddWindowHandle(m_windowHandle);
+        // Create Window Surface
+        VkResult err = glfwCreateWindowSurface(g_Instance, windowHandle, g_Allocator, &g_surface);
+        check_vk_result(err);
     }
 
     void VulkanRenderingBackend::SetupWindow(int width, int height)
@@ -42,7 +44,7 @@ namespace Walnut
     void VulkanRenderingBackend::ConfigureImGui()
     {
         ImGui_ImplGlfw_InitForVulkan(m_windowHandle, true);
-        GraphicsAPI::Vulkan::ConfigureRendererBackend(m_windowHandle);
+        GraphicsAPI::Vulkan::ConfigureRendererBackend();
     }
 
     void VulkanRenderingBackend::StartImGuiFrame()

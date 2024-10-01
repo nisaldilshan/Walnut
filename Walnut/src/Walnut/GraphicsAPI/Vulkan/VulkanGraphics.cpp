@@ -4,6 +4,8 @@
 #include <vector>
 #include <functional>
 
+#include <imgui_impl_vulkan.h>
+
 namespace GraphicsAPI
 {
 
@@ -209,13 +211,6 @@ void Vulkan::SetupVulkan(const char** extensions, uint32_t extensions_count)
 	}
 }
 
-void Vulkan::AddWindowHandle(GLFWwindow* windowHandle)
-{
-    // Create Window Surface
-    VkResult err = glfwCreateWindowSurface(g_Instance, windowHandle, g_Allocator, &g_surface);
-    check_vk_result(err);
-}
-
 void Vulkan::SetupVulkanWindow(int width, int height)
 {
 	g_MainWindowData.Surface = g_surface;
@@ -378,7 +373,7 @@ void Vulkan::FramePresent()
 	g_MainWindowData.SemaphoreIndex = (g_MainWindowData.SemaphoreIndex + 1) % g_MainWindowData.ImageCount; // Now we can use the next set of semaphores
 }
 
-void Vulkan::ConfigureRendererBackend(GLFWwindow* window)
+void Vulkan::ConfigureRendererBackend()
 {
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.Instance = g_Instance;

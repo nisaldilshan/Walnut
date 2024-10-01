@@ -35,13 +35,12 @@ class Vulkan
 public:
 	static void check_vk_result(VkResult err);
 	static void SetupVulkan(const char** extensions, uint32_t extensions_count);
-	static void AddWindowHandle(GLFWwindow* windowHandle);
 	static void SetupVulkanWindow(int width, int height);
 	static void CleanupVulkan();
 	static void CleanupVulkanWindow();
 	static void FrameRender(void* draw_data);
 	static void FramePresent();
-	static void ConfigureRendererBackend(GLFWwindow* window);
+	static void ConfigureRendererBackend();
 	static void UploadFonts();
 	static VkCommandBuffer GetCommandBuffer(bool begin);
 	static void FlushCommandBuffer(VkCommandBuffer commandBuffer);
