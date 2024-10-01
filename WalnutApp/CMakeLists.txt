@@ -1,4 +1,10 @@
-add_executable(App src/WalnutApp.cpp)
+add_executable(App src/WalnutApp.cpp )
+
+if(CMAKE_SYSTEM_NAME MATCHES "iOS")
+target_sources(App PRIVATE 
+                src/SDL_uikit_main.c
+)
+endif()
 
 target_include_directories(App PRIVATE ../Walnut/src)
 target_link_libraries(App PRIVATE glm::glm imgui::imgui)
