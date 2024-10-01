@@ -49,6 +49,7 @@ endif()
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
     find_package(glad REQUIRED)
+    add_compile_definitions(RENDERER_BACKEND=1)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/OpenGL)
 elseif(RENDERER STREQUAL "Vulkan")
     if(APPLE)
@@ -57,9 +58,11 @@ elseif(RENDERER STREQUAL "Vulkan")
         find_package (VulkanLoader REQUIRED)
         find_package (vulkan-validationlayers REQUIRED)
     endif()
+    add_compile_definitions(RENDERER_BACKEND=2)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/Vulkan)
 elseif(RENDERER STREQUAL "WebGPU")
     find_package(WebGPU REQUIRED)
+    add_compile_definitions(RENDERER_BACKEND=3)
     add_subdirectory(vendor/glfw3webgpu)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)
 else()
@@ -83,6 +86,7 @@ target_sources(walnut PRIVATE
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
+                Walnut/src/Walnut/WindowHandle.cpp
 )
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
@@ -97,13 +101,10 @@ target_link_libraries(walnut PUBLIC stb::stb glm::glm imgui::imgui)
 
 if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PUBLIC walnut-graphics-opengl)
-    add_compile_definitions(RENDERER_BACKEND=1)
 elseif (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
-    add_compile_definitions(RENDERER_BACKEND=2)
 else()
-    target_link_libraries(walnut PUBLIC walnut-graphics-webgpu)
-    add_compile_definitions(RENDERER_BACKEND=3)
+    target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
 endif()
 
 string(COMPARE EQUAL "${CMAKE_SYSTEM_NAME}" "Emscripten" IS_EMSCRIPTEN)

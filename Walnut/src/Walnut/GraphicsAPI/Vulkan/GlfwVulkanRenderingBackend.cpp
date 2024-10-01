@@ -1,6 +1,10 @@
 #include "VulkanRenderingBackend.h"
 #include <iostream>
 
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
+#include <GLFW/glfw3.h>
+
 #include "VulkanGraphics.h"
 
 namespace Walnut
@@ -21,8 +25,11 @@ namespace Walnut
         GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
         // Create Window Surface
         // Create Window Surface
-        VkResult err = glfwCreateWindowSurface(g_Instance, windowHandle, g_Allocator, &g_surface);
-        check_vk_result(err);
+        VkResult err = glfwCreateWindowSurface(GraphicsAPI::Vulkan::GetInstance(), 
+                                                windowHandle, 
+                                                GraphicsAPI::Vulkan::GetAllocator(), 
+                                                GraphicsAPI::Vulkan::GetSurface());
+        GraphicsAPI::Vulkan::check_vk_result(err);
     }
 
     void VulkanRenderingBackend::SetupWindow(int width, int height)

@@ -31,7 +31,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, 
 }
 #endif // IMGUI_VULKAN_DEBUG_REPORT
 
-static VkAllocationCallbacks* g_Allocator = NULL;
+static VkAllocationCallbacks* 	g_Allocator = NULL;
 static VkInstance               g_Instance = VK_NULL_HANDLE;
 static VkPhysicalDevice         g_PhysicalDevice = VK_NULL_HANDLE;
 static VkDevice                 g_Device = VK_NULL_HANDLE;
@@ -209,6 +209,14 @@ void Vulkan::SetupVulkan(const char** extensions, uint32_t extensions_count)
 		err = vkCreateDescriptorPool(g_Device, &pool_info, g_Allocator, &g_DescriptorPool);
 		check_vk_result(err);
 	}
+}
+
+static void SetClearColor(ImVec4 clear_color)
+{
+    g_MainWindowData.ClearValue.color.float32[0] = clear_color.x * clear_color.w;
+    g_MainWindowData.ClearValue.color.float32[1] = clear_color.y * clear_color.w;
+    g_MainWindowData.ClearValue.color.float32[2] = clear_color.z * clear_color.w;
+    g_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
 }
 
 void Vulkan::SetupVulkanWindow(int width, int height)
@@ -504,14 +512,6 @@ void Vulkan::GraphicsDeviceWaitIdle()
     check_vk_result(err);
 }
 
-void Vulkan::SetClearColor(ImVec4 clear_color)
-{
-    g_MainWindowData.ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-    g_MainWindowData.ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-    g_MainWindowData.ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-    g_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
-}
-
 void Vulkan::FreeGraphicsResources()
 {
     // Free resources in queue
@@ -551,6 +551,16 @@ uint32_t Vulkan::GetQueueFamilyIndex()
 VkQueue Vulkan::GetDeviceQueue()
 {
     return g_Queue;
+}
+
+VkAllocationCallbacks* Vulkan::GetAllocator()
+{
+    return g_Allocator;
+}
+
+VkSurfaceKHR* Vulkan::GetSurface()
+{
+    return &g_surface;
 }
 
 // IMAGE

@@ -2,12 +2,6 @@
 
 #include <functional>
 
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_vulkan.h>
-#define GLFW_INCLUDE_NONE
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
 #include <vulkan/vulkan.h>
 
 namespace Utils 
@@ -48,7 +42,6 @@ public:
 	static bool NeedSwapChainRebuild();
 	static void SetSwapChainRebuildStatus(bool status);
 	static void GraphicsDeviceWaitIdle();
-	static void SetClearColor(ImVec4 clear_color);
 	static void FreeGraphicsResources();
 	static void SubmitResourceFree(std::function<void()> func);
 
@@ -57,6 +50,8 @@ public:
 	static VkPhysicalDevice GetPhysicalDevice();
 	static uint32_t GetQueueFamilyIndex();
 	static VkQueue GetDeviceQueue();
+	static VkAllocationCallbacks* GetAllocator();
+	static VkSurfaceKHR* GetSurface();
 };
 
 
