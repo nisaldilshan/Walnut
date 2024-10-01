@@ -1,28 +1,44 @@
 #include "VulkanRenderingBackend.h"
 #include <iostream>
 
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_vulkan.h>
+#include <SDL2/SDL_vulkan.h>
+
 #include "VulkanGraphics.h"
 
 namespace Walnut
 {
 
-    void VulkanRenderingBackend::Init(GLFWwindow *windowHandle)
+    void VulkanRenderingBackend::Init(WindowHandleType* windowHandle)
     {
-        if (!glfwVulkanSupported())
+        auto result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, nullptr);
+        if (result != SDL_TRUE)
         {
-            std::cerr << "GLFW: Vulkan not supported!\n";
+            std::cerr << "SDL: Failed to get Vulkan instance extensions count!\n";
             return;
         }
-
-        m_extensions = glfwGetRequiredInstanceExtensions(&m_extensions_count);
+        m_extensions = new const char*[m_extensions_count];
+        result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, m_extensions);
+        if (result != SDL_TRUE)
+        {
+            std::cerr << "SDL: Failed to get Vulkan instance extensions!\n";
+            return;
+        }
         m_windowHandle = windowHandle;
 
         // Setup Vulkan
         GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
+        delete [] m_extensions;
         // Create Window Surface
-        // Create Window Surface
-        VkResult err = glfwCreateWindowSurface(g_Instance, windowHandle, g_Allocator, &g_surface);
-        check_vk_result(err);
+        result = SDL_Vulkan_CreateSurface(windowHandle, 
+                                            GraphicsAPI::Vulkan::GetInstance(), 
+                                            GraphicsAPI::Vulkan::GetSurface());
+        if (result != SDL_TRUE)
+        {
+            std::cerr << "SDL: Failed to create Vulkan surface!\n";
+            return;
+        }
     }
 
     void VulkanRenderingBackend::SetupWindow(int width, int height)
@@ -43,7 +59,7 @@ namespace Walnut
 
     void VulkanRenderingBackend::ConfigureImGui()
     {
-        ImGui_ImplGlfw_InitForVulkan(m_windowHandle, true);
+        ImGui_ImplSDL2_InitForVulkan(m_windowHandle);
         GraphicsAPI::Vulkan::ConfigureRendererBackend();
     }
 
@@ -51,7 +67,7 @@ namespace Walnut
     {
 		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
     }
 
@@ -70,7 +86,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::FramePresent();
     }
 
-    GLFWwindow *VulkanRenderingBackend::GetWindowHandle()
+    WindowHandleType* VulkanRenderingBackend::GetWindowHandle()
     {
         return m_windowHandle;
     }

@@ -91,6 +91,7 @@ target_sources(walnut PRIVATE
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp)
+    target_link_libraries(walnut PRIVATE SDL2::SDL2)
 else()
     target_sources(walnut PRIVATE Walnut/src/Walnut/Application.cpp)
 endif()
