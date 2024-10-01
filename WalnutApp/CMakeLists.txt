@@ -4,6 +4,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "iOS")
 target_sources(App PRIVATE 
                 src/SDL_uikit_main.c
 )
+set_target_properties(App PROPERTIES BUNDLE TRUE)
 endif()
 
 target_include_directories(App PRIVATE ../Walnut/src)

@@ -10,6 +10,7 @@
 
 #include <Walnut/GLM/GLM.h>
 #include <imgui_impl_sdl2.h>
+#include <SDL2/SDL.h>
 
 #include "RenderingBackend.h"
 
@@ -67,8 +68,10 @@ namespace Walnut {
 			return;
 		}
 
+		uint32_t sdlWindowType;
 		if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::OpenGL)
 		{
+			sdlWindowType = SDL_WINDOW_OPENGL;
 #if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -93,7 +96,7 @@ namespace Walnut {
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
-			//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+			sdlWindowType = SDL_WINDOW_VULKAN;
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
@@ -108,7 +111,7 @@ namespace Walnut {
         auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), 
 											SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
 											m_Specification.Width, m_Specification.Height, 
-											SDL_WINDOW_OPENGL);
+											sdlWindowType);
 		if (!windowHandle)
 		{
 			std::cerr << "Could not create GLFW Window!\n";
