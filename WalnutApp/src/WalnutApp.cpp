@@ -1,5 +1,8 @@
 #include <Walnut/Application.h>
+#if defined(__ANDROID__) || defined(__iOS__)
+#else
 #include <Walnut/EntryPoint.h>
+#endif
 #include <Walnut/Random.h>
 #include <Walnut/Timer.h>
 #include <Walnut/RenderingBackend.h>
@@ -86,6 +89,8 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
 	Walnut::ApplicationSpecification spec;
 	spec.Name = "Walnut Example";
+	// spec.Width = 320;
+	// spec.Height = 480;
 
 	Walnut::Application* app = new Walnut::Application(spec);
 	app->PushLayer<ExampleLayer>();
@@ -104,3 +109,24 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 
 	return app;
 }
+
+
+#if defined(__ANDROID__) || defined(__iOS__)
+int SDL_main(int argc, char *argv[])
+{
+    //Walnut::Application* app = Walnut::CreateApplication(argc, argv); // This is a function declared in Application.h
+    //ImGuiIO& io = ImGui::GetIO();
+    //io.FontGlobalScale = 2.2 * io.FontGlobalScale;
+	static bool started = false;
+	if (!started)
+	{
+		Walnut::Application* app = Walnut::CreateApplication(argc, argv);
+		started = true;
+		app->Run();
+		delete app;
+	}
+    
+    
+    return 0;
+}
+#endif
