@@ -1,19 +1,20 @@
-if(WIN32)
-add_library (walnut-imgui-part1 SHARED imgui-webgpu-part1.cpp)
-else()
-add_library (walnut-imgui-part1 STATIC imgui-webgpu-part1.cpp)
-endif()
-target_link_libraries(walnut-imgui-part1 PRIVATE imgui::imgui)
+# if(WIN32)
+# add_library (walnut-imgui-part1 SHARED imgui-webgpu-part1.cpp)
+# else()
+# add_library (walnut-imgui-part1 STATIC imgui-webgpu-part1.cpp)
+# endif()
+# target_link_libraries(walnut-imgui-part1 PRIVATE imgui::imgui)
 
 add_library (walnut-graphics-webgpu STATIC
                     ImGuiBuildWGPU.cpp
                     WebGPUGraphics.cpp
                     GlfwWebGPURenderingBackend.cpp
                     WebGPUImage.cpp
+                    imgui-webgpu-part1.cpp
                 )
 
 target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
-target_link_libraries(walnut-graphics-webgpu PUBLIC walnut-imgui-part1 glfw3webgpu imgui::imgui glm::glm)               
+target_link_libraries(walnut-graphics-webgpu PUBLIC glfw3webgpu imgui::imgui glm::glm)               
 
 if(WIN32)
 target_link_directories(walnut-graphics-webgpu PUBLIC $<$<CONFIG:DEBUG>:${WebGPU_LIB_DIRS_DEBUG}>) # TODO: add lib dir for non debug configurations as well
@@ -104,6 +105,7 @@ target_link_libraries(walnut-graphics-webgpu PUBLIC
                             absl_time.lib
                             absl_time_zone.lib
                             absl_vlog_config_internal.lib
+                            webgpu_dawn.lib
                             dawn_common.lib
                             dawn_native.lib
                             dawn_platform.lib

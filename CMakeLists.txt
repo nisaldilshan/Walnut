@@ -96,7 +96,7 @@ elseif (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
     add_compile_definitions(RENDERER_BACKEND=2)
 else()
-    target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
+    target_link_libraries(walnut PUBLIC walnut-graphics-webgpu)
     add_compile_definitions(RENDERER_BACKEND=3)
 endif()
 

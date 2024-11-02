@@ -99,7 +99,7 @@ class Walnut(ConanFile):
         elif self.options.rendering_backend == "Vulkan":
             self.cpp_info.libs = ["walnut", "walnut-graphics-vulkan"]
         else:
-            self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu"]
+            self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu", "glfw3webgpu"]
 
 
     def package(self):
