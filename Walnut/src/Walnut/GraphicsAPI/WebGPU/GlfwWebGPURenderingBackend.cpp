@@ -1,4 +1,4 @@
-//#define WINDOW_HANDLE_IMPL
+#define WINDOW_HANDLE_IMPL
 #include "GlfwWebGPURenderingBackend.h"
 
 #include <iostream>
