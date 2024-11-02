@@ -46,6 +46,12 @@ else()
     find_package(glfw3 REQUIRED)
 endif()
 
+if(CMAKE_SYSTEM_NAME MATCHES "iOS")
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
+set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
+add_compile_definitions(__iOS__)
+endif()
+
 #### WALNUT GRAPHICS ###
 if (RENDERER STREQUAL "OpenGL")
     find_package(glad REQUIRED)
@@ -67,11 +73,6 @@ elseif(RENDERER STREQUAL "WebGPU")
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)
 else()
     message(STATUS "NO RENDERING BACKEND")
-endif()
-
-if(CMAKE_SYSTEM_NAME MATCHES "iOS")
-set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
-set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
 endif()
 
 #### ENGINE ###

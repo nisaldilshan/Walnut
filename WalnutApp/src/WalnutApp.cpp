@@ -112,7 +112,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 
 
 #if defined(__ANDROID__) || defined(__iOS__)
-int SDL_main(int argc, char *argv[])
+extern "C" int SDL_main(int argc, char *argv[])
 {
     //Walnut::Application* app = Walnut::CreateApplication(argc, argv); // This is a function declared in Application.h
     //ImGuiIO& io = ImGui::GetIO();
