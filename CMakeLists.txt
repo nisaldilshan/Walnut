@@ -87,7 +87,6 @@ target_sources(walnut PRIVATE
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
-                Walnut/src/Walnut/WindowHandle.cpp
 )
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
