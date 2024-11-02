@@ -8,7 +8,7 @@ namespace Walnut {
 
 	#if (RENDERER_BACKEND == 1)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::OpenGL;
-		typedef GlfwOpenGLRenderingBackend BackendType;
+		typedef OpenGLRenderingBackend BackendType;
 	#elif (RENDERER_BACKEND == 2)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::Vulkan;
 		typedef VulkanRenderingBackend BackendType;

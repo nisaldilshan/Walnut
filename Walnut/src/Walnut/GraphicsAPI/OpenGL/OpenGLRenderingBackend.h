@@ -4,7 +4,7 @@
 
 namespace Walnut {
 
-class GlfwOpenGLRenderingBackend : public RenderingBackend
+class OpenGLRenderingBackend : public RenderingBackend
 {
 public:
 	void Init(WindowHandleType* windowHandle) override;
