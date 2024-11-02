@@ -1,12 +1,10 @@
+#define WINDOW_HANDLE_IMPL
 #include "OpenGLRenderingBackend.h"
-
 #include <iostream>
 
 #include <imgui_impl_opengl3.h>
-
 #include <imgui_impl_glfw.h>
 
-#include "../../RenderingBackend.h"
 #include "OpenGLGraphics.h"
 
 namespace Walnut
