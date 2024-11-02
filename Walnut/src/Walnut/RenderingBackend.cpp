@@ -1,4 +1,4 @@
-#include "GraphicsAPI/Vulkan/GlfwVulkanRenderingBackend.h"
+#include "GraphicsAPI/Vulkan/VulkanRenderingBackend.h"
 #include "GraphicsAPI/OpenGL/OpenGLRenderingBackend.h"
 #include "GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.h"
 
@@ -8,10 +8,10 @@ namespace Walnut {
 
 	#if (RENDERER_BACKEND == 1)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::OpenGL;
-		typedef GlfwOpenGLRenderingBackend BackendType;
+		typedef OpenGLRenderingBackend BackendType;
 	#elif (RENDERER_BACKEND == 2)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::Vulkan;
-		typedef GlfwVulkanRenderingBackend BackendType;
+		typedef VulkanRenderingBackend BackendType;
 	#elif (RENDERER_BACKEND == 3)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::WebGPU;
 		typedef GlfwWebGPURenderingBackend BackendType;

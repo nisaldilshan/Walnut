@@ -35,7 +35,7 @@ class Walnut(ConanFile):
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
-                self.requires("moltenvk/1.2.9")
+                self.requires("moltenvk/1.2.2")
             elif self.options.rendering_backend == "WebGPU":
                 self.requires("WebGPU/latest")
         elif self.settings.os == 'Linux':
@@ -61,6 +61,11 @@ class Walnut(ConanFile):
             self.options.windowing_system = "SDL"
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
+        elif self.settings.os == 'iOS':
+            self.options.windowing_system = "SDL"
+            if self.options.rendering_backend == "Vulkan":
+                self.requires("vulkan-headers/1.3.239.0")
+                self.requires("moltenvk/1.2.2")
         else:
             raise ConanInvalidSystemRequirements("Unsupported Platform")
 
@@ -83,6 +88,8 @@ class Walnut(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["RENDERER"] = self.options.rendering_backend
         tc.variables["WINDOWING_SYSTEM"] = self.options.windowing_system
+        if self.settings.os == 'iOS':
+            tc.generator = "Xcode"
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()

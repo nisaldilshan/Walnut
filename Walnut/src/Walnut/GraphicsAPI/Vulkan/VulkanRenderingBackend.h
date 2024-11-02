@@ -4,7 +4,7 @@
 
 namespace Walnut {
 
-class GlfwVulkanRenderingBackend : public RenderingBackend
+class VulkanRenderingBackend : public RenderingBackend
 {
 public:
 	void Init(WindowHandleType* windowHandle) override;

@@ -17,7 +17,7 @@ namespace Walnut
 
 	SDL_GLContext g_SDLcontext = NULL;
 
-	void GlfwOpenGLRenderingBackend::Init(WindowHandleType* windowHandle)
+	void OpenGLRenderingBackend::Init(WindowHandleType* windowHandle)
 	{
 		m_windowHandle = windowHandle;
 
@@ -34,21 +34,21 @@ namespace Walnut
 		
 	}
 
-	void GlfwOpenGLRenderingBackend::SetupWindow(int width, int height)
+	void OpenGLRenderingBackend::SetupWindow(int width, int height)
 	{
 		GraphicsAPI::OpenGL::SetupViewport(width, height);
 	}
 
-	bool GlfwOpenGLRenderingBackend::NeedToResizeWindow()
+	bool OpenGLRenderingBackend::NeedToResizeWindow()
 	{
 		return false;
 	}
 
-	void GlfwOpenGLRenderingBackend::ResizeWindow(int width, int height)
+	void OpenGLRenderingBackend::ResizeWindow(int width, int height)
 	{
 	}
 
-	void GlfwOpenGLRenderingBackend::ConfigureImGui()
+	void OpenGLRenderingBackend::ConfigureImGui()
 	{
 		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
 #if defined(__ANDROID__)
@@ -59,7 +59,7 @@ namespace Walnut
 #endif
 	}
 
-	void GlfwOpenGLRenderingBackend::StartImGuiFrame()
+	void OpenGLRenderingBackend::StartImGuiFrame()
 	{
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -67,30 +67,30 @@ namespace Walnut
 		ImGui::NewFrame();
 	}
 
-	void GlfwOpenGLRenderingBackend::UploadFonts()
+	void OpenGLRenderingBackend::UploadFonts()
 	{
 	}
 
-	void GlfwOpenGLRenderingBackend::FrameRender(void* draw_data)
+	void OpenGLRenderingBackend::FrameRender(void* draw_data)
 	{
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 
-	void GlfwOpenGLRenderingBackend::FramePresent()
+	void OpenGLRenderingBackend::FramePresent()
 	{
 		SDL_GL_SwapWindow(m_windowHandle);
 	}
 
-	WindowHandleType* GlfwOpenGLRenderingBackend::GetWindowHandle()
+	WindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;
 	}
 
-	void GlfwOpenGLRenderingBackend::Shutdown()
+	void OpenGLRenderingBackend::Shutdown()
 	{
 	}
 
-	void GlfwOpenGLRenderingBackend::Cleanup()
+	void OpenGLRenderingBackend::Cleanup()
 	{
 	}
 

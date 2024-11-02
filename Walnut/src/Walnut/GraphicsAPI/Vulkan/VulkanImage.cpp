@@ -1,5 +1,7 @@
 #include "VulkanImage.h"
 
+#include <imgui_impl_vulkan.h>
+
 #include "../../ImageFormat.h"
 
 namespace Walnut
@@ -178,9 +180,9 @@ void VulkanImage::CreateDescriptorSet()
     m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-ImTextureID VulkanImage::GetDescriptorSet()
+void* VulkanImage::GetDescriptorSet()
 {
-	return m_DescriptorSet;
+	return (ImTextureID)m_DescriptorSet;
 }
 
 bool VulkanImage::ImageAvailable()
@@ -191,7 +193,7 @@ bool VulkanImage::ImageAvailable()
     return false;
 }
 
-void VulkanImage::ResourceFree() // std::function<void()> &&func
+void VulkanImage::ResourceFree()
 {
     auto func = [  sampler = m_Sampler, imageView = m_ImageView, image = m_Image,
                         memory = m_Memory, stagingBuffer = m_StagingBuffer, stagingBufferMemory = m_StagingBufferMemory]()

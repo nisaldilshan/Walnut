@@ -1,4 +1,11 @@
-add_executable(App src/WalnutApp.cpp)
+add_executable(App src/WalnutApp.cpp )
+
+if(CMAKE_SYSTEM_NAME MATCHES "iOS")
+target_sources(App PRIVATE 
+                src/SDL_uikit_main.c
+)
+set_target_properties(App PROPERTIES BUNDLE TRUE)
+endif()
 
 target_include_directories(App PRIVATE ../Walnut/src)
 target_link_libraries(App PRIVATE glm::glm imgui::imgui)
@@ -10,7 +17,7 @@ target_link_libraries(App PRIVATE walnut) #  "--shell-file /Users/nisal/dev/othe
 endif()
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_link_libraries(App PUBLIC SDL2::SDL2)
+    target_link_libraries(App PRIVATE SDL2::SDL2 SDL2::SDL2main)
 else()
     target_link_libraries(App PUBLIC glfw)
 endif()

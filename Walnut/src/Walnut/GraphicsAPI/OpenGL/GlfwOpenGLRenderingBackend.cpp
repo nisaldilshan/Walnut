@@ -1,18 +1,16 @@
+#define WINDOW_HANDLE_IMPL
 #include "OpenGLRenderingBackend.h"
-
 #include <iostream>
 
 #include <imgui_impl_opengl3.h>
-
 #include <imgui_impl_glfw.h>
 
-#include "../../RenderingBackend.h"
 #include "OpenGLGraphics.h"
 
 namespace Walnut
 {
 
-	void GlfwOpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
+	void OpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
 	{
 		m_windowHandle = windowHandle;
 		
@@ -21,21 +19,21 @@ namespace Walnut
 		
 	}
 
-	void GlfwOpenGLRenderingBackend::SetupWindow(int width, int height)
+	void OpenGLRenderingBackend::SetupWindow(int width, int height)
 	{
 		GraphicsAPI::OpenGL::SetupViewport(width, height);
 	}
 
-	bool GlfwOpenGLRenderingBackend::NeedToResizeWindow()
+	bool OpenGLRenderingBackend::NeedToResizeWindow()
 	{
 		return false;
 	}
 
-	void GlfwOpenGLRenderingBackend::ResizeWindow(int width, int height)
+	void OpenGLRenderingBackend::ResizeWindow(int width, int height)
 	{
 	}
 
-	void GlfwOpenGLRenderingBackend::ConfigureImGui()
+	void OpenGLRenderingBackend::ConfigureImGui()
 	{
 		ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
 #ifdef __EMSCRIPTEN__
@@ -45,7 +43,7 @@ namespace Walnut
 #endif
 	}
 
-	void GlfwOpenGLRenderingBackend::StartImGuiFrame()
+	void OpenGLRenderingBackend::StartImGuiFrame()
 	{
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -53,30 +51,30 @@ namespace Walnut
 		ImGui::NewFrame();
 	}
 
-	void GlfwOpenGLRenderingBackend::UploadFonts()
+	void OpenGLRenderingBackend::UploadFonts()
 	{
 	}
 
-	void GlfwOpenGLRenderingBackend::FrameRender(void* draw_data)
+	void OpenGLRenderingBackend::FrameRender(void* draw_data)
 	{
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 
-	void GlfwOpenGLRenderingBackend::FramePresent()
+	void OpenGLRenderingBackend::FramePresent()
 	{
 		glfwSwapBuffers(m_windowHandle);
 	}
 
-	WindowHandleType* GlfwOpenGLRenderingBackend::GetWindowHandle()
+	WindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;
 	}
 
-	void GlfwOpenGLRenderingBackend::Shutdown()
+	void OpenGLRenderingBackend::Shutdown()
 	{
 	}
 
-	void GlfwOpenGLRenderingBackend::Cleanup()
+	void OpenGLRenderingBackend::Cleanup()
 	{
 	}
 
