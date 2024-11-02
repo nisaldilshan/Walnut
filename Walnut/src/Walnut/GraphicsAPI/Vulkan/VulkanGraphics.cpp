@@ -4,8 +4,6 @@
 #include <vector>
 #include <functional>
 
-#include <imgui_impl_vulkan.h>
-
 namespace GraphicsAPI
 {
 
