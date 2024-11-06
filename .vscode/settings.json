@@ -114,6 +114,7 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "sdl_main.h": "c"
+        "sdl_main.h": "c",
+        "shared_mutex": "cpp"
     }
 }
