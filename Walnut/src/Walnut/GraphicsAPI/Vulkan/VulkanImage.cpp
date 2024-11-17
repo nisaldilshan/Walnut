@@ -152,9 +152,50 @@ void VulkanImage::UploadToBuffer(const void* data, size_t uploadSize, size_t ali
 
     // Copy to Image
     {
-        VkCommandBuffer command_buffer = GraphicsAPI::Vulkan::GetCommandBuffer(true);
-        CopyToImage(command_buffer, m_width, m_height);
-        GraphicsAPI::Vulkan::FlushCommandBuffer(command_buffer);
+        // TODO: move commandpool/commandbuffer creation to constructor of VulkanImage
+        if (!m_commandPool)
+        {
+            auto queueFamilyIndices = Vulkan::FindQueueFamilies();
+            VkCommandPoolCreateInfo poolInfo{};
+            poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+            poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+            auto err = vkCreateCommandPool(Vulkan::GetDevice(), &poolInfo, nullptr, &m_commandPool);
+            Vulkan::check_vk_result(err);
+        }
+        
+        if (!m_commandBuffer)
+        {
+            VkCommandBufferAllocateInfo cmdBufAllocateInfo{};
+            cmdBufAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            cmdBufAllocateInfo.commandPool = m_commandPool;
+            cmdBufAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            cmdBufAllocateInfo.commandBufferCount = 1;
+            auto err = vkAllocateCommandBuffers(Vulkan::GetDevice(), &cmdBufAllocateInfo, &m_commandBuffer);
+            Vulkan::check_vk_result(err);
+        }
+        else
+        {
+            auto err = vkResetCommandBuffer(m_commandBuffer, 0);
+            Vulkan::check_vk_result(err);
+        }
+        
+        VkCommandBufferBeginInfo begin_info{};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        err = vkBeginCommandBuffer(m_commandBuffer, &begin_info);
+        Vulkan::check_vk_result(err);
+
+        CopyToImage(m_commandBuffer, m_width, m_height);
+
+        err = vkEndCommandBuffer(m_commandBuffer);
+        Vulkan::check_vk_result(err);
+
+        VkSubmitInfo end_info{};
+        end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        end_info.commandBufferCount = 1;
+        end_info.pCommandBuffers = &m_commandBuffer;
+        GraphicsAPI::Vulkan::QueueSubmit(end_info);
     }
 }
 
@@ -195,6 +236,17 @@ bool VulkanImage::ImageAvailable()
 
 void VulkanImage::ResourceFree()
 {
+    if (m_commandPool)
+    {
+        if (m_commandBuffer)
+        {
+            vkFreeCommandBuffers(Vulkan::GetDevice(), m_commandPool, 1, &m_commandBuffer);
+        }
+
+        vkDestroyCommandPool(Vulkan::GetDevice(), m_commandPool, nullptr);
+        m_commandPool = VK_NULL_HANDLE;
+    }
+
     auto func = [  sampler = m_Sampler, imageView = m_ImageView, image = m_Image,
                         memory = m_Memory, stagingBuffer = m_StagingBuffer, stagingBufferMemory = m_StagingBufferMemory]()
     {

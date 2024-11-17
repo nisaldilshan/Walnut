@@ -1,8 +1,12 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan.h>
+
+namespace GraphicsAPI
+{
 
 namespace Utils 
 {
@@ -20,9 +24,14 @@ namespace Utils
     }
 }
 
-
-namespace GraphicsAPI
+struct QueueFamilyIndices 
 {
+    std::optional<uint32_t> graphicsFamily;
+
+    bool isComplete() {
+        return graphicsFamily.has_value();
+    }
+};
 
 class Vulkan
 {
@@ -36,15 +45,17 @@ public:
 	static void FramePresent();
 	static void ConfigureRendererBackend();
 	static void UploadFonts();
-	static VkCommandBuffer GetCommandBuffer(bool begin);
-	static void FlushCommandBuffer(VkCommandBuffer commandBuffer);
+	static VkCommandPool GetCommandPool();
+	static void QueueSubmit(VkSubmitInfo info);
 	static void ResizeVulkanWindow(int width, int height);
 	static bool NeedSwapChainRebuild();
 	static void SetSwapChainRebuildStatus(bool status);
 	static void GraphicsDeviceWaitIdle();
 	static void FreeGraphicsResources();
 	static void SubmitResourceFree(std::function<void()> func);
-
+	static void SetClearColor(ImVec4 clear_color);
+	static QueueFamilyIndices FindQueueFamilies();
+	
 	static VkInstance GetInstance();
 	static VkDevice GetDevice();
 	static VkPhysicalDevice GetPhysicalDevice();

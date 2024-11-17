@@ -24,15 +24,17 @@ namespace GraphicsAPI
         VkBuffer GetStagingBuffer();
 
     private:
-        VkImage m_Image;
-        uint32_t m_width;
-        uint32_t m_height;
-        VkFormat m_imageFormat;
-        VkImageView m_ImageView;
-        VkSampler m_Sampler;
-        VkDeviceMemory m_Memory;
-        VkDescriptorSet m_DescriptorSet;
-        VkBuffer m_StagingBuffer;
-        VkDeviceMemory m_StagingBufferMemory;
+        VkImage m_Image = VK_NULL_HANDLE;
+        uint32_t m_width = 0;
+        uint32_t m_height = 0;
+        VkFormat m_imageFormat = VK_FORMAT_UNDEFINED;
+        VkImageView m_ImageView = VK_NULL_HANDLE;
+        VkSampler m_Sampler = VK_NULL_HANDLE;
+        VkDeviceMemory m_Memory = VK_NULL_HANDLE;
+        VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
+        VkBuffer m_StagingBuffer = VK_NULL_HANDLE;
+        VkDeviceMemory m_StagingBufferMemory = VK_NULL_HANDLE;
+        VkCommandPool m_commandPool = VK_NULL_HANDLE;
+        VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
     };
 }

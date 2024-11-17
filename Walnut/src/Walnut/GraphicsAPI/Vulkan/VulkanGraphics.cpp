@@ -49,8 +49,6 @@ static bool                     g_SwapChainRebuild = false;
 // and is always guaranteed to increase (eg. 0, 1, 2, 0, 1, 2)
 static uint32_t s_CurrentFrameIndex = 0;
 
-// Per-frame-in-flight
-static std::vector<std::vector<VkCommandBuffer>> s_AllocatedCommandBuffers;
 static std::vector<std::vector<std::function<void()>>> s_ResourceFreeQueue;
 
 
@@ -209,7 +207,7 @@ void Vulkan::SetupVulkan(const char** extensions, uint32_t extensions_count)
 	}
 }
 
-static void SetClearColor(ImVec4 clear_color)
+void Vulkan::SetClearColor(ImVec4 clear_color)
 {
     g_MainWindowData.ClearValue.color.float32[0] = clear_color.x * clear_color.w;
     g_MainWindowData.ClearValue.color.float32[1] = clear_color.y * clear_color.w;
@@ -242,13 +240,10 @@ void Vulkan::SetupVulkanWindow(int width, int height)
 	VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_FIFO_KHR };
 #endif
 	g_MainWindowData.PresentMode = ImGui_ImplVulkanH_SelectPresentMode(g_PhysicalDevice, g_MainWindowData.Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
-	//printf("[vulkan] Selected PresentMode = %d\n", wd->PresentMode);
 
 	// Create SwapChain, RenderPass, Framebuffer, etc.
 	IM_ASSERT(g_MinImageCount >= 2);
 	ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
-
-    s_AllocatedCommandBuffers.resize(g_MainWindowData.ImageCount);
     s_ResourceFreeQueue.resize(g_MainWindowData.ImageCount);
 	SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
 }
@@ -304,15 +299,6 @@ void Vulkan::FrameRender(void* draw_data)
 		s_ResourceFreeQueue[s_CurrentFrameIndex].clear();
 	}
 	{
-		// Free command buffers allocated by Application::GetCommandBuffer
-		// These use g_MainWindowData.FrameIndex and not s_CurrentFrameIndex because they're tied to the swapchain image index
-		auto& allocatedCommandBuffers = s_AllocatedCommandBuffers[g_MainWindowData.FrameIndex];
-		if (allocatedCommandBuffers.size() > 0)
-		{
-			vkFreeCommandBuffers(g_Device, fd->CommandPool, (uint32_t)allocatedCommandBuffers.size(), allocatedCommandBuffers.data());
-			allocatedCommandBuffers.clear();
-		}
-
 		err = vkResetCommandPool(g_Device, fd->CommandPool, 0);
 		check_vk_result(err);
 		VkCommandBufferBeginInfo info = {};
@@ -338,23 +324,22 @@ void Vulkan::FrameRender(void* draw_data)
 
 	// Submit command buffer
 	vkCmdEndRenderPass(fd->CommandBuffer);
-	{
-		VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		VkSubmitInfo info = {};
-		info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		info.waitSemaphoreCount = 1;
-		info.pWaitSemaphores = &image_acquired_semaphore;
-		info.pWaitDstStageMask = &wait_stage;
-		info.commandBufferCount = 1;
-		info.pCommandBuffers = &fd->CommandBuffer;
-		info.signalSemaphoreCount = 1;
-		info.pSignalSemaphores = &render_complete_semaphore;
 
-		err = vkEndCommandBuffer(fd->CommandBuffer);
-		check_vk_result(err);
-		err = vkQueueSubmit(g_Queue, 1, &info, fd->Fence);
-		check_vk_result(err);
-	}
+	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &image_acquired_semaphore;
+	submitInfo.pWaitDstStageMask = &wait_stage;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &fd->CommandBuffer;
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &render_complete_semaphore;
+
+	err = vkEndCommandBuffer(fd->CommandBuffer);
+	check_vk_result(err);
+	err = vkQueueSubmit(g_Queue, 1, &submitInfo, fd->Fence);
+	check_vk_result(err);
 }
 
 void Vulkan::FramePresent()
@@ -429,53 +414,26 @@ void Vulkan::UploadFonts()
     check_vk_result(err);
 }
 
-VkCommandBuffer Vulkan::GetCommandBuffer(bool begin)
+VkCommandPool Vulkan::GetCommandPool()
 {
-    ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
-
-    // Use any command queue
-    VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
-
-    VkCommandBufferAllocateInfo cmdBufAllocateInfo = {};
-    cmdBufAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    cmdBufAllocateInfo.commandPool = command_pool;
-    cmdBufAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cmdBufAllocateInfo.commandBufferCount = 1;
-
-    VkCommandBuffer& command_buffer = s_AllocatedCommandBuffers[wd->FrameIndex].emplace_back();
-    auto err = vkAllocateCommandBuffers(g_Device, &cmdBufAllocateInfo, &command_buffer);
-
-    VkCommandBufferBeginInfo begin_info = {};
-    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    err = vkBeginCommandBuffer(command_buffer, &begin_info);
-    check_vk_result(err);
-
-    return command_buffer;
+    VkCommandPool command_pool = g_MainWindowData.Frames[g_MainWindowData.FrameIndex].CommandPool;
+	return command_pool;
 }
 
-void Vulkan::FlushCommandBuffer(VkCommandBuffer commandBuffer)
+void Vulkan::QueueSubmit(VkSubmitInfo info)
 {
-    const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
-
-    VkSubmitInfo end_info = {};
-    end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    end_info.commandBufferCount = 1;
-    end_info.pCommandBuffers = &commandBuffer;
-    auto err = vkEndCommandBuffer(commandBuffer);
-    check_vk_result(err);
-
     // Create fence to ensure that the command buffer has finished executing
     VkFenceCreateInfo fenceCreateInfo = {};
     fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceCreateInfo.flags = 0;
     VkFence fence;
-    err = vkCreateFence(g_Device, &fenceCreateInfo, nullptr, &fence);
+    auto err = vkCreateFence(g_Device, &fenceCreateInfo, nullptr, &fence);
     check_vk_result(err);
 
-    err = vkQueueSubmit(g_Queue, 1, &end_info, fence);
+    err = vkQueueSubmit(g_Queue, 1, &info, fence);
     check_vk_result(err);
 
+	constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
     err = vkWaitForFences(g_Device, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT);
     check_vk_result(err);
 
@@ -487,10 +445,6 @@ void Vulkan::ResizeVulkanWindow(int width, int height)
     ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
     ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
     g_MainWindowData.FrameIndex = 0;
-
-    // Clear allocated command buffers from here since entire pool is destroyed
-    s_AllocatedCommandBuffers.clear();
-    s_AllocatedCommandBuffers.resize(g_MainWindowData.ImageCount);
 }
 
 bool Vulkan::NeedSwapChainRebuild()
@@ -524,6 +478,32 @@ void Vulkan::FreeGraphicsResources()
 void Vulkan::SubmitResourceFree(std::function<void()> func)
 {
 	s_ResourceFreeQueue[s_CurrentFrameIndex].emplace_back(func);
+}
+
+QueueFamilyIndices Vulkan::FindQueueFamilies() 
+{
+	QueueFamilyIndices indices;
+
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &queueFamilyCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &queueFamilyCount, queueFamilies.data());
+
+	int i = 0;
+	for (const auto& queueFamily : queueFamilies) {
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			indices.graphicsFamily = i;
+		}
+
+		if (indices.isComplete()) {
+			break;
+		}
+
+		i++;
+	}
+
+	return indices;
 }
 
 VkInstance Vulkan::GetInstance()
