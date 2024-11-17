@@ -244,7 +244,6 @@ void Vulkan::SetupVulkanWindow(int width, int height)
 	// Create SwapChain, RenderPass, Framebuffer, etc.
 	IM_ASSERT(g_MinImageCount >= 2);
 	ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
-	std::cout << "ImGuiVulkanWindow Handle : ImageCount = " << g_MainWindowData.ImageCount << std::endl;
     s_ResourceFreeQueue.resize(g_MainWindowData.ImageCount);
 	SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
 }
