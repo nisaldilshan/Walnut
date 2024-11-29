@@ -1,28 +1,22 @@
 #include "Input.h"
 
-#include "Walnut/Application.h"
-
-#ifdef USE_SDL
-#include <SDL2/SDL.h>
-#else
+#include <Walnut/Application.h>
 #include <GLFW/glfw3.h>
-#endif
-
 
 namespace Walnut {
 
 	bool Input::IsKeyDown(KeyCode keycode)
 	{
 		WindowHandleType* windowHandle = Application::Get().GetWindowHandle();
-		int state;// = glfwGetKey(windowHandle, (int)keycode);
-		return false; //state == GLFW_PRESS || state == GLFW_REPEAT;
+		int state = glfwGetKey(windowHandle, (int)keycode);
+		return state == GLFW_PRESS || state == GLFW_REPEAT;
 	}
 
 	bool Input::IsMouseButtonDown(MouseButton button)
 	{
 		WindowHandleType* windowHandle = Application::Get().GetWindowHandle();
-		int state;// = glfwGetMouseButton(windowHandle, (int)button);
-		return false; //state == GLFW_PRESS;
+		int state = glfwGetMouseButton(windowHandle, (int)button);
+		return state == GLFW_PRESS;
 	}
 
 	glm::vec2 Input::GetMousePosition()
@@ -30,14 +24,14 @@ namespace Walnut {
 		WindowHandleType* windowHandle = Application::Get().GetWindowHandle();
 
 		double x, y;
-		//glfwGetCursorPos(windowHandle, &x, &y);
+		glfwGetCursorPos(windowHandle, &x, &y);
 		return { (float)x, (float)y };
 	}
 
 	void Input::SetCursorMode(CursorMode mode)
 	{
-		// GLFWwindow* windowHandle = Application::Get().GetWindowHandle();
-		// glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
+		GLFWwindow* windowHandle = Application::Get().GetWindowHandle();
+		glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
 	}
 
 }
