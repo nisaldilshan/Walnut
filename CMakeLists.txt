@@ -85,15 +85,16 @@ endif()
 target_sources(walnut PRIVATE 
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
-                Walnut/src/Walnut/Input/Input.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
 )
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp)
+    target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp
+                                Walnut/src/Walnut/Input/SDLInput.cpp)
     target_link_libraries(walnut PRIVATE SDL2::SDL2)
 else()
-    target_sources(walnut PRIVATE Walnut/src/Walnut/Application.cpp)
+    target_sources(walnut PRIVATE Walnut/src/Walnut/Application.cpp
+                                Walnut/src/Walnut/Input/GLFWInput.cpp)
 endif()
 
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
