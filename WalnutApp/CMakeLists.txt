@@ -1,4 +1,8 @@
+if(CMAKE_SYSTEM_NAME MATCHES "Android")
+add_library(App src/WalnutApp.cpp )
+else()
 add_executable(App src/WalnutApp.cpp )
+endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "iOS")
 target_sources(App PRIVATE 
