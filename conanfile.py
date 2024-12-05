@@ -10,7 +10,6 @@ class Walnut(ConanFile):
     homepage = "https://github.com/TheCherno/Walnut"
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
     settings = "os", "compiler", "build_type", "arch"
-    requires = ("stb/20200203", "imgui/latest@nisaldilshan/docking", "glm/0.9.9.8", "tinyobjloader/2.0.0-rc10")
     build_policy = "missing"
     options = {
         "rendering_backend": ["OpenGL", "Vulkan", "WebGPU"],
@@ -30,6 +29,9 @@ class Walnut(ConanFile):
     generators = "VirtualBuildEnv"
 
     def requirements(self):
+        self.requires("imgui/latest@nisaldilshan/docking")
+        self.requires("glm/0.9.9.8")
+        self.requires("stb/20200203")
         print("Using rendering backend " + str(self.options.rendering_backend));
         if self.settings.os == 'Macos':
             if self.options.rendering_backend == "OpenGL":
@@ -75,7 +77,7 @@ class Walnut(ConanFile):
         elif self.options.windowing_system == "SDL":
             self.requires("sdl/2.30.5")
         else:
-            pass
+            raise ConanInvalidConfiguration("Unsupported windowing system")
 
     def build_requirements(self):
         pass
