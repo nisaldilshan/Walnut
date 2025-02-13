@@ -77,9 +77,11 @@ endif()
 
 #### ENGINE ###
 if(WIN32)
-add_library (walnut STATIC)
+    add_library (walnut STATIC)
+elseif(CMAKE_SYSTEM_NAME MATCHES "iOS")
+    add_library (walnut STATIC)
 else()
-add_library (walnut SHARED)
+    add_library (walnut SHARED)
 endif()
 
 target_sources(walnut PRIVATE 

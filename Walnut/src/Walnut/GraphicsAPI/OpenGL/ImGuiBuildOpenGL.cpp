@@ -4,7 +4,7 @@
 #include <imgui_tables.cpp>
 #include <imgui_widgets.cpp>
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(__iOS__)
 #define IMGUI_IMPL_OPENGL_ES3
 #endif
 #include <imgui_impl_opengl3.cpp>

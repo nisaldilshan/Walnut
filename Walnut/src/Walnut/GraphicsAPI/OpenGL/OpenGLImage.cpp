@@ -1,6 +1,9 @@
 #include "OpenGLImage.h"
 
-#include <imgui_impl_glfw.h>
+#if defined(__ANDROID__) || defined(__iOS__)
+#define IMGUI_IMPL_OPENGL_ES3
+#endif
+#include <imgui_impl_opengl3.h>
 
 #include "../../ImageFormat.h"
 

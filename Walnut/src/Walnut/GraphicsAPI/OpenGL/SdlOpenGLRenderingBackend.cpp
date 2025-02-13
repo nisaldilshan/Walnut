@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(__iOS__)
 #define IMGUI_IMPL_OPENGL_ES3
 #endif
 #include <imgui_impl_opengl3.h>
@@ -51,7 +51,7 @@ namespace Walnut
 	void OpenGLRenderingBackend::ConfigureImGui()
 	{
 		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(__iOS__)
 		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
 		assert(result);
 #else

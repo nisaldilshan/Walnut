@@ -41,13 +41,18 @@ if (APPLE)
     target_link_libraries(walnut-graphics-opengl PUBLIC
         "-framework Metal"
         "-framework MetalKit"
-        "-framework AppKit"
         "-framework Foundation"
         "-framework QuartzCore"
         "-framework IOSurface"
-        "-framework Cocoa"
         "-framework CoreVideo"
         "-framework IOKit"
     )
 endif ()
+
+if (CMAKE_SYSTEM_NAME MATCHES Darwin)
+    target_link_libraries(walnut-graphics-opengl PUBLIC
+        "-framework AppKit"
+        "-framework Cocoa"
+    )
+endif()
 

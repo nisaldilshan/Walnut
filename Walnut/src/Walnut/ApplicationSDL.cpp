@@ -29,9 +29,8 @@ namespace Walnut {
 		, m_RenderingBackend(std::move(RenderingBackend::Create()))
 		, m_SleepAmount(std::chrono::milliseconds(10))
 	{
-		s_Instance = this;
-
 		Init();
+		s_Instance = this;
 	}
 
 	Application::~Application()
@@ -61,26 +60,34 @@ namespace Walnut {
 	{
 		// Setup GLFW window
 		//glfwSetErrorCallback(glfw_error_callback);
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		auto flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER;
+		if (SDL_Init(flags) != 0)
 		{
 			std::cerr << "Could not initalize GLFW!\n";
 			assert(false);
 			return;
 		}
 
-		uint32_t sdlWindowType;
+		// Enable native IME
+        SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+
+		uint32_t sdlWindowFlags;
 		if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::OpenGL)
 		{
-			sdlWindowType = SDL_WINDOW_OPENGL;
+			sdlWindowFlags = SDL_WINDOW_OPENGL | 
+								SDL_WINDOW_FULLSCREEN | 
+								SDL_WINDOW_ALLOW_HIGHDPI | 
+								SDL_WINDOW_FULLSCREEN_DESKTOP;
 #if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#elif defined(__ANDROID__)
+#elif defined(__ANDROID__) || defined(__iOS__)
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+			SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 #else
 			//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -96,7 +103,7 @@ namespace Walnut {
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
-			sdlWindowType = SDL_WINDOW_VULKAN;
+			sdlWindowFlags = SDL_WINDOW_VULKAN;
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
@@ -108,10 +115,40 @@ namespace Walnut {
 			assert(false);
 		}
 
+		int windowPosX = SDL_WINDOWPOS_UNDEFINED;
+		int windowPosY = SDL_WINDOWPOS_UNDEFINED;
+		int windowWidth = m_Specification.Width;
+		int windowHeight = m_Specification.Height;
+#if defined(__iOS__)
+		int nbMonitors = SDL_GetNumVideoDisplays();
+        std::vector<SDL_Rect> r;
+        for (size_t i = 0; i < nbMonitors; ++i)
+        {
+            SDL_Rect rect;
+            SDL_GetDisplayUsableBounds((int)i, &rect);
+            r.push_back(rect);
+        }
+		assert(r.size() == 1);
+
+		windowPosX = r[0].x;
+		windowPosY = r[0].y;
+		windowWidth = r[0].w;
+		windowHeight = r[0].h;
+
+		// TODO: can we use this?
+		// int drawableWidth = 0, drawableHeight = 0;
+		// SDL_GL_GetDrawableSize(windowHandle, &drawableWidth, &drawableHeight);
+
+		m_Specification.Width = windowWidth;
+		m_Specification.Height = windowHeight;
+#endif
+		
+
+		
         auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), 
-											SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-											m_Specification.Width, m_Specification.Height, 
-											sdlWindowType);
+											windowPosX, windowPosY, 
+											windowWidth, windowHeight, 
+											sdlWindowFlags);
 		if (!windowHandle)
 		{
 			std::cerr << "Could not create GLFW Window!\n";
