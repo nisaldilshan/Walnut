@@ -32,3 +32,11 @@ if (IS_EMSCRIPTEN)
         " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s GL_DEBUG=1 -s DEMANGLE_SUPPORT=1 -s GL_ASSERTIONS=1 -s SAFE_HEAP=1")
 endif()
 
+
+# add_custom_command(TARGET App POST_BUILD
+# 	COMMAND /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.walnut.app" "build/WalnutApp/Debug-iphonesimulator/App.app.dSYM/Contents/Info.plist"
+# )
+
+# set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+# set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
+

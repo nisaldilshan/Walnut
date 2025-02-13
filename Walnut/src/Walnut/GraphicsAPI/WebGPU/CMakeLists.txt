@@ -16,6 +16,7 @@ add_library (walnut-graphics-webgpu STATIC
 target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
 target_link_libraries(walnut-graphics-webgpu PUBLIC glfw3webgpu imgui::imgui glm::glm) 
 target_link_directories(walnut-graphics-webgpu PUBLIC $<$<CONFIG:DEBUG>:${WebGPU_LIB_DIRS_DEBUG}>) # TODO: add lib dir for non debug configurations as well
+target_link_directories(walnut-graphics-webgpu PUBLIC $<$<CONFIG:RELWITHDEBINFO>:${WebGPU_LIB_DIRS_RELWITHDEBINFO}>)
 
 if(WIN32)
     target_link_libraries(walnut-graphics-webgpu PUBLIC
