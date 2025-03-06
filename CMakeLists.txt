@@ -117,15 +117,17 @@ if (IS_EMSCRIPTEN)
     #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 endif()
 if(APPLE AND RENDERER STREQUAL "Vulkan")
-    message(STATUS "moltenvk_LIB_DIRS_DEBUG" + ${moltenvk_LIB_DIRS_DEBUG})
-
+    set(MOLTENVK_DIR 
+        $<$<CONFIG:Debug>:${moltenvk_LIB_DIRS_DEBUG}>
+        $<$<CONFIG:RelWithDebInfo>:${moltenvk_LIB_DIRS_RELWITHDEBINFO}>)
+    message(STATUS "MOLTENVK_DIR" + ${MOLTENVK_DIR})
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-                        COMMAND ln -sf ${moltenvk_LIB_DIRS_DEBUG}/libMoltenVK.dylib libMoltenVK.dylib
+                        COMMAND ln -sf ${MOLTENVK_DIR}/libMoltenVK.dylib libMoltenVK.dylib
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
                         COMMENT "Generating symbolic link for libMoltenVK!!!")
 
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
-                        COMMAND ln -sf ${moltenvk_LIB_DIRS_DEBUG}/libMoltenVK.dylib libvulkan.1.dylib
+                        COMMAND ln -sf ${MOLTENVK_DIR}/libMoltenVK.dylib libvulkan.1.dylib
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
                         COMMENT "Generating symbolic link for libvulkan.1!!!")
 endif()
