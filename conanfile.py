@@ -14,7 +14,8 @@ class Walnut(ConanFile):
     options = {
         "rendering_backend": ["OpenGL", "Vulkan", "WebGPU"],
         "windowing_system": ["GLFW", "SDL", "None"],
-        'fPIC': [True, False]
+        'fPIC': [True, False],
+        'branch': 'ANY',
     }
     default_options = {
         "rendering_backend": "WebGPU",
@@ -24,7 +25,8 @@ class Walnut(ConanFile):
         "glad:spec": "gl",
         "glad:extensions": "",
         "glad:gl_profile": "core",
-        "glad:gl_version": 4.1
+        "glad:gl_version": 4.1,
+        'branch': 'master',
     }
     generators = "VirtualBuildEnv"
 
@@ -58,7 +60,7 @@ class Walnut(ConanFile):
                 self.requires("WebGPU/latest")
         elif self.settings.os == 'Emscripten':
             if self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest@nisaldilshan/testing")
+                self.requires("WebGPU/latest")
         elif self.settings.os == 'Android':
             self.options.windowing_system = "SDL"
             if self.options.rendering_backend == "OpenGL":
@@ -84,7 +86,7 @@ class Walnut(ConanFile):
 
     def source(self):
         git = tools.Git()
-        git.clone(self.url + ".git", "master")
+        git.clone(self.url + ".git", self.options.branch)
 
     def generate(self):
         tc = CMakeToolchain(self)

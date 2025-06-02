@@ -86,6 +86,7 @@ target_sources(walnut PRIVATE
                 Walnut/src/Walnut/Image.cpp
                 Walnut/src/Walnut/Random.cpp
                 Walnut/src/Walnut/RenderingBackend.cpp
+                Walnut/src/Walnut/Application.cpp
 )
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
@@ -93,7 +94,7 @@ if (WINDOWING_SYSTEM STREQUAL "SDL")
                                 Walnut/src/Walnut/Input/SDLInput.cpp)
     target_link_libraries(walnut PRIVATE SDL2::SDL2)
 else()
-    target_sources(walnut PRIVATE Walnut/src/Walnut/Application.cpp
+    target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationGLFW.cpp
                                 Walnut/src/Walnut/Input/GLFWInput.cpp)
 endif()
 
@@ -118,8 +119,7 @@ if (IS_EMSCRIPTEN)
 endif()
 if(APPLE AND RENDERER STREQUAL "Vulkan")
     set(MOLTENVK_DIR 
-        $<$<CONFIG:Debug>:${moltenvk_LIB_DIRS_DEBUG}>
-        $<$<CONFIG:RelWithDebInfo>:${moltenvk_LIB_DIRS_RELWITHDEBINFO}>)
+        $<$<CONFIG:Debug>:${moltenvk_LIB_DIRS_DEBUG}>$<$<CONFIG:RelWithDebInfo>:${moltenvk_LIB_DIRS_RELWITHDEBINFO}>)
     message(STATUS "MOLTENVK_DIR" + ${MOLTENVK_DIR})
     ADD_CUSTOM_COMMAND(TARGET walnut POST_BUILD
                         COMMAND ln -sf ${MOLTENVK_DIR}/libMoltenVK.dylib libMoltenVK.dylib
