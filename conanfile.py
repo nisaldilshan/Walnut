@@ -18,7 +18,7 @@ class Walnut(ConanFile):
         'branch': 'ANY',
     }
     default_options = {
-        "rendering_backend": "Vulkan",
+        "rendering_backend": "WebGPU",
         "windowing_system": "GLFW",
         'fPIC': True,
         "glad:no_loader": False,
