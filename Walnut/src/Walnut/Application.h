@@ -39,10 +39,12 @@ namespace Walnut {
 		void PushLayer()
 		{
 			static_assert(std::is_base_of<Layer, T>::value, "Pushed type is not subclass of Layer!");
-			m_LayerStack.emplace_back(std::make_shared<T>())->OnAttach();
+			m_NewLayers.emplace_back(std::make_shared<T>())->OnAttach();
 		}
 
-		void PushLayer(const std::shared_ptr<Layer>& layer) { m_LayerStack.emplace_back(layer); layer->OnAttach(); }
+		void PushLayer(const std::shared_ptr<Layer>& layer);
+		void PopLayer();
+
 		void Close();
 		float GetTime();
 		WindowHandleType* GetWindowHandle() const;
@@ -54,6 +56,9 @@ namespace Walnut {
 		void Shutdown();
 		void SetupImGuiForOneIteration();
 		void OnWindowResize(WindowHandleType *win, int width, int height);
+		void LayerStackOnUpdate();
+		void LayerStackOnGui();
+		void LayerStackShutdown();
 
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;
@@ -63,6 +68,9 @@ namespace Walnut {
 		std::chrono::milliseconds m_SleepAmount;
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
+		std::vector<std::shared_ptr<Layer>> m_NewLayers;
+		uint32_t m_LayerPopCount = 0;
+
 		std::function<void()> m_MenubarCallback;
 	};
 
