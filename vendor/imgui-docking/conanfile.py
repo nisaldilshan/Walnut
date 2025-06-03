@@ -23,7 +23,7 @@ class IMGUIConan(ConanFile):
 
     def source(self):
         git = tools.Git(folder=self._source_subfolder)
-        git.clone("https://github.com/ocornut/imgui.git", "docking")
+        git.clone("https://github.com/ocornut/imgui.git", "v1.90.5-docking")
 
 
     def package(self):
