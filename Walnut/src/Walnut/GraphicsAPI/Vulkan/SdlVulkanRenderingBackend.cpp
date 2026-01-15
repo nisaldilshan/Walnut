@@ -3,7 +3,7 @@
 
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_vulkan.h>
-#include <SDL2/SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include "VulkanGraphics.h"
 
@@ -12,29 +12,30 @@ namespace Walnut
 
     void VulkanRenderingBackend::Init(WindowHandleType* windowHandle)
     {
-        auto result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, nullptr);
-        if (result != SDL_TRUE)
+        m_extensions = SDL_Vulkan_GetInstanceExtensions(&m_extensions_count);
+        if (*m_extensions != nullptr)
         {
             std::cerr << "SDL: Failed to get Vulkan instance extensions count!\n";
             return;
         }
-        m_extensions = new const char*[m_extensions_count];
-        result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, m_extensions);
-        if (result != SDL_TRUE)
-        {
-            std::cerr << "SDL: Failed to get Vulkan instance extensions!\n";
-            return;
-        }
+        // m_extensions = new const char*[m_extensions_count];
+        // result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, m_extensions);
+        // if (result != true)
+        // {
+        //     std::cerr << "SDL: Failed to get Vulkan instance extensions!\n";
+        //     return;
+        // }
         m_windowHandle = windowHandle;
 
         // Setup Vulkan
         GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
         delete [] m_extensions;
         // Create Window Surface
-        result = SDL_Vulkan_CreateSurface(windowHandle, 
+        const bool result = SDL_Vulkan_CreateSurface(windowHandle, 
                                             GraphicsAPI::Vulkan::GetInstance(), 
+                                            NULL,
                                             GraphicsAPI::Vulkan::GetSurface());
-        if (result != SDL_TRUE)
+        if (result != true)
         {
             std::cerr << "SDL: Failed to create Vulkan surface!\n";
             return;

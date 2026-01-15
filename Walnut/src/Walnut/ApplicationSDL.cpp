@@ -10,7 +10,7 @@
 
 #include <Walnut/GLM/GLM.h>
 #include <imgui_impl_sdl2.h>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #include "RenderingBackend.h"
 
@@ -61,7 +61,7 @@ namespace Walnut {
 	{
 		// Setup GLFW window
 		//glfwSetErrorCallback(glfw_error_callback);
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		if (!SDL_Init(SDL_INIT_VIDEO))
 		{
 			std::cerr << "Could not initalize GLFW!\n";
 			assert(false);
@@ -109,7 +109,6 @@ namespace Walnut {
 		}
 
         auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), 
-											SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
 											m_Specification.Width, m_Specification.Height, 
 											sdlWindowType);
 		if (!windowHandle)

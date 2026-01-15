@@ -8,7 +8,7 @@ target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Wal
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut-graphics-vulkan PRIVATE SdlVulkanRenderingBackend.cpp)
-    target_link_libraries(walnut-graphics-vulkan PRIVATE SDL2::SDL2)
+    target_link_libraries(walnut-graphics-vulkan PRIVATE SDL3::SDL3)
 else()
     target_sources(walnut-graphics-vulkan PRIVATE GlfwVulkanRenderingBackend.cpp)
     target_link_libraries(walnut-graphics-vulkan PUBLIC glfw)

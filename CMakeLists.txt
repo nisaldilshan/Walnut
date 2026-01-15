@@ -25,6 +25,18 @@ message(STATUS "CMAKE_BUILD_TYPE " + ${CMAKE_BUILD_TYPE})
 message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
+include(FetchContent)
+
+# 2. Declare SDL3 source
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG        main  # Use 'main' for latest or a specific tag like 'preview-3.1.3'
+)
+
+# 3. Make SDL3 available (Downloads and configures)
+FetchContent_MakeAvailable(SDL3)
+
 set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
 find_package(glm REQUIRED)
@@ -40,7 +52,7 @@ message(STATUS "RENDERER" + ${RENDERER})
 message(STATUS "WINDOWING_SYSTEM" + ${WINDOWING_SYSTEM})
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    find_package(SDL2 REQUIRED)
+    #find_package(SDL2 REQUIRED)
     add_compile_definitions(USE_SDL)
 else()
     find_package(glfw3 REQUIRED)
@@ -92,7 +104,7 @@ target_sources(walnut PRIVATE
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp
                                 Walnut/src/Walnut/Input/SDLInput.cpp)
-    target_link_libraries(walnut PRIVATE SDL2::SDL2)
+    target_link_libraries(walnut PRIVATE SDL3::SDL3)
 else()
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationGLFW.cpp
                                 Walnut/src/Walnut/Input/GLFWInput.cpp)

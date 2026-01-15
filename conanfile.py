@@ -17,8 +17,8 @@ class Walnut(ConanFile):
         'fPIC': [True, False],
     }
     default_options = {
-        "rendering_backend": "WebGPU",
-        "windowing_system": "GLFW",
+        "rendering_backend": "Vulkan",
+        "windowing_system": "SDL",
         'fPIC': True,
         "glad:no_loader": False,
         "glad:spec": "gl",

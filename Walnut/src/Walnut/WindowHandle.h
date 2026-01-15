@@ -31,7 +31,7 @@
 #else // if not defined(WINDOW_HANDLE_IMPL)
 
 #ifdef USE_SDL
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #else
 #include <GLFW/glfw3.h>
 #endif

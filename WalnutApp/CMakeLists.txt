@@ -21,7 +21,7 @@ target_link_libraries(App PRIVATE walnut) #  "--shell-file /Users/nisal/dev/othe
 endif()
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_link_libraries(App PRIVATE SDL2::SDL2 SDL2::SDL2main)
+    target_link_libraries(App PRIVATE SDL3::SDL3) # SDL2::SDL2main
 else()
     target_link_libraries(App PUBLIC glfw)
 endif()

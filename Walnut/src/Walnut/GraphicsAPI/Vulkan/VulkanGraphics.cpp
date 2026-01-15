@@ -54,7 +54,7 @@ static std::vector<std::vector<std::function<void()>>> s_ResourceFreeQueue;
 
 
 
-void Vulkan::SetupVulkan(const char** extensions, uint32_t extensions_count)
+void Vulkan::SetupVulkan(const char* const* extensions, uint32_t extensions_count)
 {
     VkResult err;
 
