@@ -29,7 +29,7 @@ class Walnut(ConanFile):
     generators = "VirtualBuildEnv"
 
     def requirements(self):
-        self.requires("imgui/latest@nisaldilshan/docking")
+        self.requires("imgui/latest@nisaldilshan/docking2")
         self.requires("glm/0.9.9.8")
         self.requires("stb/cci.20230920")
         print("Using rendering backend " + str(self.options.rendering_backend));
