@@ -1,7 +1,7 @@
 #include "VulkanRenderingBackend.h"
 #include <iostream>
 
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
 #include <SDL3/SDL_vulkan.h>
 
@@ -13,7 +13,7 @@ namespace Walnut
     void VulkanRenderingBackend::Init(WindowHandleType* windowHandle)
     {
         m_extensions = SDL_Vulkan_GetInstanceExtensions(&m_extensions_count);
-        if (*m_extensions != nullptr)
+        if (*m_extensions == nullptr)
         {
             std::cerr << "SDL: Failed to get Vulkan instance extensions count!\n";
             return;
@@ -60,7 +60,7 @@ namespace Walnut
 
     void VulkanRenderingBackend::ConfigureImGui()
     {
-        ImGui_ImplSDL2_InitForVulkan(m_windowHandle);
+        ImGui_ImplSDL3_InitForVulkan(m_windowHandle);
         GraphicsAPI::Vulkan::ConfigureRendererBackend();
     }
 
@@ -68,7 +68,7 @@ namespace Walnut
     {
 		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
     }
 

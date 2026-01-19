@@ -9,7 +9,7 @@
 #include <imgui.h>
 
 #include <Walnut/GLM/GLM.h>
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdl3.h>
 #include <SDL3/SDL.h>
 
 #include "RenderingBackend.h"
@@ -202,7 +202,7 @@ namespace Walnut {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL3_ProcessEvent(&event);
             // if (event.type == SDL_QUIT)
             //     done = true;
             // if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))

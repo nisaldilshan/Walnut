@@ -32,7 +32,7 @@ namespace Walnut {
 
 		void SetData(const void* data);
 
-		void* GetDescriptorSet(); // originally returned the type VkDescriptorSet
+		uint64_t GetDescriptorSet();
 
 		void Resize(uint32_t width, uint32_t height);
 
