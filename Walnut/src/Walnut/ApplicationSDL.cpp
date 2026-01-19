@@ -96,7 +96,7 @@ namespace Walnut {
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
-			sdlWindowType = SDL_WINDOW_VULKAN;
+			sdlWindowType = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY; // SDL_WINDOW_HIDDEN
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{

@@ -12,24 +12,31 @@ namespace Walnut
 
     void VulkanRenderingBackend::Init(WindowHandleType* windowHandle)
     {
-        m_extensions = SDL_Vulkan_GetInstanceExtensions(&m_extensions_count);
-        if (*m_extensions == nullptr)
+        ImVector<const char*> extensions;
+        uint32_t sdl_extensions_count = 0;
+        const char* const* sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extensions_count);
+        for (uint32_t n = 0; n < sdl_extensions_count; n++) {
+            if (std::string(sdl_extensions[n]) == "VK_KHR_portability_enumeration") { 
+                // TODO: somehow vkCreateInstance function fails when this extension is present
+                std::cout << "   SDL: Extension - " << sdl_extensions[n] << " skipping" << std::endl;
+                continue;
+            }
+            else {
+                std::cout << "   SDL: Extension - " << sdl_extensions[n] << std::endl;
+            }
+            extensions.push_back(sdl_extensions[n]);
+        }
+        if (*sdl_extensions == nullptr)
         {
             std::cerr << "SDL: Failed to get Vulkan instance extensions count!\n";
+            assert(false);
             return;
         }
-        // m_extensions = new const char*[m_extensions_count];
-        // result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, m_extensions);
-        // if (result != true)
-        // {
-        //     std::cerr << "SDL: Failed to get Vulkan instance extensions!\n";
-        //     return;
-        // }
+        
         m_windowHandle = windowHandle;
 
         // Setup Vulkan
-        GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
-        delete [] m_extensions;
+        GraphicsAPI::Vulkan::SetupVulkan(extensions);
         // Create Window Surface
         const bool result = SDL_Vulkan_CreateSurface(windowHandle, 
                                             GraphicsAPI::Vulkan::GetInstance(), 

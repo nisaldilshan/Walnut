@@ -51,19 +51,43 @@ static uint32_t s_CurrentFrameIndex = 0;
 
 static std::vector<std::vector<std::function<void()>>> s_ResourceFreeQueue;
 
-
-
-
-void Vulkan::SetupVulkan(const char* const* extensions, uint32_t extensions_count)
+static bool IsExtensionAvailable(const ImVector<VkExtensionProperties>& properties, const char* extension)
 {
-    VkResult err;
+    for (const VkExtensionProperties& p : properties)
+        if (strcmp(p.extensionName, extension) == 0)
+            return true;
+    return false;
+}
+
+void Vulkan::SetupVulkan(ImVector<const char*> extensions)
+{
+	VkResult err;
+	VkInstanceCreateInfo create_info = {};
+
+	// Enumerate available extensions
+	uint32_t properties_count;
+	ImVector<VkExtensionProperties> properties;
+	vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, nullptr);
+	properties.resize(properties_count);
+	err = vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, properties.Data);
+	check_vk_result(err);
+
+	// Enable required extensions
+	if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+		extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+	if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
+	{
+		extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+		create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+	}
+#endif
 
 	// Create Vulkan Instance
 	{
-		VkInstanceCreateInfo create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		create_info.enabledExtensionCount = extensions_count;
-		create_info.ppEnabledExtensionNames = extensions;
+		create_info.enabledExtensionCount = (uint32_t)extensions.Size;
+		create_info.ppEnabledExtensionNames = extensions.Data;
 #ifdef IMGUI_VULKAN_DEBUG_REPORT
 		// Enabling validation layers
 		const char* layers[] = { "VK_LAYER_KHRONOS_validation" };

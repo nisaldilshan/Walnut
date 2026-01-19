@@ -21,8 +21,8 @@ public:
 	void Cleanup() override;
 
 private:
-	uint32_t m_extensions_count = 0;
-	const char* const* m_extensions = nullptr;
+	// uint32_t m_extensions_count = 0;
+	// const char* const* m_extensions = nullptr;
 	WindowHandleType* m_windowHandle = nullptr;
 };
 
