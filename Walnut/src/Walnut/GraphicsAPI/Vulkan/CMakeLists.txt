@@ -33,7 +33,7 @@ if(APPLE)
         target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui moltenvk::moltenvk)
     endif()
 else()
-    target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui Vulkan::Loader vulkan-validationlayers::vulkan-validationlayers)
+    target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui Vulkan::Loader) # vulkan-validationlayers::vulkan-validationlayers
 endif()
 
 

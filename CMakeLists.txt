@@ -26,7 +26,7 @@ message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
 include(FetchContent)
-
+set(SDL_HIDAPI_LIBUSB OFF)
 # 2. Declare SDL3 source
 FetchContent_Declare(
     SDL3
@@ -74,7 +74,7 @@ elseif(RENDERER STREQUAL "Vulkan")
         find_package(moltenvk REQUIRED)
     else()
         find_package (VulkanLoader REQUIRED)
-        find_package (vulkan-validationlayers REQUIRED)
+        #find_package (vulkan-validationlayers REQUIRED)
     endif()
     add_compile_definitions(RENDERER_BACKEND=2)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/Vulkan)
