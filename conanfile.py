@@ -138,6 +138,9 @@ class Walnut(ConanFile):
             self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu", "glfw3webgpu"]
             self.cpp_info.defines = ["RENDERER_BACKEND=3"]
 
+        if self.settings.os == 'Android':
+            self.cpp_info.libs += ["App", "SDL3"]
+
     def package(self):
         self.copy(pattern="Walnut/src/Walnut/EntryPoint.h", dst="include/Walnut", keep_path=False)
         self.copy(pattern="Walnut/src/Walnut/Application.h", dst="include/Walnut", keep_path=False)

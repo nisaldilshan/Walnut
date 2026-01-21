@@ -1,5 +1,5 @@
 if(CMAKE_SYSTEM_NAME MATCHES "Android")
-add_library(App src/WalnutApp.cpp )
+add_library(App SHARED src/WalnutApp.cpp)
 else()
 add_executable(App src/WalnutApp.cpp )
 endif()
