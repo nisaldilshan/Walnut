@@ -159,6 +159,10 @@ namespace Walnut {
 			style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
+		// Setup SDL UI scaling for imgui
+		const float scale_factor = SDL_GetWindowDisplayScale(m_RenderingBackend->GetWindowHandle());
+		std::cout << "#### SDL UI Scale: " << scale_factor << std::endl;
+		style.ScaleAllSizes(scale_factor);
 
 		// Setup Platform/Renderer backends to work with ImGui
 		m_RenderingBackend->ConfigureImGui();
@@ -166,7 +170,8 @@ namespace Walnut {
 		// Load default font
 		ImFontConfig fontConfig;
 		fontConfig.FontDataOwnedByAtlas = false;
-		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
+		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF(
+								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 15.0f * scale_factor, &fontConfig);
 		io.FontDefault = robotoFont;
 
 		// Upload Fonts
