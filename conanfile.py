@@ -1,11 +1,11 @@
-from conan.errors import ConanInvalidSystemRequirements
-from conan.errors import ConanInvalidConfiguration
-from conans import ConanFile, tools
+from conan.errors import ConanInvalidConfiguration, ConanInvalidSystemRequirements, ConanException
+from conans import ConanFile
+from conan.tools.scm import Git
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
 
 class Walnut(ConanFile):
     name = "walnut"
-    version = "latest"
+    version = "1.0.0"
     url = "https://github.com/nisaldilshan/Walnut"
     homepage = "https://github.com/TheCherno/Walnut"
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
@@ -15,7 +15,6 @@ class Walnut(ConanFile):
         "rendering_backend": ["OpenGL", "Vulkan", "WebGPU"],
         "windowing_system": ["GLFW", "SDL", "None"],
         'fPIC': [True, False],
-        'branch': 'ANY',
     }
     default_options = {
         "rendering_backend": "WebGPU",
@@ -26,7 +25,6 @@ class Walnut(ConanFile):
         "glad:extensions": "",
         "glad:gl_profile": "core",
         "glad:gl_version": 4.1,
-        'branch': 'master',
     }
     generators = "VirtualBuildEnv"
 
@@ -86,8 +84,29 @@ class Walnut(ConanFile):
         pass
 
     def source(self):
-        git = tools.Git()
-        git.clone(self.url + ".git", self.options.branch)
+        git = Git(self)
+        
+        # Determine the target reference (branch or tag) based on version
+        if self.version == "latest":
+            target_ref = "master"
+        else:
+            # Assuming tags are named like "v0.0.1"
+            target_ref = f"v{self.version}"
+
+        print(f"Attempting to checkout git ref: {target_ref}")
+
+        try:
+            # We use --depth 1 for speed, and --branch to specify tag/branch
+            clone_args = ['--depth', '1', '--branch', target_ref]
+            git.clone(url=self.url + ".git", target=".", args=clone_args)
+            
+        except Exception as e:
+            raise ConanException(
+                f"\n\nERROR: Could not checkout version '{self.version}'.\n"
+                f"Attempted to fetch git ref '{target_ref}' from {self.url}\n"
+                f"Please verify that the tag 'v{self.version}' exists in the remote repository.\n"
+                f"Original Git Error: {str(e)}\n"
+            )
 
     def generate(self):
         tc = CMakeToolchain(self)
