@@ -32,6 +32,10 @@ FetchContent_Declare(
     SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
     GIT_TAG        main  # Use 'main' for latest or a specific tag like 'preview-3.1.3'
+    QUIET
+    SOURCE_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/sdl3-src
+    BINARY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/sdl3-build
+    SUBBUILD_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/sdl3-subbuild
 )
 
 # 3. Make SDL3 available (Downloads and configures)

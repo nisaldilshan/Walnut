@@ -7,7 +7,7 @@
 #endif
 #include <imgui_impl_opengl3.h>
 
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdl3.h>
 
 #include "../../RenderingBackend.h"
 #include "OpenGLGraphics.h"
@@ -50,7 +50,7 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::ConfigureImGui()
 	{
-		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
+		ImGui_ImplSDL3_InitForOpenGL(m_windowHandle, g_SDLcontext);
 #if defined(__ANDROID__)
 		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
 		assert(result);
@@ -63,7 +63,7 @@ namespace Walnut
 	{
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 	}
 
