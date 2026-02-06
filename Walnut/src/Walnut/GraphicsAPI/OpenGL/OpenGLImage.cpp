@@ -61,7 +61,7 @@ void OpenGLImage::CreateDescriptorSet()
 {
 }
 
-void* OpenGLImage::GetDescriptorSet()
+ImTextureID OpenGLImage::GetDescriptorSet()
 {
     return (ImTextureID)(intptr_t)m_texture;
 }

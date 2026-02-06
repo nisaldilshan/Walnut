@@ -9,8 +9,8 @@
 #include <imgui.h>
 
 #include <Walnut/GLM/GLM.h>
-#include <imgui_impl_sdl2.h>
-#include <SDL2/SDL.h>
+#include <imgui_impl_sdl3.h>
+#include <SDL3/SDL.h>
 
 #include "RenderingBackend.h"
 
@@ -61,7 +61,7 @@ namespace Walnut {
 	{
 		// Setup GLFW window
 		//glfwSetErrorCallback(glfw_error_callback);
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		if (!SDL_Init(SDL_INIT_VIDEO))
 		{
 			std::cerr << "Could not initalize GLFW!\n";
 			assert(false);
@@ -96,7 +96,7 @@ namespace Walnut {
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
-			sdlWindowType = SDL_WINDOW_VULKAN;
+			sdlWindowType = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY; // SDL_WINDOW_HIDDEN
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
@@ -109,7 +109,6 @@ namespace Walnut {
 		}
 
         auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), 
-											SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
 											m_Specification.Width, m_Specification.Height, 
 											sdlWindowType);
 		if (!windowHandle)
@@ -160,6 +159,10 @@ namespace Walnut {
 			style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
+		// Setup SDL UI scaling for imgui
+		const float scale_factor = SDL_GetWindowDisplayScale(m_RenderingBackend->GetWindowHandle());
+		std::cout << "#### SDL UI Scale: " << scale_factor << std::endl;
+		style.ScaleAllSizes(scale_factor);
 
 		// Setup Platform/Renderer backends to work with ImGui
 		m_RenderingBackend->ConfigureImGui();
@@ -167,7 +170,8 @@ namespace Walnut {
 		// Load default font
 		ImFontConfig fontConfig;
 		fontConfig.FontDataOwnedByAtlas = false;
-		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
+		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF(
+								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 15.0f * scale_factor, &fontConfig);
 		io.FontDefault = robotoFont;
 
 		// Upload Fonts
@@ -203,7 +207,7 @@ namespace Walnut {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL3_ProcessEvent(&event);
             // if (event.type == SDL_QUIT)
             //     done = true;
             // if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))

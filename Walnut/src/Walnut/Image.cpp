@@ -129,7 +129,7 @@ namespace Walnut {
 		}
 	}
 
-    void* Image::GetDescriptorSet() // originally returned the type VkDescriptorSet
+    uint64_t Image::GetDescriptorSet() // originally returned the type VkDescriptorSet
     { 
 		return m_rendererBackendImage->GetDescriptorSet(); 
 	}
