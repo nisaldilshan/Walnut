@@ -19,11 +19,11 @@ namespace GraphicsAPI
 		}
 	}
 
-    void WebGPU::CreateSurface(GLFWwindow* window)
+    void WebGPU::CreateSurface(WalnutWindowHandleType* window)
     {
 		assert(g_instance);
         std::cout << "Requesting surface..." << std::endl;
-        g_surface = glfwGetWGPUSurface(g_instance, window);
+        g_surface = GetWGPUSurface(g_instance, window);
         std::cout << "Got surface: " << g_surface << std::endl;
 
 #ifdef WEBGPU_BACKEND_WGPU

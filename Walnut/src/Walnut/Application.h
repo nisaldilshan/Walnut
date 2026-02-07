@@ -47,7 +47,7 @@ namespace Walnut {
 
 		void Close();
 		float GetTime();
-		WindowHandleType* GetWindowHandle() const;
+		WalnutWindowHandleType* GetWindowHandle() const;
 
 		void SetSleepAmount(std::chrono::milliseconds sleepAmount);
 
@@ -55,7 +55,7 @@ namespace Walnut {
 		void Init();
 		void Shutdown();
 		void SetupImGuiForOneIteration();
-		void OnWindowResize(WindowHandleType *win, int width, int height);
+		void OnWindowResize(WalnutWindowHandleType *win, int width, int height);
 		void LayerStackOnUpdate();
 		void LayerStackOnGui();
 		void LayerStackShutdown();

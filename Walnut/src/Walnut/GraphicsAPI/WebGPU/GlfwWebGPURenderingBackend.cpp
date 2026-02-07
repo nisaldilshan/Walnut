@@ -13,7 +13,7 @@ wgpu::SwapChain g_swapChain = nullptr;
 
 namespace Walnut
 {
-    void GlfwWebGPURenderingBackend::Init(GLFWwindow *windowHandle)
+    void GlfwWebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle)
     {
         m_windowHandle = windowHandle;
 
@@ -151,7 +151,7 @@ namespace Walnut
 #endif
     }
 
-    GLFWwindow *GlfwWebGPURenderingBackend::GetWindowHandle()
+    WalnutWindowHandleType* GlfwWebGPURenderingBackend::GetWindowHandle()
     {
         return m_windowHandle;
     }

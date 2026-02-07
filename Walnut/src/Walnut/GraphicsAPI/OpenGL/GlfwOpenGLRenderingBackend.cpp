@@ -1,4 +1,3 @@
-#define WINDOW_HANDLE_IMPL
 #include "OpenGLRenderingBackend.h"
 #include <iostream>
 

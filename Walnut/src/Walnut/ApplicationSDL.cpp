@@ -46,7 +46,7 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
-	void Application::OnWindowResize(WindowHandleType *win, int width, int height)
+	void Application::OnWindowResize(WalnutWindowHandleType *win, int width, int height)
     {
 		std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
 		// Create Framebuffers

@@ -39,7 +39,8 @@ class Walnut(ConanFile):
             elif self.options.rendering_backend == "Vulkan":
                 self.requires("moltenvk/1.2.0")
             elif self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest")
+                pass
+                #self.requires("WebGPU/latest")
         elif self.settings.os == 'Linux':
             if self.options.rendering_backend == "OpenGL":
                 self.requires("glad/0.1.33")
@@ -47,7 +48,8 @@ class Walnut(ConanFile):
                 self.requires("vulkan-loader/1.3.239.0")
                 self.requires("vulkan-validationlayers/1.3.239.0")
             elif self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest")
+                pass
+                #self.requires("WebGPU/latest")
         elif self.settings.os == 'Windows':
             self.short_paths=True
             if self.options.rendering_backend == "OpenGL":
@@ -56,10 +58,12 @@ class Walnut(ConanFile):
                 self.requires("vulkan-loader/1.3.239.0")
                 self.requires("vulkan-validationlayers/1.3.239.0")
             elif self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest")
+                pass
+                #self.requires("WebGPU/latest")
         elif self.settings.os == 'Emscripten':
             if self.options.rendering_backend == "WebGPU":
-                self.requires("WebGPU/latest")
+                pass
+                #self.requires("WebGPU/latest")
         elif self.settings.os == 'Android':
             self.options.windowing_system = "SDL"
             if self.options.rendering_backend == "OpenGL":

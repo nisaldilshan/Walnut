@@ -46,7 +46,9 @@
 #define WGPU_TARGET WGPU_TARGET_WINDOWS
 #elif defined(__APPLE__)
 #define WGPU_TARGET WGPU_TARGET_MACOS
-#elif defined(_GLFW_WAYLAND)
+#elif defined(_GLFW_WAYLAND) || defined(SDL_VIDEO_DRIVER_WAYLAND)
+// Note: Accurate detection might require runtime checks or build system flags
+// but we assume standard definitions here.
 #define WGPU_TARGET WGPU_TARGET_LINUX_WAYLAND
 #else
 #define WGPU_TARGET WGPU_TARGET_LINUX_X11
@@ -57,7 +59,11 @@
 #include <QuartzCore/CAMetalLayer.h>
 #endif
 
+#ifdef USE_SDL
+#include <SDL3/SDL.h>
+#else
 #include <GLFW/glfw3.h>
+
 #if WGPU_TARGET == WGPU_TARGET_MACOS
 #define GLFW_EXPOSE_NATIVE_COCOA
 #elif WGPU_TARGET == WGPU_TARGET_LINUX_X11
@@ -71,8 +77,139 @@
 #if !defined(__EMSCRIPTEN__)
 #include <GLFW/glfw3native.h>
 #endif
+#endif
 
-WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window) {
+#ifdef USE_SDL
+// Define this to prevent windows.h from including too much junk (optional but recommended)
+#define WIN32_LEAN_AND_MEAN 
+#include <windows.h>
+
+WGPUSurface GetWGPUSurface(WGPUInstance instance, WalnutWindowHandleType* window) {
+    SDL_PropertiesID props = SDL_GetWindowProperties(window);
+
+#if WGPU_TARGET == WGPU_TARGET_MACOS
+    {
+        id metal_layer = NULL;
+        // SDL3 Property for Cocoa Window
+        NSWindow* ns_window = (__bridge NSWindow*)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
+        
+        if (!ns_window) return NULL; // Error handling
+
+        [ns_window.contentView setWantsLayer: YES];
+        metal_layer = [CAMetalLayer layer];
+        [ns_window.contentView setLayer: metal_layer];
+        
+        return wgpuInstanceCreateSurface(
+            instance,
+            &(WGPUSurfaceDescriptor){
+                .label = NULL,
+                .nextInChain = (const WGPUChainedStruct*)&(WGPUSurfaceDescriptorFromMetalLayer){
+                    .chain = (WGPUChainedStruct){
+                        .next = NULL,
+                        .sType = WGPUSType_SurfaceDescriptorFromMetalLayer,
+                    },
+                    .layer = metal_layer,
+                },
+            });
+    }
+#elif WGPU_TARGET == WGPU_TARGET_LINUX_X11
+    {
+        Display* x11_display = (Display*)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
+        Window x11_window = (Window)SDL_GetNumberProperty(props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+        
+        return wgpuInstanceCreateSurface(
+            instance,
+            &(WGPUSurfaceDescriptor){
+                .label = NULL,
+                .nextInChain = (const WGPUChainedStruct*)&(WGPUSurfaceDescriptorFromXlibWindow){
+                    .chain = (WGPUChainedStruct){
+                        .next = NULL,
+                        .sType = WGPUSType_SurfaceDescriptorFromXlibWindow,
+                    },
+                    .display = x11_display,
+                    .window = x11_window,
+                },
+            });
+    }
+#elif WGPU_TARGET == WGPU_TARGET_LINUX_WAYLAND
+    {
+        struct wl_display* wayland_display = (struct wl_display*)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
+        struct wl_surface* wayland_surface = (struct wl_surface*)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
+        
+        return wgpuInstanceCreateSurface(
+            instance,
+            &(WGPUSurfaceDescriptor){
+                .label = NULL,
+                .nextInChain = (const WGPUChainedStruct*)&(WGPUSurfaceDescriptorFromWaylandSurface){
+                    .chain = (WGPUChainedStruct){
+                        .next = NULL,
+                        .sType = WGPUSType_SurfaceDescriptorFromWaylandSurface,
+                    },
+                    .display = wayland_display,
+                    .surface = wayland_surface,
+                },
+            });
+    }
+#elif WGPU_TARGET == WGPU_TARGET_WINDOWS
+    {
+        // 1. Get Native Handles from SDL
+        HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
+        HINSTANCE hinstance = (HINSTANCE)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, NULL);
+        
+        if (!hinstance) {
+             hinstance = GetModuleHandle(NULL);
+        }
+
+        // 2. POLYFILL: Manually define the struct if the header is missing it.
+        // This struct layout is standard for wgpu-native.
+        struct WGPUSurfaceDescriptorFromWindowsHWND_Fallback {
+            WGPUChainedStruct chain;
+            void * hinstance;
+            void * hwnd;
+        };
+        
+        // 3. Create the Surface using the fallback struct cast
+        // We cast to (const WGPUChainedStruct*) to satisfy the API
+        return wgpuInstanceCreateSurface(
+            instance,
+            &(WGPUSurfaceDescriptor){
+                .label = NULL,
+                .nextInChain = (const WGPUChainedStruct*) &(struct WGPUSurfaceDescriptorFromWindowsHWND_Fallback) {
+                    .chain = (WGPUChainedStruct){
+                        .next = NULL,
+                        // If WGPUSType_SurfaceDescriptorFromWindowsHWND is also undefined, use (WGPUSType)4 or (WGPUSType)5 depending on your wgpu-native version.
+                        // Typically, if the enum is missing, (WGPUSType)5 is safe for recent wgpu-native builds.
+                        .sType = (WGPUSType)5, 
+                    },
+                    .hinstance = hinstance,
+                    .hwnd = hwnd,
+                },
+            });
+    }
+#elif WGPU_TARGET == WGPU_TARGET_EMSCRIPTEN
+    {
+        return wgpuInstanceCreateSurface(
+            instance,
+            &(WGPUSurfaceDescriptor){
+                .label = NULL,
+                .nextInChain = (const WGPUChainedStruct*)&(WGPUSurfaceDescriptorFromCanvasHTMLSelector){
+                    .chain = (WGPUChainedStruct){
+                        .next = NULL,
+                        .sType = WGPUSType_SurfaceDescriptorFromCanvasHTMLSelector,
+                    },
+                    .selector = "canvas",
+                },
+            }
+        );
+    }
+#else
+    #error "Unsupported WGPU_TARGET"
+#endif
+}
+
+#else // !USE_SDL (Original GLFW Implementation)
+
+WGPUSurface GetWGPUSurface(WGPUInstance instance, WalnutWindowHandleType* window) {
 #if WGPU_TARGET == WGPU_TARGET_MACOS
     {
         id metal_layer = NULL;
@@ -182,3 +319,4 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window) {
 #error "Unsupported WGPU_TARGET"
 #endif
 }
+#endif

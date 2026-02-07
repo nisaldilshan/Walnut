@@ -83,7 +83,21 @@ elseif(RENDERER STREQUAL "Vulkan")
     add_compile_definitions(RENDERER_BACKEND=2)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/Vulkan)
 elseif(RENDERER STREQUAL "WebGPU")
-    find_package(WebGPU REQUIRED)
+    set(WEBGPU_BACKEND DAWN)
+    FetchContent_Declare(
+        WebGPU-distribution
+        GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution.git
+        GIT_TAG        main  # Use 'main' for latest or a specific tag like 'preview-3.1.3'
+        QUIET
+        SOURCE_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-src
+        BINARY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-build
+        SUBBUILD_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-subbuild
+    )
+
+    # 3. Make SDL3 available (Downloads and configures)
+    FetchContent_MakeAvailable(WebGPU-distribution)
+
+    #find_package(WebGPU REQUIRED)
     add_compile_definitions(RENDERER_BACKEND=3)
     add_subdirectory(vendor/glfw3webgpu)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)

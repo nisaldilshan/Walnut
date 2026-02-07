@@ -31,7 +31,7 @@
 #define _glfw3_webgpu_h_
 
 #include <webgpu/webgpu.h>
-#include <GLFW/glfw3.h>
+#include "../../Walnut/src/Walnut/WindowHandle.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +40,7 @@ extern "C" {
 /**
  * Get a WGPUSurface from a GLFW window.
  */
-WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window);
+WGPUSurface GetWGPUSurface(WGPUInstance instance, WalnutWindowHandleType* window);
 
 #ifdef __cplusplus
 }

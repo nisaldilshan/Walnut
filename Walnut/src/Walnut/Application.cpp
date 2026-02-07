@@ -113,7 +113,7 @@ void Application::Close()
 	m_Running = false;
 }
 
-WindowHandleType* Application::GetWindowHandle() const
+WalnutWindowHandleType* Application::GetWindowHandle() const
 {
 	return m_RenderingBackend->GetWindowHandle();
 }
