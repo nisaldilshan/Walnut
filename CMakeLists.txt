@@ -38,8 +38,14 @@ FetchContent_Declare(
     SUBBUILD_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/sdl3-subbuild
 )
 
-# 3. Make SDL3 available (Downloads and configures)
-FetchContent_MakeAvailable(SDL3)
+FetchContent_Declare(
+    glfw3webgpu
+    GIT_REPOSITORY https://github.com/eliemichel/glfw3webgpu.git
+    GIT_TAG        v1.3.0-alpha
+    SOURCE_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/glfw3webgpu-src
+    BINARY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/glfw3webgpu-build
+    SUBBUILD_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/glfw3webgpu-subbuild
+)
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
@@ -57,6 +63,8 @@ message(STATUS "WINDOWING_SYSTEM" + ${WINDOWING_SYSTEM})
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     #find_package(SDL2 REQUIRED)
+    # 3. Make SDL3 available (Downloads and configures)
+    FetchContent_MakeAvailable(SDL3)
     add_compile_definitions(USE_SDL)
 else()
     find_package(glfw3 REQUIRED)
@@ -87,7 +95,7 @@ elseif(RENDERER STREQUAL "WebGPU")
     FetchContent_Declare(
         WebGPU-distribution
         GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution.git
-        GIT_TAG        main  # Use 'main' for latest or a specific tag like 'preview-3.1.3'
+        GIT_TAG        v0.3.0-gamma
         QUIET
         SOURCE_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-src
         BINARY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-build
@@ -99,7 +107,6 @@ elseif(RENDERER STREQUAL "WebGPU")
 
     #find_package(WebGPU REQUIRED)
     add_compile_definitions(RENDERER_BACKEND=3)
-    add_subdirectory(vendor/glfw3webgpu)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)
 else()
     message(STATUS "NO RENDERING BACKEND")

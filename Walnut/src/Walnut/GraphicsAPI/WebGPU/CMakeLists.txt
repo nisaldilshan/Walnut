@@ -4,6 +4,7 @@
 # add_library (walnut-imgui-part1 STATIC imgui-webgpu-part1.cpp)
 # endif()
 # target_link_libraries(walnut-imgui-part1 PRIVATE imgui::imgui)
+FetchContent_MakeAvailable(glfw3webgpu)
 
 add_library (walnut-graphics-webgpu STATIC
                     ImGuiBuildWGPU.cpp

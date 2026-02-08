@@ -1,7 +1,7 @@
 #include "WebGPUGraphics.h"
 
 #include "../../GLM/GLM.h"
-#include "../../../../../vendor/glfw3webgpu/glfw3webgpu.h"
+#include <glfw3webgpu.h>
 
 namespace GraphicsAPI
 {
@@ -23,7 +23,7 @@ namespace GraphicsAPI
     {
 		assert(g_instance);
         std::cout << "Requesting surface..." << std::endl;
-        g_surface = GetWGPUSurface(g_instance, window);
+        g_surface = glfwCreateWindowWGPUSurface(g_instance, window);
         std::cout << "Got surface: " << g_surface << std::endl;
 
 #ifdef WEBGPU_BACKEND_WGPU
@@ -44,13 +44,13 @@ namespace GraphicsAPI
 		wgpu::Adapter adapter = g_instance.requestAdapter(adapterOpts);
 		std::cout << "Got adapter: " << adapter << std::endl;
 
-		wgpu::SupportedLimits supportedLimits;
-		adapter.getLimits(&supportedLimits);
+		wgpu::Limits limits;
+		adapter.getLimits(&limits);
 
 		std::cout << "Requesting device..." << std::endl;
-		wgpu::RequiredLimits requiredLimits = wgpu::Default;
-		requiredLimits.limits.maxVertexAttributes = 6;
-		requiredLimits.limits.maxVertexBuffers = 1;
+		wgpu::Limits requiredLimits = wgpu::Default;
+		requiredLimits.maxVertexAttributes = 6;
+		requiredLimits.maxVertexBuffers = 1;
 
 		struct VertexAttributes {
 			glm::vec3 position;
@@ -59,40 +59,40 @@ namespace GraphicsAPI
 			glm::vec2 uv;
 		}; // This structure is defined just to get an idea about max values. You may define the actual VertexAttributes struct in your application.
 		// TODO : use the same VertexAttributes structure in here and in the application.
-		requiredLimits.limits.maxBufferSize = 150000 * sizeof(VertexAttributes);
-		requiredLimits.limits.maxVertexBufferArrayStride = sizeof(VertexAttributes);
-		requiredLimits.limits.minStorageBufferOffsetAlignment = supportedLimits.limits.minStorageBufferOffsetAlignment;
-		requiredLimits.limits.minUniformBufferOffsetAlignment = supportedLimits.limits.minUniformBufferOffsetAlignment;
-		requiredLimits.limits.maxInterStageShaderComponents = 17;
-		requiredLimits.limits.maxBindGroups = 2;
-		requiredLimits.limits.maxUniformBuffersPerShaderStage = 2;
-		requiredLimits.limits.maxUniformBufferBindingSize = 16 * 4 * sizeof(float);
-		requiredLimits.limits.maxDynamicUniformBuffersPerPipelineLayout = 1;
+		requiredLimits.maxBufferSize = 150000 * sizeof(VertexAttributes);
+		requiredLimits.maxVertexBufferArrayStride = sizeof(VertexAttributes);
+		requiredLimits.minStorageBufferOffsetAlignment = limits.minStorageBufferOffsetAlignment;
+		requiredLimits.minUniformBufferOffsetAlignment = limits.minUniformBufferOffsetAlignment;
+		//requiredLimits.maxInterStageShaderComponents = 17;
+		requiredLimits.maxBindGroups = 2;
+		requiredLimits.maxUniformBuffersPerShaderStage = 2;
+		requiredLimits.maxUniformBufferBindingSize = 16 * 4 * sizeof(float);
+		requiredLimits.maxDynamicUniformBuffersPerPipelineLayout = 1;
 		// Allow textures up to 4K
-		requiredLimits.limits.maxTextureDimension1D = 4096;
-		requiredLimits.limits.maxTextureDimension2D = 4096;
-		requiredLimits.limits.maxTextureDimension3D = 2048;
-		requiredLimits.limits.maxTextureArrayLayers = 1;
-		requiredLimits.limits.maxSampledTexturesPerShaderStage = 3;
-		requiredLimits.limits.maxSamplersPerShaderStage = 1;
+		requiredLimits.maxTextureDimension1D = 4096;
+		requiredLimits.maxTextureDimension2D = 4096;
+		requiredLimits.maxTextureDimension3D = 2048;
+		requiredLimits.maxTextureArrayLayers = 1;
+		requiredLimits.maxSampledTexturesPerShaderStage = 3;
+		requiredLimits.maxSamplersPerShaderStage = 1;
 
 		// For Compute 
-		requiredLimits.limits.maxStorageBuffersPerShaderStage = 2;
-		requiredLimits.limits.maxStorageBufferBindingSize = requiredLimits.limits.maxBufferSize;
-		requiredLimits.limits.maxComputeWorkgroupSizeX = 32;
-		requiredLimits.limits.maxComputeWorkgroupSizeY = 1;
-		requiredLimits.limits.maxComputeWorkgroupSizeZ = 1;
-		requiredLimits.limits.maxComputeInvocationsPerWorkgroup = 32;
-		requiredLimits.limits.maxComputeWorkgroupsPerDimension = 2;
+		requiredLimits.maxStorageBuffersPerShaderStage = 2;
+		requiredLimits.maxStorageBufferBindingSize = requiredLimits.maxBufferSize;
+		requiredLimits.maxComputeWorkgroupSizeX = 32;
+		requiredLimits.maxComputeWorkgroupSizeY = 1;
+		requiredLimits.maxComputeWorkgroupSizeZ = 1;
+		requiredLimits.maxComputeInvocationsPerWorkgroup = 32;
+		requiredLimits.maxComputeWorkgroupsPerDimension = 2;
 
 
 		wgpu::DeviceDescriptor deviceDesc;
-		deviceDesc.label = "My Device";
+		//deviceDesc.label = "My Device";
 		deviceDesc.nextInChain = nullptr;
 		deviceDesc.requiredFeatureCount = 0;
 		deviceDesc.requiredLimits = &requiredLimits;
 		deviceDesc.defaultQueue.nextInChain = nullptr;
-		deviceDesc.defaultQueue.label = "The default queue";
+		//deviceDesc.defaultQueue.label = "The default queue";
 		g_device = adapter.requestDevice(deviceDesc);
 		adapter.release();
 		assert(g_device);

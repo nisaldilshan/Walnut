@@ -13,6 +13,7 @@ namespace Utils
         case ImageFormat::RGBA32F:
             return wgpu::TextureFormat::RGBA32Uint;
         case ImageFormat::None:
+        default:
             assert(false);
             return wgpu::TextureFormat::Undefined;
         }
@@ -36,7 +37,7 @@ void WebGPUImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, u
     m_textureFormat = Walnut::Utils::WalnutFormatToWebGPUFormat(imageFormat);
     
     wgpu::TextureDescriptor tex_desc = {};
-    tex_desc.label = "Dear ImGui Font Texture";
+    //tex_desc.label = "Dear ImGui Font Texture";
     tex_desc.dimension = WGPUTextureDimension_2D;
     tex_desc.size.width = width;
     tex_desc.size.height = height;
@@ -63,7 +64,7 @@ void WebGPUImage::CreateImageView()
 
 ImTextureID WebGPUImage::GetDescriptorSet()
 {
-    return m_textureView;
+    return (ImTextureID)(void*)m_textureView; 
 }
 
 bool WebGPUImage::ImageAvailable()
@@ -82,12 +83,12 @@ WebGPUImage::VkBuffer WebGPUImage::GetStagingBuffer()
 
 void WebGPUImage::UploadToBuffer(const void *data, size_t uploadSize, size_t alignedSize)
 {
-    wgpu::ImageCopyTexture dst_view = {};
+    wgpu::TexelCopyTextureInfo dst_view = {};
     dst_view.texture = m_texture;
     dst_view.mipLevel = 0;
     dst_view.origin = { 0, 0, 0 };
     dst_view.aspect = WGPUTextureAspect_All;
-    wgpu::TextureDataLayout layout = {};
+    wgpu::TexelCopyBufferLayout layout = {};
     layout.offset = 0;
 
     int size_pp = 4; // size per pixel
