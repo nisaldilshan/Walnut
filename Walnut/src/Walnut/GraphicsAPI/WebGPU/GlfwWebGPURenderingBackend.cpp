@@ -32,19 +32,11 @@ namespace Walnut
         GraphicsAPI::WebGPU::CreateDevice();
 
         auto device = GraphicsAPI::WebGPU::GetDevice();
-        if (device == nullptr)
+        if (device == nullptr) {
             std::cerr << "Could not initialize WebGPU Device!" << std::endl;
-
-		
-
-		// Add an error callback for more debug info
-		std::unique_ptr<wgpu::ErrorCallback> m_errorCallbackHandle;
-		m_errorCallbackHandle = device.setUncapturedErrorCallback([](wgpu::ErrorType type, char const* message) {
-			std::cout << "Device error: type " << type;
-			if (message) std::cout << " (message: " << message << ")";
-			std::cout << std::endl;
-		});
-
+            assert(false);
+            return;
+        }
     }
 
     void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)

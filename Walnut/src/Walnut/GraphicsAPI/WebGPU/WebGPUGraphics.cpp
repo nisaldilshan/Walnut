@@ -85,12 +85,23 @@ namespace GraphicsAPI
 		requiredLimits.maxComputeInvocationsPerWorkgroup = 32;
 		requiredLimits.maxComputeWorkgroupsPerDimension = 2;
 
+		auto errorCallback = [](WGPUDevice const * device, WGPUErrorType type, WGPUStringView message, WGPU_NULLABLE void* userdata1, WGPU_NULLABLE void* userdata2) {
+			std::cout << "Device error: type " << type;
+			if (message.length > 0) std::cout << " (message: " << message.data << ")";
+			std::cout << std::endl;
+		};
+
+		wgpu::UncapturedErrorCallbackInfo callbackInfo = {};
+		callbackInfo.callback = errorCallback;
+		callbackInfo.userdata1 = nullptr;
+		callbackInfo.userdata2 = nullptr;
 
 		wgpu::DeviceDescriptor deviceDesc;
 		//deviceDesc.label = "My Device";
 		deviceDesc.nextInChain = nullptr;
 		deviceDesc.requiredFeatureCount = 0;
 		deviceDesc.requiredLimits = &requiredLimits;
+		deviceDesc.uncapturedErrorCallbackInfo = callbackInfo;
 		deviceDesc.defaultQueue.nextInChain = nullptr;
 		//deviceDesc.defaultQueue.label = "The default queue";
 		g_device = adapter.requestDevice(deviceDesc);

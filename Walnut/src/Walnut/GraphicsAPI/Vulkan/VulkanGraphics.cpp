@@ -95,10 +95,10 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 		create_info.ppEnabledLayerNames = layers;
 
 		// Enable debug report extension (we need additional storage, so we duplicate the user array to add our new extension to it)
-		const char** extensions_ext = (const char**)malloc(sizeof(const char*) * (extensions_count + 1));
-		memcpy(extensions_ext, extensions, extensions_count * sizeof(const char*));
-		extensions_ext[extensions_count] = "VK_EXT_debug_report";
-		create_info.enabledExtensionCount = extensions_count + 1;
+		const char** extensions_ext = (const char**)malloc(sizeof(const char*) * ((uint32_t)extensions.Size + 1));
+		memcpy(extensions_ext, extensions.Data, (uint32_t)extensions.Size * sizeof(const char*));
+		extensions_ext[(uint32_t)extensions.Size] = "VK_EXT_debug_report";
+		create_info.enabledExtensionCount = (uint32_t)extensions.Size + 1;
 		create_info.ppEnabledExtensionNames = extensions_ext;
 
 		// Create Vulkan Instance
