@@ -23,9 +23,9 @@ namespace Walnut {
 	{
 		WalnutWindowHandleType* windowHandle = Application::Get().GetWindowHandle();
 
-		double x, y;
-		//glfwGetCursorPos(windowHandle, &x, &y);
-		return { (float)x, (float)y };
+		float x, y;
+		SDL_GetMouseState(&x, &y);
+		return { x, y };
 	}
 
 	void Input::SetCursorMode(CursorMode mode)

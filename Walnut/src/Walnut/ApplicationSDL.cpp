@@ -71,28 +71,18 @@ namespace Walnut {
 		uint32_t sdlWindowType;
 		if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::OpenGL)
 		{
-			sdlWindowType = SDL_WINDOW_OPENGL;
+			sdlWindowType = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 #if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#elif defined(__ANDROID__)
+#else
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-#else
-			//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+			SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
 #endif
-
-			// glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-			// glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-			// glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
@@ -183,8 +173,6 @@ namespace Walnut {
 		LayerStackShutdown();
 
 		m_RenderingBackend->Shutdown();
-
-		//ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 
 		m_RenderingBackend->Cleanup();
@@ -273,7 +261,6 @@ namespace Walnut {
 
 	float Application::GetTime()
 	{
-		//return (float)glfwGetTime();
-        return (float)0;
+		return (float)SDL_GetTicks();
 	}
 }
