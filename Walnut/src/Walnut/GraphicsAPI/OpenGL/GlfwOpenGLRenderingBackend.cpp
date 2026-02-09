@@ -64,7 +64,7 @@ namespace Walnut
 		glfwSwapBuffers(m_windowHandle);
 	}
 
-	WindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
+	WalnutWindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;
 	}
