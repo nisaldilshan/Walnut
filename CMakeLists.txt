@@ -33,18 +33,9 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
     GIT_TAG        main  # Use 'main' for latest or a specific tag like 'preview-3.1.3'
     QUIET
-    SOURCE_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/sdl3-src
-    BINARY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/sdl3-build
-    SUBBUILD_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/sdl3-subbuild
-)
-
-FetchContent_Declare(
-    glfw3webgpu
-    GIT_REPOSITORY https://github.com/eliemichel/glfw3webgpu.git
-    GIT_TAG        v1.3.0-alpha
-    SOURCE_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/glfw3webgpu-src
-    BINARY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/glfw3webgpu-build
-    SUBBUILD_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/glfw3webgpu-subbuild
+    SOURCE_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-src
+    BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-build
+    SUBBUILD_DIR   ${CMAKE_SOURCE_DIR}/external_deps/sdl3-subbuild
 )
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
@@ -97,9 +88,9 @@ elseif(RENDERER STREQUAL "WebGPU")
         GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution.git
         GIT_TAG        v0.3.0-gamma
         QUIET
-        SOURCE_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-src
-        BINARY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-build
-        SUBBUILD_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/external_deps/WebGPU-distribution-subbuild
+        SOURCE_DIR     ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-src
+        BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-build
+        SUBBUILD_DIR   ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-subbuild
     )
 
     # 3. Make SDL3 available (Downloads and configures)

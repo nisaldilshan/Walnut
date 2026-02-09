@@ -1,9 +1,12 @@
-# if(WIN32)
-# add_library (walnut-imgui-part1 SHARED imgui-webgpu-part1.cpp)
-# else()
-# add_library (walnut-imgui-part1 STATIC imgui-webgpu-part1.cpp)
-# endif()
-# target_link_libraries(walnut-imgui-part1 PRIVATE imgui::imgui)
+set(GLFW_BUILD_WIN32 1)
+FetchContent_Declare(
+    glfw3webgpu
+    GIT_REPOSITORY https://github.com/eliemichel/glfw3webgpu.git
+    GIT_TAG        v1.3.0-alpha
+    SOURCE_DIR     ${CMAKE_SOURCE_DIR}/external_deps/glfw3webgpu-src
+    BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/glfw3webgpu-build
+    SUBBUILD_DIR   ${CMAKE_SOURCE_DIR}/external_deps/glfw3webgpu-subbuild
+)
 FetchContent_MakeAvailable(glfw3webgpu)
 
 add_library (walnut-graphics-webgpu STATIC
@@ -11,7 +14,6 @@ add_library (walnut-graphics-webgpu STATIC
                     WebGPUGraphics.cpp
                     GlfwWebGPURenderingBackend.cpp
                     WebGPUImage.cpp
-                    imgui-webgpu-part1.cpp
                 )
 
 target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 

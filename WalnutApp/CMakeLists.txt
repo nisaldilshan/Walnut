@@ -32,3 +32,17 @@ if (IS_EMSCRIPTEN)
         " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s GL_DEBUG=1 -s DEMANGLE_SUPPORT=1 -s GL_ASSERTIONS=1 -s SAFE_HEAP=1")
 endif()
 
+function(copy_runtime_dlls_at_build targetName)
+    if(WIN32)
+        add_custom_command(
+            TARGET ${targetName}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${targetName}>" "$<TARGET_RUNTIME_DLLS:${targetName}>"
+            COMMENT "Copying runtime DLLs for ${targetName}"
+            USES_TERMINAL
+            COMMAND_EXPAND_LISTS
+        )
+    endif()
+endfunction()
+
+copy_runtime_dlls_at_build(App)
