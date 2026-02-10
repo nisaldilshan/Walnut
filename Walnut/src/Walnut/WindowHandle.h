@@ -1,15 +1,10 @@
 #pragma once
 
 #ifdef USE_SDL
-#include <SDL3/SDL.h>
-#else
-#include <GLFW/glfw3.h>
-#endif
-
-
-#ifdef USE_SDL
+class SDL_Window;
 typedef SDL_Window WalnutWindowHandleType;
 #else
+class GLFWwindow;
 typedef GLFWwindow WalnutWindowHandleType;
 #endif
 

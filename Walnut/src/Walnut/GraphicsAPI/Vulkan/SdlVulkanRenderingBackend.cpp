@@ -12,9 +12,16 @@ namespace Walnut
 
     void VulkanRenderingBackend::Init(WindowHandleType* windowHandle)
     {
-        ImVector<const char*> extensions;
         uint32_t sdl_extensions_count = 0;
         const char* const* sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extensions_count);
+        if (*sdl_extensions == nullptr)
+        {
+            std::cerr << "SDL: Failed to get Vulkan instance extensions count!\n";
+            assert(false);
+            return;
+        }
+        
+        ImVector<const char*> extensions;
         for (uint32_t n = 0; n < sdl_extensions_count; n++) {
             if (std::string(sdl_extensions[n]) == "VK_KHR_portability_enumeration") { 
                 // TODO: somehow vkCreateInstance function fails when this extension is present
@@ -26,12 +33,7 @@ namespace Walnut
             }
             extensions.push_back(sdl_extensions[n]);
         }
-        if (*sdl_extensions == nullptr)
-        {
-            std::cerr << "SDL: Failed to get Vulkan instance extensions count!\n";
-            assert(false);
-            return;
-        }
+        
         
         m_windowHandle = windowHandle;
 

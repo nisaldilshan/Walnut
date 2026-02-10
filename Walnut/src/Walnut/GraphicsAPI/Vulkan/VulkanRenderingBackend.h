@@ -21,8 +21,6 @@ public:
 	void Cleanup() override;
 
 private:
-	// uint32_t m_extensions_count = 0;
-	// const char* const* m_extensions = nullptr;
 	WalnutWindowHandleType* m_windowHandle = nullptr;
 };
 
