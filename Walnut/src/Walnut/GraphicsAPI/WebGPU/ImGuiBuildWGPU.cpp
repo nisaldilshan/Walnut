@@ -4,8 +4,8 @@
 #include <imgui_tables.cpp>
 #include <imgui_widgets.cpp>
 
-#define IMGUI_IMPL_WEBGPU_BACKEND_DAWN
-#include <imgui_impl_wgpu.cpp>
+// #define IMGUI_IMPL_WEBGPU_BACKEND_DAWN
+// #include <imgui_impl_wgpu.cpp>
 
 #ifdef USE_SDL
 #include <imgui_impl_sdl3.cpp>
