@@ -75,14 +75,18 @@ namespace Walnut {
 #if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#else
+#elif defined(__ANDROID__)
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+#else
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
+			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 			SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
-#endif
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
@@ -117,15 +121,9 @@ namespace Walnut {
 		// 	app->OnWindowResize(win, width, height);
 		// });
 
-		// Create Framebuffers
-		{
-			// int w, h;
-			// glfwGetFramebufferSize(windowHandle, &w, &h);
-
-            int w,h;
-            SDL_GetWindowSize(windowHandle, &w, &h);
-			m_RenderingBackend->SetupWindow(w, h);
-		}
+		int windowWidth, windowHeight;
+		SDL_GetWindowSize(windowHandle, &windowWidth, &windowHeight);
+		m_RenderingBackend->SetupWindow(windowWidth, windowHeight);
 		
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
@@ -149,10 +147,20 @@ namespace Walnut {
 			style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
+
+		float scaleFactor = SDL_GetWindowDisplayScale(m_RenderingBackend->GetWindowHandle());
+		std::cout << "#### SDL UI Scale: " << scaleFactor << std::endl;
+
+		int widthInPixels, heightInPixels;
+		SDL_GetWindowSizeInPixels(m_RenderingBackend->GetWindowHandle(), &widthInPixels, &heightInPixels);
+		if (widthInPixels == 2 * windowWidth && heightInPixels == 2 * windowHeight) {
+			// maybe a retina display
+			scaleFactor /= 2.0f;
+			std::cout << "#### SDL UI Scale (adjusted) : " << scaleFactor << std::endl;
+		}
+
 		// Setup SDL UI scaling for imgui
-		const float scale_factor = SDL_GetWindowDisplayScale(m_RenderingBackend->GetWindowHandle());
-		std::cout << "#### SDL UI Scale: " << scale_factor << std::endl;
-		style.ScaleAllSizes(scale_factor);
+		style.ScaleAllSizes(scaleFactor);
 
 		// Setup Platform/Renderer backends to work with ImGui
 		m_RenderingBackend->ConfigureImGui();
@@ -161,7 +169,7 @@ namespace Walnut {
 		ImFontConfig fontConfig;
 		fontConfig.FontDataOwnedByAtlas = false;
 		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF(
-								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 15.0f * scale_factor, &fontConfig);
+								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 16.0f * scaleFactor, &fontConfig);
 		io.FontDefault = robotoFont;
 
 		// Upload Fonts
@@ -229,11 +237,9 @@ namespace Walnut {
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			//auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
             auto* backupPtr = SDL_GL_GetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
-			//glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
             SDL_GL_MakeCurrent(m_RenderingBackend->GetWindowHandle(), backupPtr);
 		}
 
