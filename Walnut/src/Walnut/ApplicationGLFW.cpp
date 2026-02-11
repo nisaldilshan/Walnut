@@ -187,7 +187,6 @@ namespace Walnut {
 
 		m_RenderingBackend->Shutdown();
 
-		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 
 		m_RenderingBackend->Cleanup();
