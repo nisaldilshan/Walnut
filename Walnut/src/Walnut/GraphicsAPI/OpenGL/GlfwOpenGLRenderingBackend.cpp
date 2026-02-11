@@ -1,10 +1,13 @@
 #include "OpenGLRenderingBackend.h"
-#include <iostream>
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
+#include "OpenGLGraphics.h"
 
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
-
-#include "OpenGLGraphics.h"
+#include <iostream>
 
 namespace Walnut
 {
