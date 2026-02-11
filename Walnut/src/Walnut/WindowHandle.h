@@ -1,10 +1,10 @@
 #pragma once
 
 #ifdef USE_SDL
-class SDL_Window;
+struct SDL_Window;
 typedef SDL_Window WalnutWindowHandleType;
 #else
-class GLFWwindow;
+struct GLFWwindow;
 typedef GLFWwindow WalnutWindowHandleType;
 #endif
 
