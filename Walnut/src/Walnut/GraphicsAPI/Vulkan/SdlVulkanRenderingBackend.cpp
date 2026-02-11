@@ -10,7 +10,7 @@
 namespace Walnut
 {
 
-    void VulkanRenderingBackend::Init(WindowHandleType* windowHandle)
+    void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle)
     {
         uint32_t sdl_extensions_count = 0;
         const char* const* sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extensions_count);
@@ -96,7 +96,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::FramePresent();
     }
 
-    WindowHandleType* VulkanRenderingBackend::GetWindowHandle()
+    WalnutWindowHandleType* VulkanRenderingBackend::GetWindowHandle()
     {
         return m_windowHandle;
     }
@@ -106,6 +106,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
         GraphicsAPI::Vulkan::FreeGraphicsResources();
         ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
     }
 
     void VulkanRenderingBackend::Cleanup()
