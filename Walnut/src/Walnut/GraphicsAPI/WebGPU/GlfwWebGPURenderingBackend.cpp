@@ -1,12 +1,12 @@
 #include "GlfwWebGPURenderingBackend.h"
 
-#include <iostream>
 #include <imgui_impl_wgpu.h>
 
 #define WEBGPU_CPP_IMPLEMENTATION
 #include <webgpu/webgpu.hpp>
 
 #include "WebGPUGraphics.h"
+#include <iostream>
 
 namespace Walnut
 {
@@ -155,6 +155,7 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::Shutdown()
     {
         ImGui_ImplWGPU_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
         if (GraphicsAPI::WebGPU::GetSurface())
         {
             GraphicsAPI::WebGPU::GetSurface().release();
