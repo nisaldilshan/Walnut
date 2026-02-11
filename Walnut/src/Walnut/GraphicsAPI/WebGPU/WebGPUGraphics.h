@@ -1,6 +1,5 @@
 #pragma once
 
-#include <imgui_impl_glfw.h>
 #include <webgpu/webgpu.hpp>
 #include "../../WindowHandle.h"
 

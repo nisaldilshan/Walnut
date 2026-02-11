@@ -28,7 +28,12 @@ namespace GraphicsAPI
     {
 		assert(g_instance);
         std::cout << "Requesting surface..." << std::endl;
-        g_surface = glfwCreateWindowWGPUSurface(g_instance, window);
+#ifdef USE_SDL
+		g_surface = SDL_GetWGPUSurface(g_instance, window);
+#else
+		g_surface = glfwCreateWindowWGPUSurface(g_instance, window);
+#endif
+        
         std::cout << "Got surface: " << g_surface << std::endl;
 
 #ifdef WEBGPU_BACKEND_WGPU

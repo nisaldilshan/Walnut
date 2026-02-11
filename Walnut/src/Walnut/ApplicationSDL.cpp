@@ -96,6 +96,7 @@ namespace Walnut {
 		{
 			// glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			// glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+			sdlWindowType = 0;
 		}
 		else
 		{
