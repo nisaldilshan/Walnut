@@ -25,6 +25,19 @@ message(STATUS "CMAKE_BUILD_TYPE " + ${CMAKE_BUILD_TYPE})
 message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
+include(FetchContent)
+set(SDL_HIDAPI_LIBUSB OFF)
+# 2. Declare SDL3 source
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG        main  # Use 'main' for latest or a specific tag like 'preview-3.1.3'
+    QUIET
+    SOURCE_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-src
+    BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-build
+    SUBBUILD_DIR   ${CMAKE_SOURCE_DIR}/external_deps/sdl3-subbuild
+)
+
 set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
 find_package(glm REQUIRED)
@@ -40,7 +53,9 @@ message(STATUS "RENDERER" + ${RENDERER})
 message(STATUS "WINDOWING_SYSTEM" + ${WINDOWING_SYSTEM})
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    find_package(SDL2 REQUIRED)
+    #find_package(SDL2 REQUIRED)
+    # 3. Make SDL3 available (Downloads and configures)
+    FetchContent_MakeAvailable(SDL3)
     add_compile_definitions(USE_SDL)
 else()
     find_package(glfw3 REQUIRED)
@@ -62,14 +77,27 @@ elseif(RENDERER STREQUAL "Vulkan")
         find_package(moltenvk REQUIRED)
     else()
         find_package (VulkanLoader REQUIRED)
-        find_package (vulkan-validationlayers REQUIRED)
+        #find_package (vulkan-validationlayers REQUIRED)
     endif()
     add_compile_definitions(RENDERER_BACKEND=2)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/Vulkan)
 elseif(RENDERER STREQUAL "WebGPU")
-    find_package(WebGPU REQUIRED)
+    set(WEBGPU_BACKEND DAWN)
+    FetchContent_Declare(
+        WebGPU-distribution
+        GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution.git
+        GIT_TAG        v0.3.0-gamma
+        QUIET
+        SOURCE_DIR     ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-src
+        BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-build
+        SUBBUILD_DIR   ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-subbuild
+    )
+
+    # 3. Make SDL3 available (Downloads and configures)
+    FetchContent_MakeAvailable(WebGPU-distribution)
+
+    #find_package(WebGPU REQUIRED)
     add_compile_definitions(RENDERER_BACKEND=3)
-    add_subdirectory(vendor/glfw3webgpu)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)
 else()
     message(STATUS "NO RENDERING BACKEND")
@@ -92,7 +120,7 @@ target_sources(walnut PRIVATE
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp
                                 Walnut/src/Walnut/Input/SDLInput.cpp)
-    target_link_libraries(walnut PRIVATE SDL2::SDL2)
+    target_link_libraries(walnut PRIVATE SDL3::SDL3)
 else()
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationGLFW.cpp
                                 Walnut/src/Walnut/Input/GLFWInput.cpp)
@@ -107,7 +135,7 @@ if (RENDERER STREQUAL "OpenGL")
 elseif (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
 else()
-    target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
+    target_link_libraries(walnut PUBLIC walnut-graphics-webgpu)
 endif()
 
 string(COMPARE EQUAL "${CMAKE_SYSTEM_NAME}" "Emscripten" IS_EMSCRIPTEN)

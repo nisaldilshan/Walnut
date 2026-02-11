@@ -1,7 +1,7 @@
 #include "WebGPURenderingBackend.h"
 
+#include <imgui_impl_sdl3.h>
 #include <imgui_impl_wgpu.h>
-#include <imgui_impl_glfw.h>
 
 #define WEBGPU_CPP_IMPLEMENTATION
 #include <webgpu/webgpu.hpp>
@@ -67,7 +67,7 @@ namespace Walnut
     }
     void GlfwWebGPURenderingBackend::ConfigureImGui()
     {
-        ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
+        ImGui_ImplSDL3_InitForOther(m_windowHandle);
 
         ImGui_ImplWGPU_InitInfo initInfo{};
         initInfo.Device = GraphicsAPI::WebGPU::GetDevice();
@@ -79,7 +79,7 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::StartImGuiFrame()
     {
         ImGui_ImplWGPU_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
     }
 
@@ -156,7 +156,7 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::Shutdown()
     {
         ImGui_ImplWGPU_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
         if (GraphicsAPI::WebGPU::GetSurface())
         {
             GraphicsAPI::WebGPU::GetSurface().release();

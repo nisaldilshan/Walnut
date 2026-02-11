@@ -9,8 +9,8 @@
 #include <imgui.h>
 
 #include <Walnut/GLM/GLM.h>
-#include <imgui_impl_sdl2.h>
-#include <SDL2/SDL.h>
+#include <imgui_impl_sdl3.h>
+#include <SDL3/SDL.h>
 
 #include "RenderingBackend.h"
 
@@ -46,7 +46,7 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
-	void Application::OnWindowResize(WindowHandleType *win, int width, int height)
+	void Application::OnWindowResize(WalnutWindowHandleType *win, int width, int height)
     {
 		std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
 		// Create Framebuffers
@@ -61,7 +61,7 @@ namespace Walnut {
 	{
 		// Setup GLFW window
 		//glfwSetErrorCallback(glfw_error_callback);
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		if (!SDL_Init(SDL_INIT_VIDEO))
 		{
 			std::cerr << "Could not initalize GLFW!\n";
 			assert(false);
@@ -71,7 +71,7 @@ namespace Walnut {
 		uint32_t sdlWindowType;
 		if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::OpenGL)
 		{
-			sdlWindowType = SDL_WINDOW_OPENGL;
+			sdlWindowType = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 #if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -79,29 +79,24 @@ namespace Walnut {
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 #else
-			//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 #endif
-
-			// glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-			// glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-			// glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+			SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
-			sdlWindowType = SDL_WINDOW_VULKAN;
+			sdlWindowType = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY; // SDL_WINDOW_HIDDEN
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
 			// glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			// glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+			sdlWindowType = 0;
 		}
 		else
 		{
@@ -109,12 +104,11 @@ namespace Walnut {
 		}
 
         auto* windowHandle = SDL_CreateWindow(m_Specification.Name.c_str(), 
-											SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
 											m_Specification.Width, m_Specification.Height, 
 											sdlWindowType);
 		if (!windowHandle)
 		{
-			std::cerr << "Could not create GLFW Window!\n";
+			std::cerr << "Could not create SDL Window!\n";
 			assert(false);
 			return;
 		}
@@ -128,15 +122,9 @@ namespace Walnut {
 		// 	app->OnWindowResize(win, width, height);
 		// });
 
-		// Create Framebuffers
-		{
-			// int w, h;
-			// glfwGetFramebufferSize(windowHandle, &w, &h);
-
-            int w,h;
-            SDL_GetWindowSize(windowHandle, &w, &h);
-			m_RenderingBackend->SetupWindow(w, h);
-		}
+		int windowWidth, windowHeight;
+		SDL_GetWindowSize(windowHandle, &windowWidth, &windowHeight);
+		m_RenderingBackend->SetupWindow(windowWidth, windowHeight);
 		
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
@@ -161,13 +149,28 @@ namespace Walnut {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
+		float scaleFactor = SDL_GetWindowDisplayScale(m_RenderingBackend->GetWindowHandle());
+		std::cout << "#### SDL UI Scale: " << scaleFactor << std::endl;
+
+		int widthInPixels, heightInPixels;
+		SDL_GetWindowSizeInPixels(m_RenderingBackend->GetWindowHandle(), &widthInPixels, &heightInPixels);
+		if (widthInPixels == 2 * windowWidth && heightInPixels == 2 * windowHeight) {
+			// maybe a retina display
+			scaleFactor /= 2.0f;
+			std::cout << "#### SDL UI Scale (adjusted) : " << scaleFactor << std::endl;
+		}
+
+		// Setup SDL UI scaling for imgui
+		style.ScaleAllSizes(scaleFactor);
+
 		// Setup Platform/Renderer backends to work with ImGui
 		m_RenderingBackend->ConfigureImGui();
 
 		// Load default font
 		ImFontConfig fontConfig;
 		fontConfig.FontDataOwnedByAtlas = false;
-		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
+		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF(
+								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 16.0f * scaleFactor, &fontConfig);
 		io.FontDefault = robotoFont;
 
 		// Upload Fonts
@@ -179,8 +182,6 @@ namespace Walnut {
 		LayerStackShutdown();
 
 		m_RenderingBackend->Shutdown();
-
-		//ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 
 		m_RenderingBackend->Cleanup();
@@ -203,7 +204,7 @@ namespace Walnut {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL3_ProcessEvent(&event);
             // if (event.type == SDL_QUIT)
             //     done = true;
             // if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
@@ -237,11 +238,9 @@ namespace Walnut {
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			//auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
             auto* backupPtr = SDL_GL_GetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
-			//glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
             SDL_GL_MakeCurrent(m_RenderingBackend->GetWindowHandle(), backupPtr);
 		}
 
@@ -269,7 +268,6 @@ namespace Walnut {
 
 	float Application::GetTime()
 	{
-		//return (float)glfwGetTime();
-        return (float)0;
+		return (float)SDL_GetTicks();
 	}
 }

@@ -1,9 +1,7 @@
 #pragma once
 
-#include <imgui_impl_glfw.h>
 #include <webgpu/webgpu.hpp>
-
-class GLFWwindow;
+#include "../../WindowHandle.h"
 
 namespace GraphicsAPI
 {
@@ -12,7 +10,7 @@ class WebGPU
 {
 public:
 	static void CreateInstance(wgpu::InstanceDescriptor desc);
-    static void CreateSurface(GLFWwindow* window);
+    static void CreateSurface(WalnutWindowHandleType* window);
 	static void CreateDevice();
 	static void FreeGraphicsResources();
 

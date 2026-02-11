@@ -7,7 +7,7 @@ namespace Walnut {
 class GlfwWebGPURenderingBackend : public RenderingBackend
 {
 public:
-	void Init(WindowHandleType* windowHandle) override;
+	void Init(WalnutWindowHandleType* windowHandle) override;
 	void SetupWindow(int width, int height) override;
 	bool NeedToResizeWindow() override;
 	void ResizeWindow(int width, int height) override;
@@ -16,12 +16,12 @@ public:
 	void UploadFonts() override;
 	void FrameRender(void* draw_data) override;
 	void FramePresent() override;
-	WindowHandleType* GetWindowHandle() override;
+	WalnutWindowHandleType* GetWindowHandle() override;
 	void Shutdown() override;
 	void Cleanup() override;
 
 private:
-	WindowHandleType* m_windowHandle = nullptr;
+	WalnutWindowHandleType* m_windowHandle = nullptr;
 };
 
 

@@ -17,11 +17,11 @@ namespace Walnut {
 		};
 		virtual ~RenderingBackend() = default;
 
-		virtual void Init(WindowHandleType* windowHandle) = 0;
+		virtual void Init(WalnutWindowHandleType* windowHandle) = 0;
 		virtual void Shutdown() = 0;
 		virtual void Cleanup() = 0;
 
-		virtual WindowHandleType* GetWindowHandle() = 0;
+		virtual WalnutWindowHandleType* GetWindowHandle() = 0;
 		virtual void SetupWindow(int width, int height) = 0;
 		virtual bool NeedToResizeWindow() = 0;
 		virtual void ResizeWindow(int width, int height) = 0;

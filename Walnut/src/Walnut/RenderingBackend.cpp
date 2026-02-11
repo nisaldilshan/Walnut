@@ -1,6 +1,6 @@
 #include "GraphicsAPI/Vulkan/VulkanRenderingBackend.h"
 #include "GraphicsAPI/OpenGL/OpenGLRenderingBackend.h"
-#include "GraphicsAPI/WebGPU/GlfwWebGPURenderingBackend.h"
+#include "GraphicsAPI/WebGPU/WebGPURenderingBackend.h"
 
 #include <cassert>
 

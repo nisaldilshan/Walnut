@@ -1,40 +1,50 @@
 #include "VulkanRenderingBackend.h"
 #include <iostream>
 
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
-#include <SDL2/SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include "VulkanGraphics.h"
 
 namespace Walnut
 {
 
-    void VulkanRenderingBackend::Init(WindowHandleType* windowHandle)
+    void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle)
     {
-        auto result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, nullptr);
-        if (result != SDL_TRUE)
+        uint32_t sdl_extensions_count = 0;
+        const char* const* sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extensions_count);
+        if (*sdl_extensions == nullptr)
         {
             std::cerr << "SDL: Failed to get Vulkan instance extensions count!\n";
+            assert(false);
             return;
         }
-        m_extensions = new const char*[m_extensions_count];
-        result = SDL_Vulkan_GetInstanceExtensions(windowHandle, &m_extensions_count, m_extensions);
-        if (result != SDL_TRUE)
-        {
-            std::cerr << "SDL: Failed to get Vulkan instance extensions!\n";
-            return;
+        
+        ImVector<const char*> extensions;
+        for (uint32_t n = 0; n < sdl_extensions_count; n++) {
+            if (std::string(sdl_extensions[n]) == "VK_KHR_portability_enumeration") { 
+                // TODO: somehow vkCreateInstance function fails when this extension is present
+                std::cout << "   SDL: Extension - " << sdl_extensions[n] << " skipping" << std::endl;
+                continue;
+            }
+            else {
+                std::cout << "   SDL: Extension - " << sdl_extensions[n] << std::endl;
+            }
+            extensions.push_back(sdl_extensions[n]);
         }
+        
+        
         m_windowHandle = windowHandle;
 
         // Setup Vulkan
-        GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
-        delete [] m_extensions;
+        GraphicsAPI::Vulkan::SetupVulkan(extensions);
         // Create Window Surface
-        result = SDL_Vulkan_CreateSurface(windowHandle, 
+        const bool result = SDL_Vulkan_CreateSurface(windowHandle, 
                                             GraphicsAPI::Vulkan::GetInstance(), 
+                                            NULL,
                                             GraphicsAPI::Vulkan::GetSurface());
-        if (result != SDL_TRUE)
+        if (result != true)
         {
             std::cerr << "SDL: Failed to create Vulkan surface!\n";
             return;
@@ -59,7 +69,7 @@ namespace Walnut
 
     void VulkanRenderingBackend::ConfigureImGui()
     {
-        ImGui_ImplSDL2_InitForVulkan(m_windowHandle);
+        ImGui_ImplSDL3_InitForVulkan(m_windowHandle);
         GraphicsAPI::Vulkan::ConfigureRendererBackend();
     }
 
@@ -67,7 +77,7 @@ namespace Walnut
     {
 		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
     }
 
@@ -86,7 +96,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::FramePresent();
     }
 
-    WindowHandleType* VulkanRenderingBackend::GetWindowHandle()
+    WalnutWindowHandleType* VulkanRenderingBackend::GetWindowHandle()
     {
         return m_windowHandle;
     }
@@ -96,6 +106,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
         GraphicsAPI::Vulkan::FreeGraphicsResources();
         ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
     }
 
     void VulkanRenderingBackend::Cleanup()

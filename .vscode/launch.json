@@ -5,6 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/WalnutApp/App",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/WalnutApp",
+            "environment": [
+                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build" }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
@@ -16,7 +30,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "App Launch",
+            "name": "(lldb) Launch",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/build/WalnutApp/App",

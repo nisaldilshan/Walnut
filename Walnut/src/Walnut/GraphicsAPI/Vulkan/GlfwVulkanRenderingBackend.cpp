@@ -1,15 +1,14 @@
-#define WINDOW_HANDLE_IMPL
 #include "VulkanRenderingBackend.h"
-#include <iostream>
 
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_vulkan.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 #include "VulkanGraphics.h"
+#include <imgui_impl_glfw.h>
+#include <iostream>
 
 namespace Walnut
 {
-
     void VulkanRenderingBackend::Init(GLFWwindow *windowHandle)
     {
         if (!glfwVulkanSupported())
@@ -17,13 +16,26 @@ namespace Walnut
             std::cerr << "GLFW: Vulkan not supported!\n";
             return;
         }
+        uint32_t extensionsCount = 0;
+	    const char* const* glfwExtensions = glfwGetRequiredInstanceExtensions(&extensionsCount);
 
-        m_extensions = glfwGetRequiredInstanceExtensions(&m_extensions_count);
+        ImVector<const char*> extensions;
+        for (uint32_t n = 0; n < extensionsCount; n++) {
+            if (std::string(glfwExtensions[n]) == "VK_KHR_portability_enumeration") { 
+                // TODO: somehow vkCreateInstance function fails when this extension is present
+                std::cout << "   GLFW: Extension - " << glfwExtensions[n] << " skipping" << std::endl;
+                continue;
+            }
+            else 
+            {
+                std::cout << "   GLFW: Extension - " << glfwExtensions[n] << std::endl;
+            }
+            extensions.push_back(glfwExtensions[n]);
+        }
         m_windowHandle = windowHandle;
 
         // Setup Vulkan
-        GraphicsAPI::Vulkan::SetupVulkan(m_extensions, m_extensions_count);
-        // Create Window Surface
+        GraphicsAPI::Vulkan::SetupVulkan(extensions);
         // Create Window Surface
         VkResult err = glfwCreateWindowSurface(GraphicsAPI::Vulkan::GetInstance(), 
                                                 windowHandle, 
@@ -87,6 +99,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
         GraphicsAPI::Vulkan::FreeGraphicsResources();
         ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
     }
 
     void VulkanRenderingBackend::Cleanup()

@@ -22,7 +22,7 @@ target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut-graphics-opengl PRIVATE SdlOpenGLRenderingBackend.cpp)
-    target_link_libraries(walnut-graphics-opengl PRIVATE SDL2::SDL2)
+    target_link_libraries(walnut-graphics-opengl PRIVATE SDL3::SDL3) #SDL2::SDL2
 else()
 target_sources(walnut-graphics-opengl PRIVATE GlfwOpenGLRenderingBackend.cpp)
     target_link_libraries(walnut-graphics-opengl PUBLIC glfw)

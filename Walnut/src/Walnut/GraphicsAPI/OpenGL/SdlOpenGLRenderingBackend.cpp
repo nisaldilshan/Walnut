@@ -1,23 +1,23 @@
 #include "OpenGLRenderingBackend.h"
 
-#include <iostream>
+#include <SDL3/SDL.h>
 
-#if defined(__ANDROID__)
+#include "OpenGLGraphics.h"
+
 #define IMGUI_IMPL_OPENGL_ES3
-#endif
 #include <imgui_impl_opengl3.h>
 
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdl3.h>
 
-#include "../../RenderingBackend.h"
-#include "OpenGLGraphics.h"
+#include <glad/glad.h>
+#include <iostream>
 
 namespace Walnut
 {
 
 	SDL_GLContext g_SDLcontext = NULL;
 
-	void OpenGLRenderingBackend::Init(WindowHandleType* windowHandle)
+	void OpenGLRenderingBackend::Init(WalnutWindowHandleType* windowHandle)
 	{
 		m_windowHandle = windowHandle;
 
@@ -50,12 +50,13 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::ConfigureImGui()
 	{
-		ImGui_ImplSDL2_InitForOpenGL(m_windowHandle, g_SDLcontext);
+		ImGui_ImplSDL3_InitForOpenGL(m_windowHandle, g_SDLcontext);
 #if defined(__ANDROID__)
 		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
 		assert(result);
 #else
-		ImGui_ImplOpenGL3_Init("#version 410");
+		auto result = ImGui_ImplOpenGL3_Init("#version 410");
+		assert(result);
 #endif
 	}
 
@@ -63,7 +64,7 @@ namespace Walnut
 	{
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 	}
 
@@ -73,6 +74,7 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::FrameRender(void* draw_data)
 	{
+		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 
@@ -81,17 +83,20 @@ namespace Walnut
 		SDL_GL_SwapWindow(m_windowHandle);
 	}
 
-	WindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
+	WalnutWindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;
 	}
 
 	void OpenGLRenderingBackend::Shutdown()
 	{
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplSDL3_Shutdown();
 	}
 
 	void OpenGLRenderingBackend::Cleanup()
 	{
+		SDL_GL_DestroyContext(g_SDLcontext);
 	}
 
 }

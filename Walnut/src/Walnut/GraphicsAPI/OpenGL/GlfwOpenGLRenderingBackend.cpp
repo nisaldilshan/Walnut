@@ -1,11 +1,15 @@
-#define WINDOW_HANDLE_IMPL
 #include "OpenGLRenderingBackend.h"
-#include <iostream>
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
+#include "OpenGLGraphics.h"
 
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 
-#include "OpenGLGraphics.h"
+#include <glad/glad.h>
+#include <iostream>
 
 namespace Walnut
 {
@@ -57,6 +61,7 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::FrameRender(void* draw_data)
 	{
+		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 
@@ -65,13 +70,15 @@ namespace Walnut
 		glfwSwapBuffers(m_windowHandle);
 	}
 
-	WindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
+	WalnutWindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;
 	}
 
 	void OpenGLRenderingBackend::Shutdown()
 	{
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
 	}
 
 	void OpenGLRenderingBackend::Cleanup()
