@@ -18,7 +18,7 @@ if (WINDOWING_SYSTEM STREQUAL "SDL")
     FetchContent_MakeAvailable(sdl3webgpu)
 
     target_sources(walnut-graphics-webgpu PRIVATE SDLWebGPURenderingBackend.cpp)
-    target_link_libraries(walnut-graphics-webgpu PRIVATE sdl3webgpu)
+    target_link_libraries(walnut-graphics-webgpu PUBLIC sdl3webgpu)
 else()
     if(WIN32)
         set(GLFW_BUILD_WIN32 1)
@@ -39,7 +39,7 @@ else()
     FetchContent_MakeAvailable(glfw3webgpu)
 
     target_sources(walnut-graphics-webgpu PRIVATE GlfwWebGPURenderingBackend.cpp)
-    target_link_libraries(walnut-graphics-webgpu PRIVATE glfw3webgpu)
+    target_link_libraries(walnut-graphics-webgpu PUBLIC glfw3webgpu glfw)
 endif()
 
 

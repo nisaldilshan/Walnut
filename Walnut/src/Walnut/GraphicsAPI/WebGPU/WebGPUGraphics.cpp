@@ -1,7 +1,12 @@
 #include "WebGPUGraphics.h"
 
 #include "../../GLM/GLM.h"
+
+#ifdef USE_SDL
+#include <sdl3webgpu.h>
+#else
 #include <glfw3webgpu.h>
+#endif
 
 namespace GraphicsAPI
 {

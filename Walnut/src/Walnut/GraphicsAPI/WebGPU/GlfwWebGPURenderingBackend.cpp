@@ -1,4 +1,4 @@
-#include "GlfwWebGPURenderingBackend.h"
+#include "WebGPURenderingBackend.h"
 
 #include <imgui_impl_wgpu.h>
 
