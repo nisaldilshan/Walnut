@@ -23,12 +23,12 @@ namespace Walnut
         for (uint32_t n = 0; n < extensionsCount; n++) {
             if (std::string(glfwExtensions[n]) == "VK_KHR_portability_enumeration") { 
                 // TODO: somehow vkCreateInstance function fails when this extension is present
-                std::cout << "   SDL: Extension - " << glfwExtensions[n] << " skipping" << std::endl;
+                std::cout << "   GLFW: Extension - " << glfwExtensions[n] << " skipping" << std::endl;
                 continue;
             }
             else 
             {
-                std::cout << "   SDL: Extension - " << glfwExtensions[n] << std::endl;
+                std::cout << "   GLFW: Extension - " << glfwExtensions[n] << std::endl;
             }
             extensions.push_back(glfwExtensions[n]);
         }
@@ -99,6 +99,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
         GraphicsAPI::Vulkan::FreeGraphicsResources();
         ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
     }
 
     void VulkanRenderingBackend::Cleanup()
