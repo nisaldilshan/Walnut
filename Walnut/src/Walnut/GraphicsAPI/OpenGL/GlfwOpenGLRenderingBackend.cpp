@@ -7,6 +7,8 @@
 
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
+
+#include <glad/glad.h>
 #include <iostream>
 
 namespace Walnut
@@ -59,6 +61,7 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::FrameRender(void* draw_data)
 	{
+		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 

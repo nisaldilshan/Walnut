@@ -1,15 +1,16 @@
 #include "OpenGLRenderingBackend.h"
 
-#include <iostream>
+#include <SDL3/SDL.h>
+
+#include "OpenGLGraphics.h"
 
 #define IMGUI_IMPL_OPENGL_ES3
 #include <imgui_impl_opengl3.h>
 
 #include <imgui_impl_sdl3.h>
 
-#include "../../RenderingBackend.h"
-#include "OpenGLGraphics.h"
 #include <glad/glad.h>
+#include <iostream>
 
 namespace Walnut
 {
