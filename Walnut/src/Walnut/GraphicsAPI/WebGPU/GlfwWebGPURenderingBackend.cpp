@@ -1,6 +1,7 @@
 #include "WebGPURenderingBackend.h"
 
 #include <imgui_impl_wgpu.h>
+#include <imgui_impl_glfw.h>
 
 #define WEBGPU_CPP_IMPLEMENTATION
 #include <webgpu/webgpu.hpp>
