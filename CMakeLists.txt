@@ -135,7 +135,7 @@ if (RENDERER STREQUAL "OpenGL")
 elseif (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)
 else()
-    target_link_libraries(walnut PRIVATE walnut-graphics-webgpu)
+    target_link_libraries(walnut PUBLIC walnut-graphics-webgpu)
 endif()
 
 string(COMPARE EQUAL "${CMAKE_SYSTEM_NAME}" "Emscripten" IS_EMSCRIPTEN)

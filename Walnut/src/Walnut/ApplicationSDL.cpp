@@ -108,7 +108,7 @@ namespace Walnut {
 											sdlWindowType);
 		if (!windowHandle)
 		{
-			std::cerr << "Could not create GLFW Window!\n";
+			std::cerr << "Could not create SDL Window!\n";
 			assert(false);
 			return;
 		}
