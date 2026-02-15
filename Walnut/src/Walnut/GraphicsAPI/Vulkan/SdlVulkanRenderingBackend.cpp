@@ -23,12 +23,13 @@ namespace Walnut
         
         ImVector<const char*> extensions;
         for (uint32_t n = 0; n < sdl_extensions_count; n++) {
-            if (std::string(sdl_extensions[n]) == "VK_KHR_portability_enumeration") { 
-                // TODO: somehow vkCreateInstance function fails when this extension is present
-                std::cout << "   SDL: Extension - " << sdl_extensions[n] << " skipping" << std::endl;
-                continue;
-            }
-            else {
+            // if (std::string(sdl_extensions[n]) == "VK_KHR_portability_enumeration") { 
+            //     // TODO: somehow vkCreateInstance function fails when this extension is present
+            //     std::cout << "   SDL: Extension - " << sdl_extensions[n] << " skipping" << std::endl;
+            //     continue;
+            // }
+            // else 
+            {
                 std::cout << "   SDL: Extension - " << sdl_extensions[n] << std::endl;
             }
             extensions.push_back(sdl_extensions[n]);

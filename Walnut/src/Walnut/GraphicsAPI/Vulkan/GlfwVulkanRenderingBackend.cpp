@@ -21,12 +21,12 @@ namespace Walnut
 
         ImVector<const char*> extensions;
         for (uint32_t n = 0; n < extensionsCount; n++) {
-            if (std::string(glfwExtensions[n]) == "VK_KHR_portability_enumeration") { 
-                // TODO: somehow vkCreateInstance function fails when this extension is present
-                std::cout << "   GLFW: Extension - " << glfwExtensions[n] << " skipping" << std::endl;
-                continue;
-            }
-            else 
+            // if (std::string(glfwExtensions[n]) == "VK_KHR_portability_enumeration") { 
+            //     // TODO: somehow vkCreateInstance function fails when this extension is present
+            //     std::cout << "   GLFW: Extension - " << glfwExtensions[n] << " skipping" << std::endl;
+            //     continue;
+            // }
+            // else 
             {
                 std::cout << "   GLFW: Extension - " << glfwExtensions[n] << std::endl;
             }

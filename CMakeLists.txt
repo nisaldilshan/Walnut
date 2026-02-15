@@ -31,7 +31,7 @@ set(SDL_HIDAPI_LIBUSB OFF)
 FetchContent_Declare(
     SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        main  # Use 'main' for latest or a specific tag like 'preview-3.1.3'
+    GIT_TAG        release-3.4.0
     QUIET
     SOURCE_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-src
     BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-build

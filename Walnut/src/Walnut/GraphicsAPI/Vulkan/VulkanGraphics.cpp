@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <array>
 #include <functional>
 
 namespace GraphicsAPI
@@ -51,12 +52,27 @@ static uint32_t s_CurrentFrameIndex = 0;
 
 static std::vector<std::vector<std::function<void()>>> s_ResourceFreeQueue;
 
-static bool IsExtensionAvailable(const ImVector<VkExtensionProperties>& properties, const char* extension)
+template<typename T> // either std::vector or ImVector
+static bool IsExtensionAvailable(const T& properties, const char* extension)
 {
     for (const VkExtensionProperties& p : properties)
         if (strcmp(p.extensionName, extension) == 0)
             return true;
     return false;
+}
+
+static void printAvailableDeviceExtensions(VkPhysicalDevice physicalDevice) {
+    uint32_t extensionCount = 0;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, extensions.data());
+
+    // 4. Print them out
+    std::cout << "Available Device Extensions (" << extensionCount << "):" << std::endl;
+    for (const auto& extension : extensions) {
+        std::cout << "\t" << extension.extensionName 
+                  << " (v" << extension.specVersion << ")" << std::endl;
+    }
 }
 
 void Vulkan::SetupVulkan(ImVector<const char*> extensions)
@@ -73,15 +89,13 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 	check_vk_result(err);
 
 	// Enable required extensions
-	if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+	if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)) {
 		extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-	if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
-	{
+	}
+	if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)) {
 		extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 		create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 	}
-#endif
 
 	// Create Vulkan Instance
 	{
@@ -158,7 +172,9 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 			vkGetPhysicalDeviceProperties(gpus[use_gpu], &properties);
 			std::cout << "Graphics Info:" << std::endl;
 			std::cout << "\tdeviceName: " << properties.deviceName << std::endl;
-			std::cout << "\tapiVersion: " << properties.apiVersion << std::endl;
+			std::cout << "\tapiVersion: " << VK_API_VERSION_MAJOR(properties.apiVersion) << "." 
+											<< VK_API_VERSION_MINOR(properties.apiVersion) << "." 
+											<< VK_API_VERSION_PATCH(properties.apiVersion) << std::endl;
 			std::cout << "\tdriverVersion: " << properties.driverVersion << std::endl;
 		}
 
@@ -185,8 +201,20 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 
 	// Create Logical Device (with 1 queue)
 	{
-		int device_extension_count = 1;
-		const char* device_extensions[] = { "VK_KHR_swapchain" };
+		uint32_t availableExtensionsCount = 0;
+    	vkEnumerateDeviceExtensionProperties(g_PhysicalDevice, nullptr, &availableExtensionsCount, nullptr);
+    	std::vector<VkExtensionProperties> availableExtensions(availableExtensionsCount);
+    	vkEnumerateDeviceExtensionProperties(g_PhysicalDevice, nullptr, &availableExtensionsCount, availableExtensions.data());
+
+		constexpr std::array<const char*, 2> deviceExtensions = {
+			"VK_KHR_swapchain",
+			"VK_KHR_maintenance1" //VK_KHR_MAINTENANCE_1_EXTENSION_NAME
+		};
+		for (const auto &extension : deviceExtensions)
+		{
+			assert(IsExtensionAvailable(availableExtensions, extension));
+		}
+
 		const float queue_priority[] = { 1.0f };
 		VkDeviceQueueCreateInfo queue_info[1] = {};
 		queue_info[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -197,8 +225,8 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 		create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		create_info.queueCreateInfoCount = sizeof(queue_info) / sizeof(queue_info[0]);
 		create_info.pQueueCreateInfos = queue_info;
-		create_info.enabledExtensionCount = device_extension_count;
-		create_info.ppEnabledExtensionNames = device_extensions;
+		create_info.enabledExtensionCount = deviceExtensions.size();
+		create_info.ppEnabledExtensionNames = deviceExtensions.data();
 		err = vkCreateDevice(g_PhysicalDevice, &create_info, g_Allocator, &g_Device);
 		check_vk_result(err);
 		vkGetDeviceQueue(g_Device, g_QueueFamily, 0, &g_Queue);
