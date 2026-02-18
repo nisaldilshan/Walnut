@@ -84,7 +84,6 @@ class Walnut(ConanFile):
             self.requires("glfw/3.4")
         elif self.options.windowing_system == "SDL":
             pass
-            #self.requires("sdl/2.30.5")
         else:
             raise ConanInvalidConfiguration("Unsupported windowing system")
 

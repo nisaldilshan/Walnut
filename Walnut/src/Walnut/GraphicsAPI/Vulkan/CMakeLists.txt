@@ -33,7 +33,12 @@ if(APPLE)
         target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui moltenvk::moltenvk)
     endif()
 else()
-    target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui Vulkan::Loader) # vulkan-validationlayers::vulkan-validationlayers
+    target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui Vulkan::Loader)
+    find_package (vulkan-validationlayers REQUIRED)
+    # Create a custom target that echoes the path during the build step
+    add_custom_target(PrintVulkanLayerPath ALL
+        COMMAND ${CMAKE_COMMAND} -E echo "VK_LAYER_PATH for validation layers is: $<IF:$<CONFIG:Debug>,${vulkan-validationlayers_PACKAGE_FOLDER_DEBUG},Disabled for non debug builds>"
+    )
 endif()
 
 
