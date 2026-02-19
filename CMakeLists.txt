@@ -53,7 +53,6 @@ message(STATUS "RENDERER" + ${RENDERER})
 message(STATUS "WINDOWING_SYSTEM" + ${WINDOWING_SYSTEM})
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    #find_package(SDL2 REQUIRED)
     # 3. Make SDL3 available (Downloads and configures)
     FetchContent_MakeAvailable(SDL3)
     add_compile_definitions(USE_SDL)
@@ -77,7 +76,6 @@ elseif(RENDERER STREQUAL "Vulkan")
         find_package(moltenvk REQUIRED)
     else()
         find_package (VulkanLoader REQUIRED)
-        #find_package (vulkan-validationlayers REQUIRED)
     endif()
     add_compile_definitions(RENDERER_BACKEND=2)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/Vulkan)
@@ -92,11 +90,7 @@ elseif(RENDERER STREQUAL "WebGPU")
         BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-build
         SUBBUILD_DIR   ${CMAKE_SOURCE_DIR}/external_deps/WebGPU-distribution-subbuild
     )
-
-    # 3. Make SDL3 available (Downloads and configures)
     FetchContent_MakeAvailable(WebGPU-distribution)
-
-    #find_package(WebGPU REQUIRED)
     add_compile_definitions(RENDERER_BACKEND=3)
     add_subdirectory(Walnut/src/Walnut/GraphicsAPI/WebGPU)
 else()
@@ -159,13 +153,6 @@ if(APPLE AND RENDERER STREQUAL "Vulkan")
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
                         COMMENT "Generating symbolic link for libvulkan.1!!!")
 endif()
-
-
-# add_library(walnut-combined INTERFACE "")
-# set_target_properties(walnut-combined PROPERTIES LINKER_LANGUAGE CXX)
-# target_link_libraries(walnut-combined INTERFACE 
-#   "$<LINK_LIBRARY:WHOLE_ARCHIVE,walnut>"
-# )
 
 
 add_subdirectory(WalnutApp)
