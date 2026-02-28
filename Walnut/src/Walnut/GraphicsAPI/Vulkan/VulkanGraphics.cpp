@@ -24,17 +24,6 @@ constexpr bool isDebugBuild = true;
 constexpr bool isDebugBuild = false;
 #endif
 
-#ifdef IMGUI_VULKAN_DEBUG_REPORT
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, 
-													uint64_t object, size_t location, int32_t messageCode, 
-													const char* pLayerPrefix, const char* pMessage, void* pUserData)
-{
-	(void)flags; (void)object; (void)location; (void)messageCode; (void)pUserData; (void)pLayerPrefix; // Unused arguments
-	fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
-	return VK_FALSE;
-}
-#endif // IMGUI_VULKAN_DEBUG_REPORT
-
 static VkAllocationCallbacks* 	g_Allocator = NULL;
 static VkInstance               g_Instance = VK_NULL_HANDLE;
 static VkPhysicalDevice         g_PhysicalDevice = VK_NULL_HANDLE;
@@ -135,8 +124,21 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 			VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
 			debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 			debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-			debug_report_ci.pfnCallback = debugReportCallback;
+			debug_report_ci.pfnCallback = [](VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+											 uint64_t object, size_t location, int32_t messageCode, const char *pLayerPrefix,
+											 const char *pMessage, void *pUserData) -> VkBool32
+			{
+				(void)flags;
+				(void)object;
+				(void)location;
+				(void)messageCode;
+				(void)pUserData;
+				(void)pLayerPrefix; // Unused arguments
+				fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
+				return VK_FALSE;
+			};
 			debug_report_ci.pUserData = NULL;
+
 			err = vkCreateDebugReportCallbackEXT(g_Instance, &debug_report_ci, g_Allocator, &g_DebugReport);
 			check_vk_result(err);
 		}
