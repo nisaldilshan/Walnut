@@ -124,9 +124,9 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 			VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
 			debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 			debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-			debug_report_ci.pfnCallback = [](VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, 
-											uint64_t object, size_t location, int32_t messageCode, const char *pLayerPrefix, 
-											const char *pMessage, void *pUserData) -> VKAPI_ATTR VkBool32 VKAPI_CALL
+			debug_report_ci.pfnCallback = [](VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+											 uint64_t object, size_t location, int32_t messageCode, const char *pLayerPrefix,
+											 const char *pMessage, void *pUserData) -> VkBool32
 			{
 				(void)flags;
 				(void)object;
