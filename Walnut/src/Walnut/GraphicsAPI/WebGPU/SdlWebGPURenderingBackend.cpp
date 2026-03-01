@@ -83,10 +83,6 @@ namespace Walnut
 		ImGui::NewFrame();
     }
 
-    void GlfwWebGPURenderingBackend::UploadFonts()
-    {
-    }
-
     void GlfwWebGPURenderingBackend::FrameRender(void* draw_data)
     {
         wgpu::SurfaceTexture surfaceTexture;

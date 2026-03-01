@@ -27,7 +27,6 @@ namespace Walnut {
 		virtual void ResizeWindow(int width, int height) = 0;
 		virtual void ConfigureImGui() = 0;
 		virtual void StartImGuiFrame() = 0;
-		virtual void UploadFonts() = 0;
 		virtual void FrameRender(void* draw_data) = 0;
 		virtual void FramePresent() = 0;
 

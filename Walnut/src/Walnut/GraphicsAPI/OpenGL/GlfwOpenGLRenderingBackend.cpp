@@ -55,10 +55,6 @@ namespace Walnut
 		ImGui::NewFrame();
 	}
 
-	void OpenGLRenderingBackend::UploadFonts()
-	{
-	}
-
 	void OpenGLRenderingBackend::FrameRender(void* draw_data)
 	{
 		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui

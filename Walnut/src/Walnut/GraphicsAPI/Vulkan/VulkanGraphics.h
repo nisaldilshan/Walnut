@@ -44,7 +44,6 @@ public:
 	static void FrameRender(void* draw_data);
 	static void FramePresent();
 	static void ConfigureRendererBackend();
-	static void UploadFonts();
 	static VkCommandPool GetCommandPool();
 	static void QueueSubmit(VkSubmitInfo info);
 	static void ResizeVulkanWindow(int width, int height);

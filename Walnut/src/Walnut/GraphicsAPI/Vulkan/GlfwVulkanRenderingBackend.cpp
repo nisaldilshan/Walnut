@@ -74,11 +74,6 @@ namespace Walnut
 		ImGui::NewFrame();
     }
 
-    void VulkanRenderingBackend::UploadFonts()
-    {
-        GraphicsAPI::Vulkan::UploadFonts();
-    }
-
     void VulkanRenderingBackend::FrameRender(void* draw_data)
     {
         GraphicsAPI::Vulkan::FrameRender(draw_data);

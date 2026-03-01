@@ -136,6 +136,7 @@ namespace Walnut {
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 		//io.ConfigViewportsNoAutoMerge = true;
 		//io.ConfigViewportsNoTaskBarIcon = true;
+		io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
 
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
@@ -172,9 +173,6 @@ namespace Walnut {
 		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF(
 								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 16.0f * scaleFactor, &fontConfig);
 		io.FontDefault = robotoFont;
-
-		// Upload Fonts
-		m_RenderingBackend->UploadFonts();
 	}
 
 	void Application::Shutdown()
