@@ -13,7 +13,9 @@ public:
 	void ResizeWindow(int width, int height) override;
 	void ConfigureImGui() override;
 	void StartImGuiFrame() override;
+	void FrameBegin() override;
 	void FrameRender(void* draw_data) override;
+	void FrameEnd() override;
 	void FramePresent() override;
 	WalnutWindowHandleType* GetWindowHandle() override;
 	void Shutdown() override;

@@ -41,7 +41,9 @@ public:
 	static void SetupVulkanWindow(int width, int height);
 	static void CleanupVulkan();
 	static void CleanupVulkanWindow();
+	static void FrameBegin();
 	static void FrameRender(void* draw_data);
+	static void FrameEnd();
 	static void FramePresent();
 	static void ConfigureRendererBackend();
 	static VkCommandPool GetCommandPool();

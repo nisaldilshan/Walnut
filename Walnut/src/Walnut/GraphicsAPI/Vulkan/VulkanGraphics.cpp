@@ -328,12 +328,11 @@ void Vulkan::CleanupVulkanWindow()
 	ImGui_ImplVulkanH_DestroyWindow(g_Instance, g_Device, &g_MainWindowData, g_Allocator);
 }
 
-void Vulkan::FrameRender(void* draw_data)
+void Vulkan::FrameBegin()
 {
 	VkResult err;
 
 	VkSemaphore image_acquired_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
-	VkSemaphore render_complete_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
 	err = vkAcquireNextImageKHR(g_Device, g_MainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &g_MainWindowData.FrameIndex);
 	if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 	{
@@ -379,10 +378,22 @@ void Vulkan::FrameRender(void* draw_data)
 		info.pClearValues = &g_MainWindowData.ClearValue;
 		vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 	}
+}
+
+void Vulkan::FrameRender(void* draw_data)
+{
+	ImGui_ImplVulkanH_Frame* fd = &g_MainWindowData.Frames[g_MainWindowData.FrameIndex];
 
 	// Record dear imgui primitives into command buffer
 	ImGui_ImplVulkan_RenderDrawData((ImDrawData*)draw_data, fd->CommandBuffer);
+}
 
+void Vulkan::FrameEnd()
+{
+	VkResult err;
+	VkSemaphore image_acquired_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
+	VkSemaphore render_complete_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
+	ImGui_ImplVulkanH_Frame* fd = &g_MainWindowData.Frames[g_MainWindowData.FrameIndex];
 	// Submit command buffer
 	vkCmdEndRenderPass(fd->CommandBuffer);
 
@@ -440,8 +451,7 @@ void Vulkan::ConfigureRendererBackend()
     init_info.Allocator = g_Allocator;
     init_info.CheckVkResultFn = check_vk_result;
 
-	ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
-	init_info.PipelineInfoMain.RenderPass = wd->RenderPass;
+	init_info.PipelineInfoMain.RenderPass = (&g_MainWindowData)->RenderPass;
 	init_info.PipelineInfoMain.Subpass = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&init_info);

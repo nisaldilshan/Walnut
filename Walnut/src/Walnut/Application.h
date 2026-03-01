@@ -54,6 +54,7 @@ namespace Walnut {
 	private:
 		void Init();
 		void Shutdown();
+		void InitImGui();
 		void SetupImGuiForOneIteration();
 		void OnWindowResize(WalnutWindowHandleType *win, int width, int height);
 		void LayerStackOnUpdate();

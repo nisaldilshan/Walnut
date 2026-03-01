@@ -74,9 +74,19 @@ namespace Walnut
 		ImGui::NewFrame();
     }
 
+    void VulkanRenderingBackend::FrameBegin()
+    {
+        GraphicsAPI::Vulkan::FrameBegin();
+    }
+
     void VulkanRenderingBackend::FrameRender(void* draw_data)
     {
         GraphicsAPI::Vulkan::FrameRender(draw_data);
+    }
+
+    void VulkanRenderingBackend::FrameEnd()
+    {
+        GraphicsAPI::Vulkan::FrameEnd();
     }
 
     void VulkanRenderingBackend::FramePresent()

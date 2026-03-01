@@ -143,7 +143,28 @@ namespace Walnut {
 			glfwGetFramebufferSize(windowHandle, &w, &h);
 			m_RenderingBackend->SetupWindow(w, h);
 		}
-		
+
+		InitImGui();
+	}
+
+	void Application::Shutdown()
+	{
+		LayerStackShutdown();
+
+		m_RenderingBackend->Shutdown();
+
+		ImGui::DestroyContext();
+
+		m_RenderingBackend->Cleanup();
+
+		glfwDestroyWindow(m_RenderingBackend->GetWindowHandle());
+		glfwTerminate();
+
+		g_ApplicationRunning = false;
+	}
+
+	void Application::InitImGui()
+	{
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -178,22 +199,6 @@ namespace Walnut {
 		io.FontDefault = robotoFont;
 	}
 
-	void Application::Shutdown()
-	{
-		LayerStackShutdown();
-
-		m_RenderingBackend->Shutdown();
-
-		ImGui::DestroyContext();
-
-		m_RenderingBackend->Cleanup();
-
-		glfwDestroyWindow(m_RenderingBackend->GetWindowHandle());
-		glfwTerminate();
-
-		g_ApplicationRunning = false;
-	}
-
 	void Application::MainLoop()
 	{
 		// Poll and handle events (inputs, window resize, etc.)
@@ -222,8 +227,11 @@ namespace Walnut {
 		ImGui::Render();
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
 		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-		if (!main_is_minimized)
+		if (!main_is_minimized) {
+			m_RenderingBackend->FrameBegin();
 			m_RenderingBackend->FrameRender(main_draw_data);
+			m_RenderingBackend->FrameEnd();
+		}
 
 		// Update and Render additional Platform Windows
 		ImGuiIO& io = ImGui::GetIO();
