@@ -42,10 +42,8 @@ public:
 	static void CleanupVulkan();
 	static void CleanupVulkanWindow();
 	static void FrameBegin();
-	static void FrameRender(void* draw_data);
 	static void FrameEnd();
 	static void FramePresent();
-	static void ConfigureRendererBackend();
 	static VkCommandPool GetCommandPool();
 	static void QueueSubmit(VkSubmitInfo info);
 	static void ResizeVulkanWindow(int width, int height);
@@ -60,10 +58,13 @@ public:
 	static VkInstance GetInstance();
 	static VkDevice GetDevice();
 	static VkPhysicalDevice GetPhysicalDevice();
-	static uint32_t GetQueueFamilyIndex();
-	static VkQueue GetDeviceQueue();
+	static uint32_t GetQueueFamily();
+	static VkQueue GetQueue();
 	static VkAllocationCallbacks* GetAllocator();
 	static VkSurfaceKHR* GetSurface();
+	static VkDescriptorPool GetDescriptorPool();
+	static int GetMinImageCount();
+	static const ImGui_ImplVulkanH_Window& GetWindowData();
 };
 
 

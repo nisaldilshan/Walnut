@@ -31,10 +31,11 @@ static VkDevice                 g_Device = VK_NULL_HANDLE;
 static uint32_t                 g_QueueFamily = (uint32_t)-1;
 static VkQueue                  g_Queue = VK_NULL_HANDLE;
 static VkDebugReportCallbackEXT g_DebugReport = VK_NULL_HANDLE;
-static VkPipelineCache          g_PipelineCache = VK_NULL_HANDLE;
 static VkDescriptorPool         g_DescriptorPool = VK_NULL_HANDLE;
 
 static VkSurfaceKHR             g_surface = VK_NULL_HANDLE;
+// All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
+// Your real engine/app may not use them.
 static ImGui_ImplVulkanH_Window g_MainWindowData;
 
 static int                      g_MinImageCount = 2;
@@ -380,14 +381,6 @@ void Vulkan::FrameBegin()
 	}
 }
 
-void Vulkan::FrameRender(void* draw_data)
-{
-	ImGui_ImplVulkanH_Frame* fd = &g_MainWindowData.Frames[g_MainWindowData.FrameIndex];
-
-	// Record dear imgui primitives into command buffer
-	ImGui_ImplVulkan_RenderDrawData((ImDrawData*)draw_data, fd->CommandBuffer);
-}
-
 void Vulkan::FrameEnd()
 {
 	VkResult err;
@@ -434,27 +427,6 @@ void Vulkan::FramePresent()
 	}
 	check_vk_result(err);
 	g_MainWindowData.SemaphoreIndex = (g_MainWindowData.SemaphoreIndex + 1) % g_MainWindowData.ImageCount; // Now we can use the next set of semaphores
-}
-
-void Vulkan::ConfigureRendererBackend()
-{
-    ImGui_ImplVulkan_InitInfo init_info = {};
-    init_info.Instance = g_Instance;
-    init_info.PhysicalDevice = g_PhysicalDevice;
-    init_info.Device = g_Device;
-    init_info.QueueFamily = g_QueueFamily;
-    init_info.Queue = g_Queue;
-    init_info.PipelineCache = g_PipelineCache;
-    init_info.DescriptorPool = g_DescriptorPool;
-    init_info.MinImageCount = g_MinImageCount;
-    init_info.ImageCount = g_MainWindowData.ImageCount;
-    init_info.Allocator = g_Allocator;
-    init_info.CheckVkResultFn = check_vk_result;
-
-	init_info.PipelineInfoMain.RenderPass = (&g_MainWindowData)->RenderPass;
-	init_info.PipelineInfoMain.Subpass = 0;
-    init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-    ImGui_ImplVulkan_Init(&init_info);
 }
 
 VkCommandPool Vulkan::GetCommandPool()
@@ -566,12 +538,12 @@ VkPhysicalDevice Vulkan::GetPhysicalDevice()
 	return g_PhysicalDevice;
 }
 
-uint32_t Vulkan::GetQueueFamilyIndex()
+uint32_t Vulkan::GetQueueFamily()
 {
     return g_QueueFamily;
 }
 
-VkQueue Vulkan::GetDeviceQueue()
+VkQueue Vulkan::GetQueue()
 {
     return g_Queue;
 }
@@ -584,6 +556,21 @@ VkAllocationCallbacks* Vulkan::GetAllocator()
 VkSurfaceKHR* Vulkan::GetSurface()
 {
     return &g_surface;
+}
+
+VkDescriptorPool Vulkan::GetDescriptorPool()
+{
+	return g_DescriptorPool;
+}
+
+int Vulkan::GetMinImageCount()
+{
+    return g_MinImageCount;
+}
+
+const ImGui_ImplVulkanH_Window &Vulkan::GetWindowData()
+{
+    return g_MainWindowData;
 }
 
 // IMAGE

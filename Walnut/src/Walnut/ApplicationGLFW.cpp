@@ -32,9 +32,6 @@ Walnut_API bool g_ApplicationRunning = true;
 
 static Walnut::Application* s_Instance = nullptr;
 
-// All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
-// Your real engine/app may not use them.
-
 static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
