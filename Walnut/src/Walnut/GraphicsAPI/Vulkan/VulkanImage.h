@@ -30,10 +30,12 @@ namespace GraphicsAPI
         VkImageView m_ImageView = VK_NULL_HANDLE;
         VkSampler m_Sampler = VK_NULL_HANDLE;
         VkDeviceMemory m_Memory = VK_NULL_HANDLE;
-        VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
         VkBuffer m_StagingBuffer = VK_NULL_HANDLE;
         VkDeviceMemory m_StagingBufferMemory = VK_NULL_HANDLE;
         VkCommandPool m_commandPool = VK_NULL_HANDLE;
         VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
+
+        VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
+        VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
     };
 }
