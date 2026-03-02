@@ -457,7 +457,6 @@ void Vulkan::QueueSubmit(VkSubmitInfo info)
 
 void Vulkan::ResizeVulkanWindow(int width, int height)
 {
-    ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
     ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, 
 										&g_MainWindowData, g_QueueFamily, g_Allocator, 
 										width, height, g_MinImageCount, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);

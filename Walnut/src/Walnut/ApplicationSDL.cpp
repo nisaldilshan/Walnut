@@ -126,6 +126,23 @@ namespace Walnut {
 		SDL_GetWindowSize(windowHandle, &windowWidth, &windowHeight);
 		m_RenderingBackend->SetupWindow(windowWidth, windowHeight);
 		
+		InitImGui();
+	}
+
+	void Application::Shutdown()
+	{
+		LayerStackShutdown();
+
+		m_RenderingBackend->Shutdown();
+		ImGui::DestroyContext();
+
+		m_RenderingBackend->Cleanup();
+
+		g_ApplicationRunning = false;
+	}
+
+	void Application::InitImGui()
+	{
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -153,6 +170,8 @@ namespace Walnut {
 		float scaleFactor = SDL_GetWindowDisplayScale(m_RenderingBackend->GetWindowHandle());
 		std::cout << "#### SDL UI Scale: " << scaleFactor << std::endl;
 
+		int windowWidth, windowHeight;
+		SDL_GetWindowSize(m_RenderingBackend->GetWindowHandle(), &windowWidth, &windowHeight);
 		int widthInPixels, heightInPixels;
 		SDL_GetWindowSizeInPixels(m_RenderingBackend->GetWindowHandle(), &widthInPixels, &heightInPixels);
 		if (widthInPixels == 2 * windowWidth && heightInPixels == 2 * windowHeight) {
@@ -173,21 +192,6 @@ namespace Walnut {
 		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF(
 								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 16.0f * scaleFactor, &fontConfig);
 		io.FontDefault = robotoFont;
-	}
-
-	void Application::Shutdown()
-	{
-		LayerStackShutdown();
-
-		m_RenderingBackend->Shutdown();
-		ImGui::DestroyContext();
-
-		m_RenderingBackend->Cleanup();
-
-		// glfwDestroyWindow(m_RenderingBackend->GetWindowHandle());
-		// glfwTerminate();
-
-		g_ApplicationRunning = false;
 	}
 
 	void Application::MainLoop()
@@ -229,8 +233,11 @@ namespace Walnut {
 		ImGui::Render();
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
 		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-		if (!main_is_minimized)
+		if (!main_is_minimized) {
+			m_RenderingBackend->FrameBegin();
 			m_RenderingBackend->FrameRender(main_draw_data);
+			m_RenderingBackend->FrameEnd();
+		}
 
 		// Update and Render additional Platform Windows
 		ImGuiIO& io = ImGui::GetIO();

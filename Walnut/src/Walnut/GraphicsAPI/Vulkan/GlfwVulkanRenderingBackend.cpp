@@ -56,6 +56,7 @@ namespace Walnut
 
     void VulkanRenderingBackend::ResizeWindow(int width, int height)
     {
+        ImGui_ImplVulkan_SetMinImageCount(GraphicsAPI::Vulkan::GetMinImageCount());
         GraphicsAPI::Vulkan::ResizeVulkanWindow(width, height);
         GraphicsAPI::Vulkan::SetSwapChainRebuildStatus(false);
     }
