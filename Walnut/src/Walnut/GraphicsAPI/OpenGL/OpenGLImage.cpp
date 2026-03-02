@@ -59,9 +59,9 @@ void OpenGLImage::CreateDescriptorSet()
 {
 }
 
-ImTextureID OpenGLImage::GetDescriptorSet()
+uint64_t OpenGLImage::GetDescriptorSet()
 {
-    return (ImTextureID)(intptr_t)m_texture;
+    return reinterpret_cast<uint64_t>((intptr_t)m_texture);
 }
 
 bool OpenGLImage::ImageAvailable()

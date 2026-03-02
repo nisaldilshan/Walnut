@@ -1,7 +1,5 @@
 #include "VulkanImage.h"
 
-#include <imgui_impl_vulkan.h>
-
 #include "../../ImageFormat.h"
 
 namespace Walnut
@@ -276,9 +274,9 @@ void VulkanImage::CreateDescriptorSet()
     }
 }
 
-ImTextureID VulkanImage::GetDescriptorSet()
+uint64_t VulkanImage::GetDescriptorSet()
 {
-	return (ImTextureID)m_DescriptorSet;
+	return reinterpret_cast<uint64_t>(m_DescriptorSet);
 }
 
 bool VulkanImage::ImageAvailable()

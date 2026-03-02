@@ -62,9 +62,9 @@ void WebGPUImage::CreateImageView()
     m_textureView = m_texture.createView(tex_view_desc);
 }
 
-ImTextureID WebGPUImage::GetDescriptorSet()
+uint64_t WebGPUImage::GetDescriptorSet()
 {
-    return (ImTextureID)(void*)m_textureView; 
+    return reinterpret_cast<uint64_t>((void*)m_textureView); 
 }
 
 bool WebGPUImage::ImageAvailable()
