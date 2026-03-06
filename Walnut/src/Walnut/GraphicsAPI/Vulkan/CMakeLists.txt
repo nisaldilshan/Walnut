@@ -2,6 +2,7 @@ add_library (walnut-graphics-vulkan STATIC
                     ImGuiBuildVulkan.cpp
                     VulkanGraphics.cpp
                     VulkanImage.cpp
+                    VulkanImageRenderPipeline.cpp
                 )
 
 target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)  
@@ -11,8 +12,10 @@ if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_link_libraries(walnut-graphics-vulkan PRIVATE SDL3::SDL3)
 else()
     target_sources(walnut-graphics-vulkan PRIVATE GlfwVulkanRenderingBackend.cpp)
-    target_link_libraries(walnut-graphics-vulkan PUBLIC glfw)
+    target_link_libraries(walnut-graphics-vulkan PUBLIC glfw shaderc::shaderc)
 endif()
+
+find_package(shaderc REQUIRED)
 
 if(APPLE)
     if(CMAKE_SYSTEM_NAME MATCHES "iOS")

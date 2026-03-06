@@ -114,6 +114,27 @@ namespace Walnut
     void VulkanRenderingBackend::FrameRender(void* draw_data)
     {
         const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
+        const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
+
+        // 1. Draw your image as the background
+        vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_FullscreenPipeline);
+        
+        // Bind the descriptor set containing your VkImageView and a VkSampler
+        vkCmdBindDescriptorSets(
+            fd->CommandBuffer, 
+            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+            m_PipelineLayout, 
+            0, 1, &m_FinalImageDescriptorSet, 
+            0, nullptr
+        );
+
+        // Draw the 3 vertices to trigger the vertex shader logic
+        vkCmdDraw(fd->CommandBuffer, 3, 1, 0, 0);
+    }
+
+    void VulkanRenderingBackend::FrameRenderImGui(void *draw_data)
+    {
+        const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
         
         const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
 
@@ -131,7 +152,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::FramePresent();
     }
 
-    WalnutWindowHandleType* VulkanRenderingBackend::GetWindowHandle()
+    WalnutWindowHandleType *VulkanRenderingBackend::GetWindowHandle()
     {
         return m_windowHandle;
     }
