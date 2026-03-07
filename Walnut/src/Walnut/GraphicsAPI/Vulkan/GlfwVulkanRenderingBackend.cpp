@@ -182,12 +182,11 @@ namespace Walnut
     std::unique_ptr<GraphicsAPI::ImageRenderPipeline> g_imageRenderPipeline;
     void VulkanRenderingBackend::FrameRender(void* draw_data)
     {
-        // const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
-        // const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
-
         if (!g_renderpass) {
             CreateRenderPassForImagePipeline();
         }
+
+        const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
 
         if (!g_imageRenderPipeline)
         {
@@ -195,19 +194,21 @@ namespace Walnut
             const std::string shadowVertexGLSL = R"(
                 #version 450
 
-                // Vertex attributes from your vertex buffer
-                layout(location = 0) in vec3 inPosition;
-                layout(location = 1) in vec2 inTexCoord; 
-
                 // Output to fragment shader
                 layout(location = 0) out vec2 fragTexCoord;
 
                 void main() {
-                    // Since there is no MVP matrix, we pass the position directly.
-                    // Make sure your vertex buffer positions are between -1.0 and 1.0.
-                    gl_Position = vec4(inPosition, 1.0);
+                    // Generate UV coordinates: 
+                    // Vertex 0: (0, 0)
+                    // Vertex 1: (2, 0)
+                    // Vertex 2: (0, 2)
+                    fragTexCoord = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
                     
-                    fragTexCoord = inTexCoord;
+                    // Map those UVs to Vulkan NDC positions:
+                    // Vertex 0: (-1.0, -1.0)
+                    // Vertex 1: ( 3.0, -1.0)
+                    // Vertex 2: (-1.0,  3.0)
+                    gl_Position = vec4(fragTexCoord * 2.0f - 1.0f, 0.0f, 1.0f);
                 }
             )";
 
@@ -268,22 +269,42 @@ namespace Walnut
             GraphicsAPI::Vulkan::check_vk_result(err);
 
             std::vector<VkDescriptorSetLayout> layouts{descSetLayout};
-                                                            
+            GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
             g_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
-                g_renderpass, layouts, m_vertexInputLayout, shaderStageInfos);
+                wd.RenderPass, layouts, vertexInputLayout, shaderStageInfos);
         }
 
-        // // 1. Draw your image as the background
-        // vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_FullscreenPipeline);
+        const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
+
+        // 1. Draw your image as the background
+        vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, g_imageRenderPipeline->GetPipeline());
+
+        if (s_renderTarget == 0) {
+            return;
+        }
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(wd.Width);
+        viewport.height = static_cast<float>(wd.Height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(fd->CommandBuffer, 0, 1, &viewport);
+
+        const uint32_t w = wd.Width;
+        const uint32_t h = wd.Height;
+        VkRect2D scissor{{ 0, 0 }, { w, h }};
+        vkCmdSetScissor(fd->CommandBuffer, 0, 1, &scissor);
         
-        // // Bind the descriptor set containing your VkImageView and a VkSampler
-        // vkCmdBindDescriptorSets(
-        //     fd->CommandBuffer, 
-        //     VK_PIPELINE_BIND_POINT_GRAPHICS, 
-        //     m_PipelineLayout, 
-        //     0, 1, &m_FinalImageDescriptorSet, 
-        //     0, nullptr
-        // );
+        // Bind the descriptor set containing your VkImageView and a VkSampler
+        vkCmdBindDescriptorSets(
+            fd->CommandBuffer, 
+            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+            g_imageRenderPipeline->GetPipelineLayout(), 
+            0, 1, reinterpret_cast<VkDescriptorSet*>(&s_renderTarget), 
+            0, nullptr
+        );
 
         // Draw the 3 vertices to trigger the vertex shader logic
         vkCmdDraw(fd->CommandBuffer, 3, 1, 0, 0);

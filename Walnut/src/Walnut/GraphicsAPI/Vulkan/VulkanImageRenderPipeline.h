@@ -7,6 +7,7 @@ namespace GraphicsAPI
 
 struct VertexInputLayout
 {
+    bool enabled = false;
     VkVertexInputBindingDescription m_vertexBindingDescs;
     std::vector<VkVertexInputAttributeDescription> m_vertexAttribDescs;
 };

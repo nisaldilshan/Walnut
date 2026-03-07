@@ -138,18 +138,25 @@ void ImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexIn
 
     std::vector<VkVertexInputBindingDescription> vertexBindingDescs;
     std::vector<VkVertexInputAttributeDescription> vertexAttribDescs;
-    assert(vertexInputLayout.m_vertexAttribDescs.size() > 0);
-    vertexBindingDescs.push_back(vertexInputLayout.m_vertexBindingDescs);
-    for (const auto &vertextAttribDesc : vertexInputLayout.m_vertexAttribDescs)
-    {
-        vertexAttribDescs.push_back(vertextAttribDesc);
+    if (vertexInputLayout.enabled) {
+        
+        assert(vertexInputLayout.m_vertexAttribDescs.size() > 0);
+        vertexBindingDescs.push_back(vertexInputLayout.m_vertexBindingDescs);
+        for (const auto &vertextAttribDesc : vertexInputLayout.m_vertexAttribDescs)
+        {
+            vertexAttribDescs.push_back(vertextAttribDesc);
+        }
+        vertexInputInfo.vertexBindingDescriptionCount = vertexBindingDescs.size();
+        vertexInputInfo.pVertexBindingDescriptions = vertexBindingDescs.data();
+        vertexInputInfo.vertexAttributeDescriptionCount = vertexAttribDescs.size();
+        vertexInputInfo.pVertexAttributeDescriptions = vertexAttribDescs.data();
+    } else {
+        vertexInputInfo.vertexBindingDescriptionCount = 0;
+        vertexInputInfo.pVertexBindingDescriptions = nullptr;
+        vertexInputInfo.vertexAttributeDescriptionCount = 0;
+        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
     }
-
-    vertexInputInfo.vertexBindingDescriptionCount = vertexBindingDescs.size();
-    vertexInputInfo.pVertexBindingDescriptions = vertexBindingDescs.data();
-    vertexInputInfo.vertexAttributeDescriptionCount = vertexAttribDescs.size();
-    vertexInputInfo.pVertexAttributeDescriptions = vertexAttribDescs.data();
-
+    
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
     inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
