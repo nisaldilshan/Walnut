@@ -279,7 +279,7 @@ namespace Walnut
         // 1. Draw your image as the background
         vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, g_imageRenderPipeline->GetPipeline());
 
-        if (s_renderTarget == 0) {
+        if (!HasImageToRender()) {
             return;
         }
 
@@ -302,7 +302,7 @@ namespace Walnut
             fd->CommandBuffer, 
             VK_PIPELINE_BIND_POINT_GRAPHICS, 
             g_imageRenderPipeline->GetPipelineLayout(), 
-            0, 1, reinterpret_cast<VkDescriptorSet*>(&s_renderTarget), 
+            0, 1, reinterpret_cast<VkDescriptorSet*>(GetImageToRender()), 
             0, nullptr
         );
 

@@ -12,11 +12,13 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "ImageFormat.h"
+
 namespace Walnut {
 
 	namespace Utils {
 
-		static uint32_t BytesPerPixel(ImageFormat format)
+		uint32_t BytesPerPixel(ImageFormat format)
 		{
 			switch (format)
 			{
@@ -26,6 +28,7 @@ namespace Walnut {
 			}
 			return 0;
 		}
+	}
 
 #if (RENDERER_BACKEND == 1)
 		static std::unique_ptr<GraphicsAPI::OpenGLImage> CreateBackendImage()
@@ -45,11 +48,10 @@ namespace Walnut {
 #else
 #endif
 
-	}
-
 	Image::Image(std::string_view path)
 		: m_Filepath(path)
-		, m_rendererBackendImage(Utils::CreateBackendImage())
+		, m_Width(0), m_Height(0), m_Format(ImageFormat::None)
+		, m_rendererBackendImage(CreateBackendImage())
 	{
 		int width, height, channels;
 		uint8_t* data = nullptr;
@@ -73,13 +75,16 @@ namespace Walnut {
 		stbi_image_free(data);
 	}
 
-	Image::Image(uint32_t width, uint32_t height, ImageFormat format, const void* data)
-		: m_Width(width), m_Height(height), m_Format(format)
-		, m_rendererBackendImage(Utils::CreateBackendImage())
+	Image::Image(uint32_t width, uint32_t height, ImageFormat format)
+		: m_Filepath()
+		, m_Width(width), m_Height(height), m_Format(format)
+		, m_rendererBackendImage(CreateBackendImage())
 	{
 		AllocateMemory();
-		if (data)
-			SetData(data);
+
+		auto imageData = new uint8_t[m_Width * m_Height * Walnut::Utils::BytesPerPixel(format)];
+		SetData(imageData);
+		delete[] imageData;
 	}
 
 	Image::~Image()

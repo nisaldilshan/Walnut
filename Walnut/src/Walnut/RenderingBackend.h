@@ -34,8 +34,13 @@ namespace Walnut {
 
 		static BACKEND GetBackend() { return s_backend; }
 		static std::unique_ptr<RenderingBackend> Create();
+
+		bool SetImageToRender(uint64_t image);
+		bool HasImageToRender();
+		uint64_t* GetImageToRender();
 	private:
 		static BACKEND s_backend;
+		uint64_t m_renderTarget = 0;
 	};
 
 }

@@ -9,6 +9,7 @@
 #include <imgui.h>
 
 #include "RenderingBackend.h"
+#include "Image.h"
 
 namespace Walnut {
 
@@ -121,6 +122,11 @@ WalnutWindowHandleType* Application::GetWindowHandle() const
 void Application::SetSleepAmount(std::chrono::milliseconds sleepAmount)
 {
 	m_SleepAmount = sleepAmount;
+}
+
+std::shared_ptr<Image> Application::GetImage()
+{
+    return m_ImageToRender;
 }
 
 void Application::LayerStackOnUpdate()

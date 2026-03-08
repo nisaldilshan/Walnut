@@ -10,12 +10,14 @@
 
 #include "ExportConfig.h"
 #include "WindowHandle.h"
+#include "ImageFormat.h"
 
 Walnut_API extern bool g_ApplicationRunning;
 
 namespace Walnut {
 
 	class RenderingBackend;
+	class Image;
 
 	struct ApplicationSpecification
 	{
@@ -50,13 +52,14 @@ namespace Walnut {
 		WalnutWindowHandleType* GetWindowHandle() const;
 
 		void SetSleepAmount(std::chrono::milliseconds sleepAmount);
+		std::shared_ptr<Image> GetImage();
 
 	private:
 		void Init();
 		void Shutdown();
 		void InitImGui();
 		void SetupImGuiForOneIteration();
-		void OnWindowResize(WalnutWindowHandleType *win, int width, int height);
+		void OnWindowResize(WalnutWindowHandleType *win);
 		void LayerStackOnUpdate();
 		void LayerStackOnGui();
 		void LayerStackShutdown();
@@ -67,6 +70,7 @@ namespace Walnut {
 		float m_TimeStep = 0.0f;
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
 		std::chrono::milliseconds m_SleepAmount;
+		std::shared_ptr<Image> m_ImageToRender = nullptr;
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::vector<std::shared_ptr<Layer>> m_NewLayers;

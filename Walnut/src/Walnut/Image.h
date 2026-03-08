@@ -23,11 +23,17 @@ typedef WebGPUImage ImageType;
 
 namespace Walnut {
 
+	namespace Utils
+	{
+		uint32_t BytesPerPixel(ImageFormat format);
+	} // namespace Utils
+	
+
 	class Walnut_API Image
 	{
 	public:
 		Image(std::string_view path);
-		Image(uint32_t width, uint32_t height, ImageFormat format, const void* data = nullptr);
+		Image(uint32_t width, uint32_t height, ImageFormat format);
 		~Image();
 
 		void SetData(const void* data);
@@ -43,8 +49,8 @@ namespace Walnut {
 		void Release();
 
 		std::string m_Filepath;
-		uint32_t m_Width = 0, m_Height = 0;
-		ImageFormat m_Format = ImageFormat::None;
+		uint32_t m_Width, m_Height;
+		ImageFormat m_Format;
 		std::unique_ptr<GraphicsAPI::ImageType> m_rendererBackendImage;
 		size_t m_AlignedSize = 0;
 	};
