@@ -8,6 +8,8 @@
 
 namespace Walnut {
 
+	class Image;
+
 	class Walnut_API RenderingBackend
 	{
 	public:
@@ -28,20 +30,16 @@ namespace Walnut {
 		virtual void ConfigureImGui() = 0;
 		virtual void StartImGuiFrame() = 0;
 		virtual void FrameBegin() = 0;
-		virtual void FrameRender(void* draw_data) = 0;
-		virtual void FrameRenderImGui(void* draw_data) {}
+		virtual void FrameRender(std::unique_ptr<Image>& mainImage) = 0;
+		virtual void FrameRenderImGui(void* draw_data) = 0;
 		virtual void FrameEnd() = 0;
 		virtual void FramePresent() = 0;
 
 		static BACKEND GetBackend() { return s_backend; }
 		static std::unique_ptr<RenderingBackend> Create();
 
-		void SetImageToRender(uint64_t image);
-		bool HasImageToRender();
-		uint64_t* GetImageToRender();
 	private:
 		static BACKEND s_backend;
-		uint64_t m_renderTarget = 0;
 	};
 
 }

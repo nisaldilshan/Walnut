@@ -1,8 +1,11 @@
-#include "GraphicsAPI/Vulkan/VulkanRenderingBackend.h"
+#if (RENDERER_BACKEND == 1)
 #include "GraphicsAPI/OpenGL/OpenGLRenderingBackend.h"
+#elif (RENDERER_BACKEND == 2)
+#include "GraphicsAPI/Vulkan/VulkanRenderingBackend.h"
+#elif (RENDERER_BACKEND == 3)
 #include "GraphicsAPI/WebGPU/WebGPURenderingBackend.h"
-
-#include <cassert>
+#else
+#endif
 
 namespace Walnut {
 
@@ -24,19 +27,4 @@ namespace Walnut {
         return std::make_unique<BackendType>();
 	}
 
-    void RenderingBackend::SetImageToRender(uint64_t image)
-    {
-		m_renderTarget = image;
-        return;
-    }
-
-    bool RenderingBackend::HasImageToRender()
-    {
-        return m_renderTarget != 0;
-    }
-
-    uint64_t* RenderingBackend::GetImageToRender()
-    {
-        return &m_renderTarget;
-    }
 }

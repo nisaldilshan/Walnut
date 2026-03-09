@@ -14,7 +14,7 @@ public:
 	void ConfigureImGui() override;
 	void StartImGuiFrame() override;
 	void FrameBegin() override;
-	void FrameRender(void* draw_data) override;
+	void FrameRender(std::unique_ptr<Image>& mainImage) override;
 	void FrameRenderImGui(void* draw_data) override;
 	void FrameEnd() override;
 	void FramePresent() override;

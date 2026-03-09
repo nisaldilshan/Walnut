@@ -77,7 +77,6 @@ namespace Walnut {
 			return; // when using ImGui, we don't need to resize our main image, as ImGui will render to it directly
 		}
 		m_ImageToRender = std::make_unique<Image>(w, h, ImageFormat::RGBA);
-		m_RenderingBackend->SetImageToRender(m_ImageToRender->GetDescriptorSet());
     }
 
 	void Application::Init()
@@ -227,7 +226,7 @@ namespace Walnut {
 			if (m_Specification.UseImGui) {
 				m_RenderingBackend->FrameRenderImGui(main_draw_data);
 			} else {
-				m_RenderingBackend->FrameRender(main_draw_data);
+				m_RenderingBackend->FrameRender(m_ImageToRender);
 			}
 			
 			m_RenderingBackend->FrameEnd();
