@@ -5,14 +5,37 @@ namespace GraphicsAPI
 {
 
 // Helper 1: Compiles inline GLSL string to SPIR-V bytecode
-std::vector<uint32_t> compileGLSLToSPIRV_Vert(const std::string& source) {
+std::vector<uint32_t> compileGLSLToSPIRV_Vert() {
+    // 1. Define your inline GLSL using raw string literals
+    const std::string vertexSource = R"(
+        #version 450
+
+        // Output to fragment shader
+        layout(location = 0) out vec2 fragTexCoord;
+
+        void main() {
+            // Generate UV coordinates: 
+            // Vertex 0: (0, 0)
+            // Vertex 1: (2, 0)
+            // Vertex 2: (0, 2)
+            fragTexCoord = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
+            
+            // Map those UVs to Vulkan NDC positions:
+            // Vertex 0: (-1.0, -1.0)
+            // Vertex 1: ( 3.0, -1.0)
+            // Vertex 2: (-1.0,  3.0)
+            gl_Position = vec4(fragTexCoord * 2.0f - 1.0f, 0.0f, 1.0f);
+        }
+    )";
+
+
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     
     // Optimize for performance (optional)
     options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-    shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, shaderc_glsl_vertex_shader, "Image-Vertex", options);
+    shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(vertexSource, shaderc_glsl_vertex_shader, "Image-Vertex", options);
 
     if (module.GetCompilationStatus() != shaderc_compilation_status_success) {
         //std::cerr << "Shader Compilation Error in " << name << ": " << module.GetErrorMessage() << std::endl;
@@ -23,14 +46,31 @@ std::vector<uint32_t> compileGLSLToSPIRV_Vert(const std::string& source) {
     return {module.cbegin(), module.cend()};
 }
 
-std::vector<uint32_t> compileGLSLToSPIRV_Frag(const std::string& source) {
+std::vector<uint32_t> compileGLSLToSPIRV_Frag() {
+    const std::string fragmentSource = R"(
+        #version 450
+
+        // Input from vertex shader
+        layout(location = 0) in vec2 fragTexCoord;
+
+        // Matches your C++ layout: binding[0]
+        layout(binding = 0) uniform sampler2D texSampler;
+
+        // Output to the framebuffer
+        layout(location = 0) out vec4 outColor;
+
+        void main() {
+            outColor = texture(texSampler, fragTexCoord);
+        }
+    )";
+
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     
     // Optimize for performance (optional)
     options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-    shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, shaderc_glsl_fragment_shader, "Image-Fragment", options);
+    shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(fragmentSource, shaderc_glsl_fragment_shader, "Image-Fragment", options);
 
     if (module.GetCompilationStatus() != shaderc_compilation_status_success) {
         //std::cerr << "Shader Compilation Error in " << name << ": " << module.GetErrorMessage() << std::endl;

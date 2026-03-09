@@ -119,48 +119,8 @@ namespace Walnut
 
         if (!g_imageRenderPipeline)
         {
-            // 1. Define your inline GLSL using raw string literals
-            const std::string shadowVertexGLSL = R"(
-                #version 450
-
-                // Output to fragment shader
-                layout(location = 0) out vec2 fragTexCoord;
-
-                void main() {
-                    // Generate UV coordinates: 
-                    // Vertex 0: (0, 0)
-                    // Vertex 1: (2, 0)
-                    // Vertex 2: (0, 2)
-                    fragTexCoord = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
-                    
-                    // Map those UVs to Vulkan NDC positions:
-                    // Vertex 0: (-1.0, -1.0)
-                    // Vertex 1: ( 3.0, -1.0)
-                    // Vertex 2: (-1.0,  3.0)
-                    gl_Position = vec4(fragTexCoord * 2.0f - 1.0f, 0.0f, 1.0f);
-                }
-            )";
-
-            const std::string shadowFragmentGLSL = R"(
-                #version 450
-
-                // Input from vertex shader
-                layout(location = 0) in vec2 fragTexCoord;
-
-                // Matches your C++ layout: binding[0]
-                layout(binding = 0) uniform sampler2D texSampler;
-
-                // Output to the framebuffer
-                layout(location = 0) out vec4 outColor;
-
-                void main() {
-                    outColor = texture(texSampler, fragTexCoord);
-                }
-            )";
-
-            // 2. Compile GLSL to SPIR-V
-            std::vector<uint32_t> vertSpirv = GraphicsAPI::compileGLSLToSPIRV_Vert(shadowVertexGLSL);
-            std::vector<uint32_t> fragSpirv = GraphicsAPI::compileGLSLToSPIRV_Frag(shadowFragmentGLSL);
+            std::vector<uint32_t> vertSpirv = GraphicsAPI::compileGLSLToSPIRV_Vert();
+            std::vector<uint32_t> fragSpirv = GraphicsAPI::compileGLSLToSPIRV_Frag();
 
             // 3. Create VkShaderModules (Assuming you have access to your 'VkDevice device')
             VkShaderModule vertShaderModule = GraphicsAPI::createShaderModule(GraphicsAPI::Vulkan::GetDevice(), vertSpirv);
