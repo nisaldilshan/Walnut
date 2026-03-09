@@ -52,7 +52,7 @@ namespace Walnut {
 		WalnutWindowHandleType* GetWindowHandle() const;
 
 		void SetSleepAmount(std::chrono::milliseconds sleepAmount);
-		std::shared_ptr<Image> GetImage();
+		std::unique_ptr<Image>& MainImageRef();
 
 	private:
 		void Init();
@@ -70,7 +70,7 @@ namespace Walnut {
 		float m_TimeStep = 0.0f;
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
 		std::chrono::milliseconds m_SleepAmount;
-		std::shared_ptr<Image> m_ImageToRender = nullptr;
+		std::unique_ptr<Image> m_ImageToRender = nullptr;
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		std::vector<std::shared_ptr<Layer>> m_NewLayers;

@@ -124,7 +124,7 @@ void Application::SetSleepAmount(std::chrono::milliseconds sleepAmount)
 	m_SleepAmount = sleepAmount;
 }
 
-std::shared_ptr<Image> Application::GetImage()
+std::unique_ptr<Image>& Application::MainImageRef()
 {
     return m_ImageToRender;
 }

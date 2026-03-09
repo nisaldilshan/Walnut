@@ -24,13 +24,10 @@ namespace Walnut {
         return std::make_unique<BackendType>();
 	}
 
-    bool RenderingBackend::SetImageToRender(uint64_t image)
+    void RenderingBackend::SetImageToRender(uint64_t image)
     {
-		if (m_renderTarget != 0) {
-			return false;
-		}
 		m_renderTarget = image;
-        return false;
+        return;
     }
 
     bool RenderingBackend::HasImageToRender()

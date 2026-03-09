@@ -12,6 +12,7 @@
 #include <Walnut/GLM/GLM.h>
 
 #include "RenderingBackend.h"
+#include "Image.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -66,15 +67,13 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
-	void Application::OnWindowResize(GLFWwindow *win, int width, int height)
+	void Application::OnWindowResize(GLFWwindow *win)
     {
-		std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
-		// Create Framebuffers
-		{
-			int w, h;
-			glfwGetFramebufferSize(win, &w, &h);
-			m_RenderingBackend->SetupWindow(w, h);
-		}
+		int w, h;
+		glfwGetFramebufferSize(win, &w, &h);
+		m_RenderingBackend->SetupWindow(w, h);
+		m_ImageToRender = std::make_unique<Image>(w, h, ImageFormat::RGBA);
+		m_RenderingBackend->SetImageToRender(m_ImageToRender->GetDescriptorSet());
     }
 
 	void Application::Init()
@@ -131,16 +130,11 @@ namespace Walnut {
 		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {
 			auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
 			assert(app);
-			app->OnWindowResize(win, width, height);
+			std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
+			app->OnWindowResize(win);
 		});
 
-		// Create Framebuffers
-		{
-			int w, h;
-			glfwGetFramebufferSize(windowHandle, &w, &h);
-			m_RenderingBackend->SetupWindow(w, h);
-		}
-
+		OnWindowResize(windowHandle);
 		InitImGui();
 	}
 
