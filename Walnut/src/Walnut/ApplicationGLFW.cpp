@@ -145,7 +145,7 @@ namespace Walnut {
 	void Application::Shutdown()
 	{
 		LayerStackShutdown();
-
+		m_ImageToRender.reset();
 		m_RenderingBackend->Shutdown();
 
 		ImGui::DestroyContext();

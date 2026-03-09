@@ -23,7 +23,7 @@ public:
     ImageRenderPipeline(VkRenderPass renderPass, 
                         std::vector<VkDescriptorSetLayout>& descriptorSetLayouts,
                         const VertexInputLayout& vertexInputLayout, 
-                        const std::vector<VkPipelineShaderStageCreateInfo>& shaderStageInfos);
+                        const std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos);
     ~ImageRenderPipeline();
 
     ImageRenderPipeline(const ImageRenderPipeline&) = delete;
@@ -36,11 +36,11 @@ public:
 
 private:
     void CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
-    void CreatePipeline(VkRenderPass renderPass, const VertexInputLayout &vertexInputLayout, 
-                        const std::vector<VkPipelineShaderStageCreateInfo> &shaderStageInfos);
+    void CreatePipeline(VkRenderPass renderPass, const VertexInputLayout &vertexInputLayout);
 
     VkPipelineLayout m_PipelineLayout;
     VkPipeline m_Pipeline;
+    std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageInfos;
 };
 
 

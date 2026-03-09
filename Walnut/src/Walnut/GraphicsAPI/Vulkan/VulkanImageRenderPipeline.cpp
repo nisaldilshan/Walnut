@@ -91,16 +91,26 @@ VkPipelineRasterizationStateCreateInfo getRasterizerInfo()
 ImageRenderPipeline::ImageRenderPipeline(VkRenderPass renderPass, 
                                     std::vector<VkDescriptorSetLayout> &descriptorSetLayouts, 
                                     const VertexInputLayout &vertexInputLayout, 
-                                    const std::vector<VkPipelineShaderStageCreateInfo> &shaderStageInfos)
+                                    const std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos)
     : m_PipelineLayout(VK_NULL_HANDLE), 
-      m_Pipeline(VK_NULL_HANDLE)
+      m_Pipeline(VK_NULL_HANDLE),
+      m_shaderStageInfos(shaderStageInfos)
 {
     CreatePipelineLayout(descriptorSetLayouts);
-    CreatePipeline(renderPass, vertexInputLayout, shaderStageInfos);
+    CreatePipeline(renderPass, vertexInputLayout);
 }
 
 ImageRenderPipeline::~ImageRenderPipeline()
 {
+    for (const auto &shaderStageInfo : m_shaderStageInfos)
+    {
+        if (shaderStageInfo.module != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(Vulkan::GetDevice(), shaderStageInfo.module, nullptr);
+        }
+    }
+    m_shaderStageInfos.clear();
+
     if (m_Pipeline)
     {
         vkDestroyPipeline(Vulkan::GetDevice(), m_Pipeline, nullptr);
@@ -127,8 +137,7 @@ void ImageRenderPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSet
     }
 }
 
-void ImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexInputLayout &vertexInputLayout, 
-                                    const std::vector<VkPipelineShaderStageCreateInfo> &shaderStageInfos)
+void ImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexInputLayout &vertexInputLayout)
 {
     assert(m_PipelineLayout != VK_NULL_HANDLE);
 
@@ -205,11 +214,11 @@ void ImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexIn
     dynStatesInfo.dynamicStateCount = static_cast<uint32_t>(dynStates.size());
     dynStatesInfo.pDynamicStates = dynStates.data();
 
-    assert(shaderStageInfos.size() > 0);
+    assert(m_shaderStageInfos.size() > 0);
     VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineCreateInfo.stageCount = shaderStageInfos.size();
-    pipelineCreateInfo.pStages = shaderStageInfos.data();
+    pipelineCreateInfo.stageCount = m_shaderStageInfos.size();
+    pipelineCreateInfo.pStages = m_shaderStageInfos.data();
     pipelineCreateInfo.pVertexInputState = &vertexInputInfo;
     pipelineCreateInfo.pInputAssemblyState = &inputAssemblyInfo;
     pipelineCreateInfo.pViewportState = &viewportStateInfo;

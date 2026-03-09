@@ -250,12 +250,6 @@ namespace Walnut
             fragShaderStageInfo.module = fragShaderModule;
             fragShaderStageInfo.pName = "main";
 
-            // 5. Populate your final vector
-            std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos = {
-                vertShaderStageInfo, 
-                fragShaderStageInfo
-            };
-
             VkDescriptorSetLayoutBinding binding[1] = {};
             binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             binding[0].descriptorCount = 1;
@@ -271,7 +265,7 @@ namespace Walnut
             std::vector<VkDescriptorSetLayout> layouts{descSetLayout};
             GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
             g_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
-                wd.RenderPass, layouts, vertexInputLayout, shaderStageInfos);
+                wd.RenderPass, layouts, vertexInputLayout, std::vector<VkPipelineShaderStageCreateInfo>{vertShaderStageInfo, fragShaderStageInfo});
         }
 
         const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
@@ -341,6 +335,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::FreeGraphicsResources();
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
+        g_imageRenderPipeline.reset();
     }
 
     void VulkanRenderingBackend::Cleanup()
