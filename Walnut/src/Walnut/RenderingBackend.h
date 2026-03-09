@@ -29,6 +29,7 @@ namespace Walnut {
 		virtual void StartImGuiFrame() = 0;
 		virtual void FrameBegin() = 0;
 		virtual void FrameRender(void* draw_data) = 0;
+		virtual void FrameRenderImGui(void* draw_data) {}
 		virtual void FrameEnd() = 0;
 		virtual void FramePresent() = 0;
 

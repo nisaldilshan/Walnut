@@ -15,7 +15,7 @@ public:
 	void StartImGuiFrame() override;
 	void FrameBegin() override;
 	void FrameRender(void* draw_data) override;
-	void FrameRenderImGui(void* draw_data);
+	void FrameRenderImGui(void* draw_data) override;
 	void FrameEnd() override;
 	void FramePresent() override;
 	WalnutWindowHandleType* GetWindowHandle() override;

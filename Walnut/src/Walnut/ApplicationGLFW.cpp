@@ -72,6 +72,10 @@ namespace Walnut {
 		int w, h;
 		glfwGetFramebufferSize(win, &w, &h);
 		m_RenderingBackend->SetupWindow(w, h);
+
+		if (m_Specification.UseImGui) {
+			return; // when using ImGui, we don't need to resize our main image, as ImGui will render to it directly
+		}
 		m_ImageToRender = std::make_unique<Image>(w, h, ImageFormat::RGBA);
 		m_RenderingBackend->SetImageToRender(m_ImageToRender->GetDescriptorSet());
     }
@@ -220,7 +224,12 @@ namespace Walnut {
 		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
 		if (!main_is_minimized) {
 			m_RenderingBackend->FrameBegin();
-			m_RenderingBackend->FrameRender(main_draw_data);
+			if (m_Specification.UseImGui) {
+				m_RenderingBackend->FrameRenderImGui(main_draw_data);
+			} else {
+				m_RenderingBackend->FrameRender(main_draw_data);
+			}
+			
 			m_RenderingBackend->FrameEnd();
 		}
 
