@@ -17,7 +17,8 @@ namespace GraphicsAPI
         void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
         void CreateSampler();
         void CreateDescriptorSet();
-        uint64_t GetDescriptorSet();
+        uint64_t GetDescriptorSet() const;
+        VkDescriptorSetLayout GetDescriptorSetLayout() const;
         bool ImageAvailable();
         void ResourceFree();
         VkBuffer GetStagingBuffer();

@@ -5,10 +5,12 @@
 
 #include "VulkanGraphics.h"
 #include <imgui_impl_glfw.h>
-#include <iostream>
 
 #include "VulkanImageRenderPipeline.h"
 #include <Walnut/Image.h>
+#include "VulkanImage.h"
+
+#include <iostream>
 
 namespace Walnut
 {
@@ -109,6 +111,10 @@ namespace Walnut
     std::unique_ptr<GraphicsAPI::ImageRenderPipeline> g_imageRenderPipeline;
     void VulkanRenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
     {
+        if (!mainImage) {
+            return;
+        }
+
         const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
 
         if (!g_imageRenderPipeline)
@@ -173,19 +179,8 @@ namespace Walnut
             fragShaderStageInfo.module = fragShaderModule;
             fragShaderStageInfo.pName = "main";
 
-            VkDescriptorSetLayoutBinding binding[1] = {};
-            binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            binding[0].descriptorCount = 1;
-            binding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            VkDescriptorSetLayoutCreateInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            info.bindingCount = 1;
-            info.pBindings = binding;
-            VkDescriptorSetLayout descSetLayout;
-            VkResult err = vkCreateDescriptorSetLayout(GraphicsAPI::Vulkan::GetDevice(), &info, GraphicsAPI::Vulkan::GetAllocator(), &descSetLayout);
-            GraphicsAPI::Vulkan::check_vk_result(err);
-
-            std::vector<VkDescriptorSetLayout> layouts{descSetLayout};
+            auto& platformImage = mainImage->PlatformImageRef();
+            std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
             GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
             g_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
                 wd.RenderPass, layouts, vertexInputLayout, std::vector<VkPipelineShaderStageCreateInfo>{vertShaderStageInfo, fragShaderStageInfo});
@@ -195,10 +190,6 @@ namespace Walnut
 
         // 1. Draw your image as the background
         vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, g_imageRenderPipeline->GetPipeline());
-
-        if (!mainImage) {
-            return;
-        }
 
         VkViewport viewport{};
         viewport.x = 0.0f;

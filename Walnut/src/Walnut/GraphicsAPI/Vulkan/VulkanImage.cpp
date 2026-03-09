@@ -228,10 +228,10 @@ void VulkanImage::CreateDescriptorSet()
 
     // Following implemenation replaces the usage of ImGui_ImplVulkan_AddTexture()
 
-    if (!ImGui::GetCurrentContext()) {
-        assert(false);
-        return;
-    }
+    // if (!ImGui::GetCurrentContext()) {
+    //     assert(false);
+    //     return;
+    // }
 
     // Create Descriptor Set Layout:
     {
@@ -274,9 +274,14 @@ void VulkanImage::CreateDescriptorSet()
     }
 }
 
-uint64_t VulkanImage::GetDescriptorSet()
+uint64_t VulkanImage::GetDescriptorSet() const
 {
 	return reinterpret_cast<uint64_t>(m_DescriptorSet);
+}
+
+VkDescriptorSetLayout VulkanImage::GetDescriptorSetLayout() const
+{
+    return m_DescriptorSetLayout;
 }
 
 bool VulkanImage::ImageAvailable()

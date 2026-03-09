@@ -44,6 +44,8 @@ namespace Walnut {
 
 		uint32_t GetWidth() const { return m_Width; }
 		uint32_t GetHeight() const { return m_Height; }
+
+		std::unique_ptr<GraphicsAPI::ImageType>& PlatformImageRef() { return m_rendererBackendImage; }
 	private:
 		void AllocateMemory();
 		void Release();
