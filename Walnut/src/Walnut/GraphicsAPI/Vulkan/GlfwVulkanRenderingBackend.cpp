@@ -61,7 +61,6 @@ namespace Walnut
 
     void VulkanRenderingBackend::ResizeWindow(int width, int height)
     {
-        ImGui_ImplVulkan_SetMinImageCount(GraphicsAPI::Vulkan::GetMinImageCount());
         GraphicsAPI::Vulkan::ResizeVulkanWindow(width, height);
         GraphicsAPI::Vulkan::SetSwapChainRebuildStatus(false);
     }
@@ -93,6 +92,7 @@ namespace Walnut
         init_info.PipelineInfoMain.Subpass = 0;
         init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         ImGui_ImplVulkan_Init(&init_info);
+        ImGui_ImplVulkan_SetMinImageCount(GraphicsAPI::Vulkan::GetMinImageCount());
     }
 
     std::unique_ptr<GraphicsAPI::ImageRenderPipeline> g_imageRenderPipeline;
