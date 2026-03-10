@@ -27,7 +27,9 @@ namespace Walnut {
 		virtual void SetupWindow(int width, int height) = 0;
 		virtual bool NeedToResizeWindow() = 0;
 		virtual void ResizeWindow(int width, int height) = 0;
-		virtual void ConfigureImGui() = 0;
+		virtual void CreateImGuiPipeline() = 0;
+		virtual void DestroyImGuiPipeline() = 0;
+		virtual void CreateMainImagePipeline(std::unique_ptr<Image>& mainImage) = 0;
 		virtual void StartImGuiFrame() = 0;
 		virtual void FrameBegin() = 0;
 		virtual void FrameRender(std::unique_ptr<Image>& mainImage) = 0;

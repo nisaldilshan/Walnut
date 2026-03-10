@@ -11,7 +11,9 @@ public:
 	void SetupWindow(int width, int height) override;
 	bool NeedToResizeWindow() override;
 	void ResizeWindow(int width, int height) override;
-	void ConfigureImGui() override;
+	void CreateImGuiPipeline() override;
+	void DestroyImGuiPipeline() override;
+	void CreateMainImagePipeline(std::unique_ptr<Image>& mainImage) override;
 	void StartImGuiFrame() override;
 	void FrameBegin() override;
 	void FrameRender(std::unique_ptr<Image>& mainImage) override;

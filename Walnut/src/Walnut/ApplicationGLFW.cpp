@@ -138,7 +138,18 @@ namespace Walnut {
 		});
 
 		OnWindowResize(windowHandle);
-		InitImGui();
+
+		if (m_Specification.UseImGui)
+		{
+			InitImGui();
+			// Setup Platform/Renderer backends to work with ImGui
+			m_RenderingBackend->CreateImGuiPipeline();
+		}
+		else
+		{
+			// when not using ImGui, we need to create our main image pipeline here,
+			m_RenderingBackend->CreateMainImagePipeline(m_ImageToRender);
+		}
 	}
 
 	void Application::Shutdown()
@@ -147,7 +158,10 @@ namespace Walnut {
 		m_ImageToRender.reset();
 		m_RenderingBackend->Shutdown();
 
-		ImGui::DestroyContext();
+		if (m_Specification.UseImGui) {
+			m_RenderingBackend->DestroyImGuiPipeline();
+			ImGui::DestroyContext();
+		}
 
 		m_RenderingBackend->Cleanup();
 
@@ -183,9 +197,6 @@ namespace Walnut {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		// Setup Platform/Renderer backends to work with ImGui
-		m_RenderingBackend->ConfigureImGui();
-
 		// Load default font
 		ImFontConfig fontConfig;
 		fontConfig.FontDataOwnedByAtlas = false;
@@ -213,17 +224,24 @@ namespace Walnut {
 				m_RenderingBackend->ResizeWindow(width, height);
 		}
 
-		m_RenderingBackend->StartImGuiFrame();
-		SetupImGuiForOneIteration();
-		ImGui::EndFrame();
+		bool main_is_minimized = false;
+		if (m_Specification.UseImGui) {
+			m_RenderingBackend->StartImGuiFrame();
+			ImGui::NewFrame();
+			SetupImGuiForOneIteration();
+			ImGui::EndFrame();
+			ImGui::Render();
 
-		// Rendering
-		ImGui::Render();
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+			ImDrawData* main_draw_data = ImGui::GetDrawData();
+			main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+		} else {
+			main_is_minimized = glfwGetWindowAttrib(m_RenderingBackend->GetWindowHandle(), GLFW_ICONIFIED);
+		}
+
 		if (!main_is_minimized) {
 			m_RenderingBackend->FrameBegin();
 			if (m_Specification.UseImGui) {
+				ImDrawData* main_draw_data = ImGui::GetDrawData();
 				m_RenderingBackend->FrameRenderImGui(main_draw_data);
 			} else {
 				m_RenderingBackend->FrameRender(m_ImageToRender);
@@ -232,14 +250,16 @@ namespace Walnut {
 			m_RenderingBackend->FrameEnd();
 		}
 
-		// Update and Render additional Platform Windows
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
+		if (m_Specification.UseImGui) {
+			// Update and Render additional Platform Windows
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				auto* backupPtr = glfwGetCurrentContext();  // save currentcontext and have to call glfwMakeContextCurrent later
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+				glfwMakeContextCurrent(backupPtr); // if we do not do this there will be a bug in opengl when docking
+			}
 		}
 
 		// Present Main Platform Window

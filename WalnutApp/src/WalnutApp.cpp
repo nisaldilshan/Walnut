@@ -25,16 +25,18 @@ public:
 	{}
 
 	virtual void OnUpdate(float ts) override
-	{}
-
-	virtual void OnUIRender() override
 	{
 		const auto& mainImage = appPtr->MainImageRef();
 		if (mainImage) {
 			MainImageRender();
-		} else {
-			ImGuiRender();
 		}
+	}
+
+	virtual void OnUIRender() override // This will be called only if UseImGui is set to true
+	{
+		const auto& mainImage = appPtr->MainImageRef();
+		assert(!mainImage);
+		ImGuiRender();
 	}
 
 	void MainImageRender()

@@ -66,7 +66,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::SetSwapChainRebuildStatus(false);
     }
 
-    void VulkanRenderingBackend::ConfigureImGui()
+    void VulkanRenderingBackend::CreateImGuiPipeline()
     {
         ImGui_ImplGlfw_InitForVulkan(m_windowHandle, true);
         
@@ -95,28 +95,9 @@ namespace Walnut
         ImGui_ImplVulkan_Init(&init_info);
     }
 
-    void VulkanRenderingBackend::StartImGuiFrame()
-    {
-		// Start the Dear ImGui frame
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-    }
-
-    void VulkanRenderingBackend::FrameBegin()
-    {
-        GraphicsAPI::Vulkan::FrameBegin();
-    }
-
     std::unique_ptr<GraphicsAPI::ImageRenderPipeline> g_imageRenderPipeline;
-    void VulkanRenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
+    void VulkanRenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
     {
-        if (!mainImage) {
-            return;
-        }
-
-        const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
-
         if (!g_imageRenderPipeline)
         {
             std::vector<uint32_t> vertSpirv = GraphicsAPI::compileGLSLToSPIRV_Vert();
@@ -143,12 +124,34 @@ namespace Walnut
             std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
             GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
             g_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
-                wd.RenderPass, layouts, vertexInputLayout, std::vector<VkPipelineShaderStageCreateInfo>{vertShaderStageInfo, fragShaderStageInfo});
+                GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout, 
+                std::vector<VkPipelineShaderStageCreateInfo>{vertShaderStageInfo, fragShaderStageInfo});
+        }
+    }
+
+    void VulkanRenderingBackend::StartImGuiFrame()
+    {
+		// Start the Dear ImGui frame
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+    }
+
+    void VulkanRenderingBackend::FrameBegin()
+    {
+        GraphicsAPI::Vulkan::FrameBegin();
+    }
+
+    void VulkanRenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
+    {
+        if (!mainImage) {
+            assert(false);
+            return;
         }
 
+        const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
         const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
 
-        // 1. Draw your image as the background
+        assert(g_imageRenderPipeline != VK_NULL_HANDLE);
         vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, g_imageRenderPipeline->GetPipeline());
 
         VkViewport viewport{};
@@ -208,9 +211,13 @@ namespace Walnut
     {
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
         GraphicsAPI::Vulkan::FreeGraphicsResources();
+        g_imageRenderPipeline.reset();
+    }
+
+    void VulkanRenderingBackend::DestroyImGuiPipeline()
+    {
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
-        g_imageRenderPipeline.reset();
     }
 
     void VulkanRenderingBackend::Cleanup()
