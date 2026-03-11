@@ -100,32 +100,11 @@ namespace Walnut
     {
         if (!g_imageRenderPipeline)
         {
-            const std::vector<uint32_t> vertSpirv = GraphicsAPI::getSPIRV_Vert();
-            const std::vector<uint32_t> fragSpirv = GraphicsAPI::getSPIRV_Frag();
-
-            // 3. Create VkShaderModules (Assuming you have access to your 'VkDevice device')
-            VkShaderModule vertShaderModule = GraphicsAPI::createShaderModule(GraphicsAPI::Vulkan::GetDevice(), vertSpirv);
-            VkShaderModule fragShaderModule = GraphicsAPI::createShaderModule(GraphicsAPI::Vulkan::GetDevice(), fragSpirv);
-
-            // 4. Create the Shader Stage Create Infos
-            VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-            vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            vertShaderStageInfo.module = vertShaderModule;
-            vertShaderStageInfo.pName = "main";
-
-            VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-            fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            fragShaderStageInfo.module = fragShaderModule;
-            fragShaderStageInfo.pName = "main";
-
             auto& platformImage = mainImage->PlatformImageRef();
             std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
             GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
             g_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
-                GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout, 
-                std::vector<VkPipelineShaderStageCreateInfo>{vertShaderStageInfo, fragShaderStageInfo});
+                GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout);
         }
     }
 

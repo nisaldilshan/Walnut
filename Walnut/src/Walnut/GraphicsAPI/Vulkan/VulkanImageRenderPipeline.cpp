@@ -191,12 +191,12 @@ VkPipelineRasterizationStateCreateInfo getRasterizerInfo()
 
 ImageRenderPipeline::ImageRenderPipeline(VkRenderPass renderPass, 
                                     std::vector<VkDescriptorSetLayout> &descriptorSetLayouts, 
-                                    const VertexInputLayout &vertexInputLayout, 
-                                    const std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos)
+                                    const VertexInputLayout &vertexInputLayout)
     : m_PipelineLayout(VK_NULL_HANDLE), 
       m_Pipeline(VK_NULL_HANDLE),
-      m_shaderStageInfos(shaderStageInfos)
+      m_shaderStageInfos()
 {
+    PrepareShaders();
     CreatePipelineLayout(descriptorSetLayouts);
     CreatePipeline(renderPass, vertexInputLayout);
 }
@@ -334,14 +334,30 @@ void ImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexIn
     pipelineCreateInfo.subpass = 0;
     pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(GraphicsAPI::Vulkan::GetDevice(), VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &m_Pipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(Vulkan::GetDevice(), VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &m_Pipeline) != VK_SUCCESS) {
+        assert(false);
         //std::cout << "error: could not create rendering pipeline" << std::endl;
     }
+}
 
-    // can save memory by calling DestroyShaders() after pipeline have been created
-    // currently not possible, as pipeline get recreated every window get resized
-    assert(m_Pipeline != VK_NULL_HANDLE);
-    //std::cout << "Render pipeline: " << m_Pipeline << std::endl;
+void ImageRenderPipeline::PrepareShaders()
+{
+    VkShaderModule vertShaderModule = createShaderModule(Vulkan::GetDevice(), getSPIRV_Vert());
+    VkShaderModule fragShaderModule = createShaderModule(Vulkan::GetDevice(), getSPIRV_Frag());
+
+    VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.pName = "main";
+
+    m_shaderStageInfos = std::vector<VkPipelineShaderStageCreateInfo>{vertShaderStageInfo, fragShaderStageInfo};
 }
 
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "VulkanGraphics.h"
-#include <string>
 
 namespace GraphicsAPI
 {
@@ -12,18 +11,13 @@ struct VertexInputLayout
     std::vector<VkVertexInputAttributeDescription> m_vertexAttribDescs;
 };
 
-std::vector<uint32_t> getSPIRV_Vert();
-std::vector<uint32_t> getSPIRV_Frag();
-VkShaderModule createShaderModule(VkDevice device, const std::vector<uint32_t>& spirv);
-
 class ImageRenderPipeline
 {
 
 public:
     ImageRenderPipeline(VkRenderPass renderPass, 
                         std::vector<VkDescriptorSetLayout>& descriptorSetLayouts,
-                        const VertexInputLayout& vertexInputLayout, 
-                        const std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos);
+                        const VertexInputLayout& vertexInputLayout);
     ~ImageRenderPipeline();
 
     ImageRenderPipeline(const ImageRenderPipeline&) = delete;
@@ -37,6 +31,7 @@ public:
 private:
     void CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
     void CreatePipeline(VkRenderPass renderPass, const VertexInputLayout &vertexInputLayout);
+    void PrepareShaders();
 
     VkPipelineLayout m_PipelineLayout;
     VkPipeline m_Pipeline;
