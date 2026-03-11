@@ -20,7 +20,7 @@ namespace Walnut
     VulkanRenderingBackend::~VulkanRenderingBackend()
     {}
 
-    void VulkanRenderingBackend::Init(GLFWwindow *windowHandle)
+    void VulkanRenderingBackend::Init(WalnutWindowHandleType *windowHandle)
     {
         if (!glfwVulkanSupported())
         {
@@ -187,7 +187,7 @@ namespace Walnut
         GraphicsAPI::Vulkan::FramePresent();
     }
 
-    GLFWwindow *VulkanRenderingBackend::GetWindowHandle()
+    WalnutWindowHandleType *VulkanRenderingBackend::GetWindowHandle()
     {
         return m_windowHandle;
     }

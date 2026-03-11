@@ -67,7 +67,7 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
-	void Application::OnWindowResize(GLFWwindow *win)
+	void Application::OnWindowResize(WalnutWindowHandleType *win)
     {
 		int w, h;
 		glfwGetFramebufferSize(win, &w, &h);

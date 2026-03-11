@@ -13,6 +13,7 @@
 #include <SDL3/SDL.h>
 
 #include "RenderingBackend.h"
+#include "Image.h"
 
 // Emedded font
 #include "ImGui/Roboto-Regular.embed"
@@ -46,15 +47,16 @@ namespace Walnut {
 		return *s_Instance;
 	}
 
-	void Application::OnWindowResize(WalnutWindowHandleType *win, int width, int height)
+	void Application::OnWindowResize(WalnutWindowHandleType *win)
     {
-		std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
-		// Create Framebuffers
-		// {
-		// 	int w, h;
-		// 	glfwGetFramebufferSize(win, &w, &h);
-		// 	m_RenderingBackend->SetupWindow(w, h);
-		// }
+		int w, h;
+		SDL_GetWindowSize(win, &w, &h);
+		m_RenderingBackend->SetupWindow(w, h);
+		std::cout << "Resized window to: x=" << w << ", y=" << h << std::endl;
+		if (m_Specification.UseImGui) {
+			return; // when using ImGui, we don't need to resize our main image, as ImGui will render to it directly
+		}
+		m_ImageToRender = std::make_unique<Image>(w, h, ImageFormat::RGBA);
     }
 
 	void Application::Init()
@@ -122,19 +124,33 @@ namespace Walnut {
 		// 	app->OnWindowResize(win, width, height);
 		// });
 
-		int windowWidth, windowHeight;
-		SDL_GetWindowSize(windowHandle, &windowWidth, &windowHeight);
-		m_RenderingBackend->SetupWindow(windowWidth, windowHeight);
-		
-		InitImGui();
+
+		OnWindowResize(windowHandle);
+		if (m_Specification.UseImGui)
+		{
+			InitImGui();
+			// Setup Platform/Renderer backends to work with ImGui
+			m_RenderingBackend->CreateImGuiPipeline();
+		}
+		else
+		{
+			// when not using ImGui, we need to create our main image pipeline here,
+			m_RenderingBackend->CreateMainImagePipeline(m_ImageToRender);
+		}
 	}
 
 	void Application::Shutdown()
 	{
 		LayerStackShutdown();
-
+		m_ImageToRender.reset();
 		m_RenderingBackend->Shutdown();
-		ImGui::DestroyContext();
+
+		if (m_Specification.UseImGui) {
+			m_RenderingBackend->DestroyImGuiPipeline();
+			ImGui::DestroyContext();
+		} else {
+			m_RenderingBackend->DestroyMainImagePipeline();
+		}
 
 		m_RenderingBackend->Cleanup();
 
@@ -183,9 +199,6 @@ namespace Walnut {
 		// Setup SDL UI scaling for imgui
 		style.ScaleAllSizes(scaleFactor);
 
-		// Setup Platform/Renderer backends to work with ImGui
-		m_RenderingBackend->ConfigureImGui();
-
 		// Load default font
 		ImFontConfig fontConfig;
 		fontConfig.FontDataOwnedByAtlas = false;
@@ -206,7 +219,9 @@ namespace Walnut {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL3_ProcessEvent(&event);
+			if (m_Specification.UseImGui) {
+				ImGui_ImplSDL3_ProcessEvent(&event);
+			}
             // if (event.type == SDL_QUIT)
             //     done = true;
             // if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
@@ -225,28 +240,41 @@ namespace Walnut {
 				m_RenderingBackend->ResizeWindow(width, height);
 		}
 
-		m_RenderingBackend->StartImGuiFrame();
-		SetupImGuiForOneIteration();
-		ImGui::EndFrame();
+		bool main_is_minimized = false;
+		if (m_Specification.UseImGui) {
+			m_RenderingBackend->StartImGuiFrame();
+			ImGui::NewFrame();
+			SetupImGuiForOneIteration();
+			ImGui::EndFrame();
+			ImGui::Render();
 
-		// Rendering
-		ImGui::Render();
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+			ImDrawData* main_draw_data = ImGui::GetDrawData();
+			main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+		} else {
+			//main_is_minimized = glfwGetWindowAttrib(m_RenderingBackend->GetWindowHandle(), GLFW_ICONIFIED);
+		}
+
 		if (!main_is_minimized) {
 			m_RenderingBackend->FrameBegin();
-			m_RenderingBackend->FrameRender(main_draw_data);
+			if (m_Specification.UseImGui) {
+				ImDrawData* main_draw_data = ImGui::GetDrawData();
+				m_RenderingBackend->FrameRenderImGui(main_draw_data);
+			} else {
+				m_RenderingBackend->FrameRender(m_ImageToRender);
+			}
 			m_RenderingBackend->FrameEnd();
 		}
 
-		// Update and Render additional Platform Windows
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-            auto* backupPtr = SDL_GL_GetCurrentContext();
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-            SDL_GL_MakeCurrent(m_RenderingBackend->GetWindowHandle(), backupPtr);
+		if (m_Specification.UseImGui) {
+			// Update and Render additional Platform Windows
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				auto* backupPtr = SDL_GL_GetCurrentContext();
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+				SDL_GL_MakeCurrent(m_RenderingBackend->GetWindowHandle(), backupPtr);
+			}
 		}
 
 		// Present Main Platform Window
@@ -275,4 +303,5 @@ namespace Walnut {
 	{
 		return (float)SDL_GetTicks();
 	}
+
 }
