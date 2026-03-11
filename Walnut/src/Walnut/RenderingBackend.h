@@ -30,6 +30,7 @@ namespace Walnut {
 		virtual void CreateImGuiPipeline() = 0;
 		virtual void DestroyImGuiPipeline() = 0;
 		virtual void CreateMainImagePipeline(std::unique_ptr<Image>& mainImage) = 0;
+		virtual void DestroyMainImagePipeline() = 0;
 		virtual void StartImGuiFrame() = 0;
 		virtual void FrameBegin() = 0;
 		virtual void FrameRender(std::unique_ptr<Image>& mainImage) = 0;

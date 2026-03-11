@@ -9,6 +9,11 @@
 
 namespace Walnut
 {
+    VulkanRenderingBackend::VulkanRenderingBackend()
+    {}
+
+    VulkanRenderingBackend::~VulkanRenderingBackend()
+    {}
 
     void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle)
     {

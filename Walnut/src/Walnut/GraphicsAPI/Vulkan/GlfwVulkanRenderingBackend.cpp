@@ -14,6 +14,12 @@
 
 namespace Walnut
 {
+    VulkanRenderingBackend::VulkanRenderingBackend()
+    {}
+
+    VulkanRenderingBackend::~VulkanRenderingBackend()
+    {}
+
     void VulkanRenderingBackend::Init(GLFWwindow *windowHandle)
     {
         if (!glfwVulkanSupported())
@@ -95,17 +101,18 @@ namespace Walnut
         ImGui_ImplVulkan_SetMinImageCount(GraphicsAPI::Vulkan::GetMinImageCount());
     }
 
-    std::unique_ptr<GraphicsAPI::ImageRenderPipeline> g_imageRenderPipeline;
     void VulkanRenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
     {
-        if (!g_imageRenderPipeline)
-        {
-            auto& platformImage = mainImage->PlatformImageRef();
-            std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
-            GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
-            g_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
-                GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout);
-        }
+        auto& platformImage = mainImage->PlatformImageRef();
+        std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
+        GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
+        m_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
+            GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout);
+    }
+
+    void VulkanRenderingBackend::DestroyMainImagePipeline()
+    {
+        m_imageRenderPipeline.reset();
     }
 
     void VulkanRenderingBackend::StartImGuiFrame()
@@ -130,8 +137,8 @@ namespace Walnut
         const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
         const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
 
-        assert(g_imageRenderPipeline != VK_NULL_HANDLE);
-        vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, g_imageRenderPipeline->GetPipeline());
+        assert(m_imageRenderPipeline != VK_NULL_HANDLE);
+        vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_imageRenderPipeline->GetPipeline());
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -152,7 +159,7 @@ namespace Walnut
         vkCmdBindDescriptorSets(
             fd->CommandBuffer, 
             VK_PIPELINE_BIND_POINT_GRAPHICS, 
-            g_imageRenderPipeline->GetPipelineLayout(), 
+            m_imageRenderPipeline->GetPipelineLayout(), 
             0, 1, &descriptorSet, 
             0, nullptr
         );
@@ -164,7 +171,6 @@ namespace Walnut
     void VulkanRenderingBackend::FrameRenderImGui(void *draw_data)
     {
         const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
-        
         const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
 
         // Record dear imgui primitives into command buffer
@@ -190,7 +196,6 @@ namespace Walnut
     {
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
         GraphicsAPI::Vulkan::FreeGraphicsResources();
-        g_imageRenderPipeline.reset();
     }
 
     void VulkanRenderingBackend::DestroyImGuiPipeline()

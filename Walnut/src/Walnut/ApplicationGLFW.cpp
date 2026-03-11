@@ -161,6 +161,8 @@ namespace Walnut {
 		if (m_Specification.UseImGui) {
 			m_RenderingBackend->DestroyImGuiPipeline();
 			ImGui::DestroyContext();
+		} else {
+			m_RenderingBackend->DestroyMainImagePipeline();
 		}
 
 		m_RenderingBackend->Cleanup();
