@@ -13,7 +13,9 @@ struct VertexInputLayout
 };
 
 std::vector<uint32_t> compileGLSLToSPIRV_Vert();
+std::vector<uint32_t> getSPIRV_Vert();
 std::vector<uint32_t> compileGLSLToSPIRV_Frag();
+std::vector<uint32_t> getSPIRV_Frag();
 VkShaderModule createShaderModule(VkDevice device, const std::vector<uint32_t>& spirv);
 
 class ImageRenderPipeline

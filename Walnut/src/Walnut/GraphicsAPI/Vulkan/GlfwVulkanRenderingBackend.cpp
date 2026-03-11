@@ -100,8 +100,8 @@ namespace Walnut
     {
         if (!g_imageRenderPipeline)
         {
-            std::vector<uint32_t> vertSpirv = GraphicsAPI::compileGLSLToSPIRV_Vert();
-            std::vector<uint32_t> fragSpirv = GraphicsAPI::compileGLSLToSPIRV_Frag();
+            const std::vector<uint32_t> vertSpirv = GraphicsAPI::getSPIRV_Vert();
+            const std::vector<uint32_t> fragSpirv = GraphicsAPI::getSPIRV_Frag();
 
             // 3. Create VkShaderModules (Assuming you have access to your 'VkDevice device')
             VkShaderModule vertShaderModule = GraphicsAPI::createShaderModule(GraphicsAPI::Vulkan::GetDevice(), vertSpirv);
