@@ -1,50 +1,7 @@
 #include "VulkanImageRenderPipeline.h"
-#include <shaderc/shaderc.hpp>
 
 namespace GraphicsAPI
 {
-
-// Helper 1: Compiles inline GLSL string to SPIR-V bytecode
-std::vector<uint32_t> compileGLSLToSPIRV_Vert() {
-    // 1. Define your inline GLSL using raw string literals
-    const std::string vertexSource = R"(
-        #version 450
-
-        // Output to fragment shader
-        layout(location = 0) out vec2 fragTexCoord;
-
-        void main() {
-            // Generate UV coordinates: 
-            // Vertex 0: (0, 0)
-            // Vertex 1: (2, 0)
-            // Vertex 2: (0, 2)
-            fragTexCoord = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
-            
-            // Map those UVs to Vulkan NDC positions:
-            // Vertex 0: (-1.0, -1.0)
-            // Vertex 1: ( 3.0, -1.0)
-            // Vertex 2: (-1.0,  3.0)
-            gl_Position = vec4(fragTexCoord * 2.0f - 1.0f, 0.0f, 1.0f);
-        }
-    )";
-
-
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    
-    // Optimize for performance (optional)
-    options.SetOptimizationLevel(shaderc_optimization_level_performance);
-
-    shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(vertexSource, shaderc_glsl_vertex_shader, "Image-Vertex", options);
-
-    if (module.GetCompilationStatus() != shaderc_compilation_status_success) {
-        //std::cerr << "Shader Compilation Error in " << name << ": " << module.GetErrorMessage() << std::endl;
-        assert(false);
-        return {};
-    }
-
-    return {module.cbegin(), module.cend()};
-}
 
 std::vector<uint32_t> getSPIRV_Vert()
 {
@@ -132,43 +89,27 @@ std::vector<uint32_t> getSPIRV_Vert()
             0x00010038};
 }
 
-std::vector<uint32_t> compileGLSLToSPIRV_Frag() {
-    const std::string fragmentSource = R"(
-        #version 450
-
-        // Input from vertex shader
-        layout(location = 0) in vec2 fragTexCoord;
-
-        // Matches your C++ layout: binding[0]
-        layout(binding = 0) uniform sampler2D texSampler;
-
-        // Output to the framebuffer
-        layout(location = 0) out vec4 outColor;
-
-        void main() {
-            outColor = texture(texSampler, fragTexCoord);
-        }
-    )";
-
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    
-    // Optimize for performance (optional)
-    options.SetOptimizationLevel(shaderc_optimization_level_performance);
-
-    shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(fragmentSource, shaderc_glsl_fragment_shader, "Image-Fragment", options);
-
-    if (module.GetCompilationStatus() != shaderc_compilation_status_success) {
-        //std::cerr << "Shader Compilation Error in " << name << ": " << module.GetErrorMessage() << std::endl;
-        assert(false);
-        return {};
-    }
-
-    return {module.cbegin(), module.cend()};
-}
-
 std::vector<uint32_t> getSPIRV_Frag()
 {
+    // const std::string fragmentSource = R"(
+    //     #version 450
+
+    //     // Input from vertex shader
+    //     layout(location = 0) in vec2 fragTexCoord;
+
+    //     // Matches your C++ layout: binding[0]
+    //     layout(binding = 0) uniform sampler2D texSampler;
+
+    //     // Output to the framebuffer
+    //     layout(location = 0) out vec4 outColor;
+
+    //     void main() {
+    //         outColor = texture(texSampler, fragTexCoord);
+    //     }
+    // )";
+
+    // how to get this SPIR-V binary blob:
+    // glslc shader.frag -O -mfmt=c -o frag.h
     return {0x07230203, 0x00010000, 0x000d000b, 0x00000014,
             0x00000000, 0x00020011, 0x00000001, 0x0006000b,
             0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e,
