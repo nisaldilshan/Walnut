@@ -61,7 +61,8 @@ void OpenGLImage::CreateDescriptorSet()
 
 uint64_t OpenGLImage::GetDescriptorSet()
 {
-    return reinterpret_cast<uint64_t>((intptr_t)m_texture);
+    const auto casted = static_cast<intptr_t>(m_texture);
+    return static_cast<uint64_t>(casted);
 }
 
 bool OpenGLImage::ImageAvailable()

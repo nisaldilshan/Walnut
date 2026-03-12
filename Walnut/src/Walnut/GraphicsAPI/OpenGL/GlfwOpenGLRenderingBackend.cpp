@@ -11,8 +11,15 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#include <Walnut/Image.h>
+
 namespace Walnut
 {
+	OpenGLRenderingBackend::OpenGLRenderingBackend()
+	{}
+
+	OpenGLRenderingBackend::~OpenGLRenderingBackend()
+	{}
 
 	void OpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
 	{
@@ -37,7 +44,7 @@ namespace Walnut
 	{
 	}
 
-	void OpenGLRenderingBackend::ConfigureImGui()
+	void OpenGLRenderingBackend::CreateImGuiPipeline()
 	{
 		ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
 #ifdef __EMSCRIPTEN__
@@ -55,13 +62,46 @@ namespace Walnut
 		ImGui::NewFrame();
 	}
 
-	void OpenGLRenderingBackend::FrameRender(void* draw_data)
+	void OpenGLRenderingBackend::DestroyImGuiPipeline()
+    {
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+    }
+
+	void OpenGLRenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image>& mainImage)
+    {
+        auto& platformImage = mainImage->PlatformImageRef();
+        // std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
+        // GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
+        // m_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
+        //     GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout);
+    }
+
+    void OpenGLRenderingBackend::DestroyMainImagePipeline()
+    {
+    }
+
+    void OpenGLRenderingBackend::FrameBegin()
+    {
+    }
+
+    void OpenGLRenderingBackend::FrameRender(std::unique_ptr<Image> &mainImage)
+    {
+		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
+		//ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
+	}
+
+	void OpenGLRenderingBackend::FrameRenderImGui(void* draw_data)
 	{
 		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 
-	void OpenGLRenderingBackend::FramePresent()
+    void OpenGLRenderingBackend::FrameEnd()
+    {
+    }
+
+    void OpenGLRenderingBackend::FramePresent()
 	{
 		glfwSwapBuffers(m_windowHandle);
 	}
@@ -73,8 +113,7 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::Shutdown()
 	{
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		
 	}
 
 	void OpenGLRenderingBackend::Cleanup()
