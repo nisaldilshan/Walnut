@@ -96,8 +96,6 @@ namespace Walnut {
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
-			// glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-			// glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 			sdlWindowType = 0;
 		}
 		else
@@ -116,14 +114,6 @@ namespace Walnut {
 		}
 
 		m_RenderingBackend->Init(windowHandle);
-
-		// glfwSetWindowUserPointer(windowHandle, this);
-		// glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {
-		// 	auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
-		// 	assert(app);
-		// 	app->OnWindowResize(win, width, height);
-		// });
-
 
 		OnWindowResize(windowHandle);
 		if (m_Specification.UseImGui)
@@ -214,18 +204,21 @@ namespace Walnut {
 		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
 		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
 		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-		//glfwPollEvents();
-
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
 			if (m_Specification.UseImGui) {
 				ImGui_ImplSDL3_ProcessEvent(&event);
 			}
-            // if (event.type == SDL_QUIT)
-            //     done = true;
-            // if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-            //     done = true;
+
+			if (event.type == SDL_EVENT_QUIT) {
+                // The user requested to quit the application (e.g., closed the main window)
+                m_Running = false;
+            }
+
+			if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+				OnWindowResize(m_RenderingBackend->GetWindowHandle());
+			}
         }
 
 		LayerStackOnUpdate();
@@ -251,7 +244,8 @@ namespace Walnut {
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
 			main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
 		} else {
-			//main_is_minimized = glfwGetWindowAttrib(m_RenderingBackend->GetWindowHandle(), GLFW_ICONIFIED);
+			const Uint32 flags = SDL_GetWindowFlags(m_RenderingBackend->GetWindowHandle());
+			main_is_minimized = (flags & SDL_WINDOW_MINIMIZED) != 0;
 		}
 
 		if (!main_is_minimized) {
@@ -292,7 +286,7 @@ namespace Walnut {
 		m_Running = true;
 
 		// Main loop
-		while (m_Running) // !glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && 
+		while (m_Running)
 		{
 			MainLoop();
 			std::this_thread::sleep_for(m_SleepAmount);

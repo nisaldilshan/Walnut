@@ -215,6 +215,10 @@ namespace Walnut {
 		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 		glfwPollEvents();
 
+		if (glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle())) {
+			m_Running = false;
+		}
+
 		LayerStackOnUpdate();
 
 		// Resize swap chain?
@@ -282,7 +286,7 @@ namespace Walnut {
     	emscripten_set_main_loop_arg(&EmscriptenMainLoop, this, 0, true);
 #else
 		// Main loop
-		while (!glfwWindowShouldClose(m_RenderingBackend->GetWindowHandle()) && m_Running)
+		while (m_Running)
 		{
 			MainLoop();
 			std::this_thread::sleep_for(m_SleepAmount);
