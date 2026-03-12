@@ -3,6 +3,7 @@ add_library (walnut-graphics-vulkan STATIC
                     VulkanGraphics.cpp
                     VulkanImage.cpp
                     VulkanImageRenderPipeline.cpp
+                    VulkanRenderingBackend.cpp
                 )
 
 target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)  
