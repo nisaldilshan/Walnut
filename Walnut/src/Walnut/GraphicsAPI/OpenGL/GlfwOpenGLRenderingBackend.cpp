@@ -15,6 +15,75 @@
 
 namespace Walnut
 {
+	GLuint CompileShader(GLenum type, const std::string& source) 
+	{
+		GLuint id = glCreateShader(type);
+		const char* src = source.c_str();
+		glShaderSource(id, 1, &src, nullptr);
+		glCompileShader(id);
+
+		// Error handling
+		int result;
+		glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+		if (result == GL_FALSE) 
+		{
+			int length;
+			glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+			std::vector<char> message(length);
+			glGetShaderInfoLog(id, length, &length, message.data());
+			
+			std::cerr << "Failed to compile " 
+					<< (type == GL_VERTEX_SHADER ? "vertex" : "fragment") 
+					<< " shader!" << std::endl;
+			std::cerr << message.data() << std::endl;
+			
+			glDeleteShader(id);
+			return 0;
+		}
+
+		return id;
+	}
+
+	GLuint CreateShaderProgram(const std::string& vertexShaderSrc, const std::string& fragmentShaderSrc) 
+	{
+		GLuint program = glCreateProgram();
+		
+		// Compile both shaders
+		GLuint vs = CompileShader(GL_VERTEX_SHADER, vertexShaderSrc);
+		GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
+
+		// Attach and link them together
+		glAttachShader(program, vs);
+		glAttachShader(program, fs);
+		glLinkProgram(program);
+
+		// Error handling for linking
+		int result;
+		glGetProgramiv(program, GL_LINK_STATUS, &result);
+		if (result == GL_FALSE) 
+		{
+			int length;
+			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+			std::vector<char> message(length);
+			glGetProgramInfoLog(program, length, &length, message.data());
+			
+			std::cerr << "Failed to link shader program!" << std::endl;
+			std::cerr << message.data() << std::endl;
+			
+			glDeleteProgram(program);
+			return 0;
+		}
+
+		// Always detach and delete the individual shaders once linked
+		// They are now baked into the program object and just taking up memory
+		glDetachShader(program, vs);
+		glDetachShader(program, fs);
+		glDeleteShader(vs);
+		glDeleteShader(fs);
+
+		return program;
+	}
+
 	OpenGLRenderingBackend::OpenGLRenderingBackend()
 	{}
 
@@ -66,13 +135,43 @@ namespace Walnut
 		ImGui_ImplGlfw_Shutdown();
     }
 
+	GLuint g_emptyVAO;
+	GLuint g_shaderProgram;
 	void OpenGLRenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image>& mainImage)
     {
-        auto& platformImage = mainImage->PlatformImageRef();
-        // std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
-        // GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
-        // m_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
-        //     GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout);
+        //auto& platformImage = mainImage->PlatformImageRef();
+		glGenVertexArrays(1, &g_emptyVAO);
+
+		std::string vertexSrc = R"(
+			#version 330 core
+			out vec2 v_TexCoord;
+			void main() {
+				v_TexCoord = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+				gl_Position = vec4(v_TexCoord * 2.0 - 1.0, 0.0, 1.0);
+			}
+		)";
+
+		std::string fragmentSrc = R"(
+			#version 330 core
+			layout(location = 0) out vec4 color;
+			in vec2 v_TexCoord;
+			uniform float u_TilingFactor;
+			uniform sampler2D u_Texture;
+			void main() {
+				color = texture(u_Texture, v_TexCoord * u_TilingFactor);
+			}
+		)";
+
+		g_shaderProgram = CreateShaderProgram(vertexSrc, fragmentSrc);
+
+		if (g_shaderProgram == 0) {
+			assert(false && "Shader program creation failed!");
+		}
+
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_DEPTH_TEST);
     }
 
     void OpenGLRenderingBackend::DestroyMainImagePipeline()
@@ -85,8 +184,25 @@ namespace Walnut
 
     void OpenGLRenderingBackend::FrameRender(std::unique_ptr<Image> &mainImage)
     {
-		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
-		//ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
+		// Bind your texture to texture unit 0
+		glActiveTexture(GL_TEXTURE0);
+		const auto textureiD = mainImage->GetDescriptorSet();
+		glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)textureiD);
+
+		// 2. Bind your shader and textures
+		glUseProgram(g_shaderProgram);
+
+		// Set your uniforms
+		glUniform1i(glGetUniformLocation(g_shaderProgram, "u_Texture"), 0);
+		glUniform1f(glGetUniformLocation(g_shaderProgram, "u_TilingFactor"), 1.0f); 
+
+		// 3. Draw the full-screen triangle
+		glBindVertexArray(g_emptyVAO); // Bind the empty VAO
+
+		// Draw exactly 3 vertices. The Vertex Shader handles the rest!
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glBindVertexArray(0); // Unbind
 	}
 
 	void OpenGLRenderingBackend::FrameRenderImGui(void* draw_data)
