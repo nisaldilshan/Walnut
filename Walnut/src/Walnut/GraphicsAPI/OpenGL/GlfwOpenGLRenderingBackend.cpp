@@ -9,20 +9,19 @@
 #include <imgui_impl_glfw.h>
 
 #include <glad/glad.h>
-#include <iostream>
-
 #include <Walnut/Image.h>
+
+#include <iostream>
 
 namespace Walnut
 {
-	GLuint CompileShader(GLenum type, const std::string& source) 
+	GLuint CompileShader(GLenum type, const std::string_view source) 
 	{
 		GLuint id = glCreateShader(type);
-		const char* src = source.c_str();
+		const char* src = source.data();
 		glShaderSource(id, 1, &src, nullptr);
 		glCompileShader(id);
 
-		// Error handling
 		int result;
 		glGetShaderiv(id, GL_COMPILE_STATUS, &result);
 		if (result == GL_FALSE) 
@@ -44,11 +43,9 @@ namespace Walnut
 		return id;
 	}
 
-	GLuint CreateShaderProgram(const std::string& vertexShaderSrc, const std::string& fragmentShaderSrc) 
+	GLuint CreateShaderProgram(const std::string_view vertexShaderSrc, const std::string_view fragmentShaderSrc) 
 	{
 		GLuint program = glCreateProgram();
-		
-		// Compile both shaders
 		GLuint vs = CompileShader(GL_VERTEX_SHADER, vertexShaderSrc);
 		GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
 
@@ -136,13 +133,11 @@ namespace Walnut
     }
 
 	GLuint g_emptyVAO;
-	GLuint g_shaderProgram;
 	void OpenGLRenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image>& mainImage)
     {
-        //auto& platformImage = mainImage->PlatformImageRef();
 		glGenVertexArrays(1, &g_emptyVAO);
 
-		std::string vertexSrc = R"(
+		constexpr std::string_view vertexSrc = R"(
 			#version 330 core
 			out vec2 v_TexCoord;
 			void main() {
@@ -151,7 +146,7 @@ namespace Walnut
 			}
 		)";
 
-		std::string fragmentSrc = R"(
+		constexpr std::string_view fragmentSrc = R"(
 			#version 330 core
 			layout(location = 0) out vec4 color;
 			in vec2 v_TexCoord;
@@ -162,9 +157,9 @@ namespace Walnut
 			}
 		)";
 
-		g_shaderProgram = CreateShaderProgram(vertexSrc, fragmentSrc);
+		m_imageRenderShaderProgram = CreateShaderProgram(vertexSrc, fragmentSrc);
 
-		if (g_shaderProgram == 0) {
+		if (m_imageRenderShaderProgram == 0) {
 			assert(false && "Shader program creation failed!");
 		}
 
@@ -189,20 +184,16 @@ namespace Walnut
 		const auto textureiD = mainImage->GetDescriptorSet();
 		glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)textureiD);
 
-		// 2. Bind your shader and textures
-		glUseProgram(g_shaderProgram);
+		// Bind your shader and textures via uniforms
+		glUseProgram(m_imageRenderShaderProgram);
+		glUniform1i(glGetUniformLocation(m_imageRenderShaderProgram, "u_Texture"), 0);
+		glUniform1f(glGetUniformLocation(m_imageRenderShaderProgram, "u_TilingFactor"), 1.0f); 
 
-		// Set your uniforms
-		glUniform1i(glGetUniformLocation(g_shaderProgram, "u_Texture"), 0);
-		glUniform1f(glGetUniformLocation(g_shaderProgram, "u_TilingFactor"), 1.0f); 
 
-		// 3. Draw the full-screen triangle
 		glBindVertexArray(g_emptyVAO); // Bind the empty VAO
-
 		// Draw exactly 3 vertices. The Vertex Shader handles the rest!
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		glBindVertexArray(0); // Unbind
+		glBindVertexArray(0); // Unbind the VAO
 	}
 
 	void OpenGLRenderingBackend::FrameRenderImGui(void* draw_data)

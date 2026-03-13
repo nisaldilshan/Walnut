@@ -36,6 +36,7 @@ private:
 	uint32_t m_extensions_count = 0;
 	const char** m_extensions = nullptr;
 	WalnutWindowHandleType* m_windowHandle = nullptr;
+	uint32_t m_imageRenderShaderProgram = 0;
 };
 
 
