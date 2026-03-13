@@ -11,19 +11,19 @@ struct VertexInputLayout
     std::vector<VkVertexInputAttributeDescription> m_vertexAttribDescs;
 };
 
-class ImageRenderPipeline
+class VulkanImageRenderPipeline
 {
 
 public:
-    ImageRenderPipeline(VkRenderPass renderPass, 
+    VulkanImageRenderPipeline(VkRenderPass renderPass, 
                         std::vector<VkDescriptorSetLayout>& descriptorSetLayouts,
                         const VertexInputLayout& vertexInputLayout);
-    ~ImageRenderPipeline();
+    ~VulkanImageRenderPipeline();
 
-    ImageRenderPipeline(const ImageRenderPipeline&) = delete;
-    ImageRenderPipeline& operator=(const ImageRenderPipeline&) = delete;
-    ImageRenderPipeline(ImageRenderPipeline&&) = delete;
-    ImageRenderPipeline& operator=(ImageRenderPipeline&&) = delete;
+    VulkanImageRenderPipeline(const VulkanImageRenderPipeline&) = delete;
+    VulkanImageRenderPipeline& operator=(const VulkanImageRenderPipeline&) = delete;
+    VulkanImageRenderPipeline(VulkanImageRenderPipeline&&) = delete;
+    VulkanImageRenderPipeline& operator=(VulkanImageRenderPipeline&&) = delete;
 
     VkPipeline GetPipeline() const { return m_Pipeline; }
     VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }

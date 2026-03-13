@@ -107,7 +107,7 @@ namespace Walnut
         auto& platformImage = mainImage->PlatformImageRef();
         std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
         GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
-        m_imageRenderPipeline = std::make_unique<GraphicsAPI::ImageRenderPipeline>(
+        m_imageRenderPipeline = std::make_unique<GraphicsAPI::VulkanImageRenderPipeline>(
             GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout);
     }
 

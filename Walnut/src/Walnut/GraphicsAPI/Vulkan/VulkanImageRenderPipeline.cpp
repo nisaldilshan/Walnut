@@ -189,7 +189,7 @@ VkPipelineRasterizationStateCreateInfo getRasterizerInfo()
     return rasterizerInfo;
 }
 
-ImageRenderPipeline::ImageRenderPipeline(VkRenderPass renderPass, 
+VulkanImageRenderPipeline::VulkanImageRenderPipeline(VkRenderPass renderPass, 
                                     std::vector<VkDescriptorSetLayout> &descriptorSetLayouts, 
                                     const VertexInputLayout &vertexInputLayout)
     : m_PipelineLayout(VK_NULL_HANDLE), 
@@ -201,7 +201,7 @@ ImageRenderPipeline::ImageRenderPipeline(VkRenderPass renderPass,
     CreatePipeline(renderPass, vertexInputLayout);
 }
 
-ImageRenderPipeline::~ImageRenderPipeline()
+VulkanImageRenderPipeline::~VulkanImageRenderPipeline()
 {
     for (const auto &shaderStageInfo : m_shaderStageInfos)
     {
@@ -225,7 +225,7 @@ ImageRenderPipeline::~ImageRenderPipeline()
     }
 }
 
-void ImageRenderPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout> &descriptorSetLayouts)
+void VulkanImageRenderPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout> &descriptorSetLayouts)
 {
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -238,7 +238,7 @@ void ImageRenderPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSet
     }
 }
 
-void ImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexInputLayout &vertexInputLayout)
+void VulkanImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexInputLayout &vertexInputLayout)
 {
     assert(m_PipelineLayout != VK_NULL_HANDLE);
 
@@ -340,7 +340,7 @@ void ImageRenderPipeline::CreatePipeline(VkRenderPass renderPass, const VertexIn
     }
 }
 
-void ImageRenderPipeline::PrepareShaders()
+void VulkanImageRenderPipeline::PrepareShaders()
 {
     VkShaderModule vertShaderModule = createShaderModule(Vulkan::GetDevice(), getSPIRV_Vert());
     VkShaderModule fragShaderModule = createShaderModule(Vulkan::GetDevice(), getSPIRV_Frag());
