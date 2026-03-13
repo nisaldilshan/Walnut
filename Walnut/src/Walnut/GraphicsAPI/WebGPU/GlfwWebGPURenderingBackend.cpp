@@ -11,6 +11,12 @@
 
 namespace Walnut
 {
+    GlfwWebGPURenderingBackend::GlfwWebGPURenderingBackend()
+	{}
+
+	GlfwWebGPURenderingBackend::~GlfwWebGPURenderingBackend()
+	{}
+
     void GlfwWebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle)
     {
         m_windowHandle = windowHandle;
@@ -62,10 +68,12 @@ namespace Walnut
     {
         return false;
     }
+
     void GlfwWebGPURenderingBackend::ResizeWindow(int width, int height)
     {
     }
-    void GlfwWebGPURenderingBackend::ConfigureImGui()
+
+    void GlfwWebGPURenderingBackend::CreateImGuiPipeline()
     {
         ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
 
@@ -80,10 +88,40 @@ namespace Walnut
     {
         ImGui_ImplWGPU_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
     }
 
-    void GlfwWebGPURenderingBackend::FrameRender(void* draw_data)
+    void GlfwWebGPURenderingBackend::DestroyImGuiPipeline()
+    {
+        ImGui_ImplWGPU_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        if (GraphicsAPI::WebGPU::GetSurface())
+        {
+            GraphicsAPI::WebGPU::GetSurface().release();
+        }
+    }
+
+    void GlfwWebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
+    {
+    }
+
+    void GlfwWebGPURenderingBackend::DestroyMainImagePipeline()
+    {
+    }
+
+    void GlfwWebGPURenderingBackend::FrameBegin()
+    {
+    }
+
+    void GlfwWebGPURenderingBackend::FrameEnd()
+    {
+    }
+
+    void GlfwWebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
+    {
+        assert(false);
+    }
+
+    void GlfwWebGPURenderingBackend::FrameRenderImGui(void* draw_data)
     {
         wgpu::SurfaceTexture surfaceTexture;
         GraphicsAPI::WebGPU::GetSurface().getCurrentTexture(&surfaceTexture);
@@ -149,16 +187,13 @@ namespace Walnut
         return m_windowHandle;
     }
 
-    void GlfwWebGPURenderingBackend::Shutdown()
-    {
-        ImGui_ImplWGPU_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        if (GraphicsAPI::WebGPU::GetSurface())
-        {
-            GraphicsAPI::WebGPU::GetSurface().release();
-        }
-    }
-    void GlfwWebGPURenderingBackend::Cleanup()
-    {
-    }
+	void GlfwWebGPURenderingBackend::Shutdown()
+	{
+		
+	}
+
+	void GlfwWebGPURenderingBackend::Cleanup()
+	{
+	}
+
 }
