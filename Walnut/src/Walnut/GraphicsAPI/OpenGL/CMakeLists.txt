@@ -14,7 +14,8 @@ endif()
 add_library (walnut-graphics-opengl STATIC
                     ImGuiBuildOpenGL.cpp
                     OpenGLGraphics.cpp
-                    OpenGLImage.cpp   
+                    OpenGLImage.cpp  
+                    OpenGLRenderingBackend.cpp 
                 )
 
 target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
