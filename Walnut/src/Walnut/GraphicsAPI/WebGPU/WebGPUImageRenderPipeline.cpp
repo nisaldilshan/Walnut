@@ -31,7 +31,8 @@ void WebGPUImageRenderPipeline::CreatePipeline()
     pipelineDesc.vertex.buffers = nullptr;
 
     // Vertex shader
-    pipelineDesc.vertex.module = m_vertexShader;
+    assert(m_shaderModule);
+    pipelineDesc.vertex.module = m_shaderModule;
 	pipelineDesc.vertex.entryPoint = wgpu::StringView{"vs_main"};
     pipelineDesc.vertex.constantCount = 0;
 	pipelineDesc.vertex.constants = nullptr;
@@ -40,13 +41,13 @@ void WebGPUImageRenderPipeline::CreatePipeline()
 	// Each sequence of 3 vertices is considered as a triangle
 	pipelineDesc.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
 	pipelineDesc.primitive.stripIndexFormat = wgpu::IndexFormat::Undefined;
-	pipelineDesc.primitive.frontFace = wgpu::FrontFace::CW;
+	pipelineDesc.primitive.frontFace = wgpu::FrontFace::CCW;
 	pipelineDesc.primitive.cullMode = wgpu::CullMode::Back;
 
     // Fragment shader
 	wgpu::FragmentState fragmentState;
 	pipelineDesc.fragment = &fragmentState;
-	fragmentState.module = m_fragmentShader;
+	fragmentState.module = m_shaderModule;
 	fragmentState.entryPoint = wgpu::StringView{"fs_main"};
 	fragmentState.constantCount = 0;
 	fragmentState.constants = nullptr;
@@ -71,28 +72,69 @@ void WebGPUImageRenderPipeline::CreatePipeline()
 	fragmentState.targets = &colorTarget;
 	
 	// We setup a depth buffer state for the render pipeline
-	wgpu::DepthStencilState depthStencilState = wgpu::Default;
-	depthStencilState.depthCompare = wgpu::CompareFunction::Less;
-	depthStencilState.depthWriteEnabled = wgpu::OptionalBool::False;
-	depthStencilState.format = WebGPU::GetDepthFormat();
-	depthStencilState.stencilReadMask = 0;
-	depthStencilState.stencilWriteMask = 0;
-    pipelineDesc.depthStencil = &depthStencilState;
+	// wgpu::DepthStencilState depthStencilState = wgpu::Default;
+	// depthStencilState.depthCompare = wgpu::CompareFunction::Less;
+	// depthStencilState.depthWriteEnabled = wgpu::OptionalBool::False;
+	// depthStencilState.format = WebGPU::GetDepthFormat();
+	// depthStencilState.stencilReadMask = 0;
+	// depthStencilState.stencilWriteMask = 0;
+    pipelineDesc.depthStencil = nullptr;
 	pipelineDesc.multisample.count = 1;
 	pipelineDesc.multisample.mask = ~0u;
 	pipelineDesc.multisample.alphaToCoverageEnabled = false;
 
-	// Pipeline layout
-    if (m_pipelineLayout)
-	    pipelineDesc.layout = m_pipelineLayout;
-    else
-        pipelineDesc.layout = nullptr;
-
+    assert(m_pipelineLayout);
+    pipelineDesc.layout = m_pipelineLayout;
     m_pipeline = GraphicsAPI::WebGPU::GetDevice().createRenderPipeline(pipelineDesc);
 }
 
 void WebGPUImageRenderPipeline::PrepareShaders()
 {
+    std::string_view shader = R"(
+        struct VertexOutput {
+            @builtin(position) position : vec4f,
+            @location(0) fragTexCoord : vec2f
+        }
+
+        @vertex
+        fn vs_main(@builtin(vertex_index) vertexIndex : u32) -> VertexOutput {
+            var output : VertexOutput;
+            
+            // Generate UV coordinates using your exact bitwise logic:
+            // Vertex 0: (0.0, 0.0)
+            // Vertex 1: (2.0, 0.0)
+            // Vertex 2: (0.0, 2.0)
+            let uv = vec2<f32>(
+                f32((vertexIndex << 1u) & 2u),
+                f32(vertexIndex & 2u)
+            );
+            output.fragTexCoord = uv;
+            
+            // Map UVs to NDC positions. 
+            // Note: WebGPU NDC is X:[-1, 1], Y:[-1, 1] (bottom to top), Z:[0, 1].
+            output.position = vec4<f32>(uv * 2.0 - 1.0, 0.0, 1.0);
+            
+            return output;
+        }
+
+        @group(0) @binding(0) var tex : texture_2d<f32>;
+        @group(0) @binding(1) var smp : sampler;
+
+        @fragment
+        fn fs_main(in : VertexOutput) -> @location(0) vec4f {
+            // textureSample natively combines the distinct texture and sampler
+            return textureSample(tex, smp, in.fragTexCoord);
+        }
+    )";
+
+    wgpu::ShaderSourceWGSL shaderCodeDesc;
+    shaderCodeDesc.chain.next = nullptr;
+    shaderCodeDesc.chain.sType = wgpu::SType::ShaderSourceWGSL;
+    shaderCodeDesc.code = wgpu::StringView{shader};
+    
+    wgpu::ShaderModuleDescriptor shaderDesc; // Connect the chain
+    shaderDesc.nextInChain = &shaderCodeDesc.chain;
+    m_shaderModule = GraphicsAPI::WebGPU::GetDevice().createShaderModule(shaderDesc);
 }
 
 } // namespace GraphicsAPI

@@ -148,11 +148,19 @@ namespace Walnut
         renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
         renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
 
+        // wgpu::RenderPassDepthStencilAttachment depthAttachment{};
+        // // This must match the TextureFormat::Depth24Plus that your pipeline expects
+        // depthAttachment.view = myDepthTextureView; 
+        // depthAttachment.depthLoadOp = wgpu::LoadOp::Clear;
+        // depthAttachment.depthStoreOp = wgpu::StoreOp::Store;
+        // depthAttachment.depthClearValue = 1.0f; // Standard clear to far plane
+
         wgpu::RenderPassDescriptor renderPassDesc{};
+        //renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
         renderPassDesc.timestampWrites = nullptr;
-        //renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
+        //renderPassDesc.depthStencilAttachment = &depthAttachment;
 
         wgpu::CommandEncoderDescriptor commandEncoderDesc;
         //commandEncoderDesc.label = "Command Encoder";
@@ -160,8 +168,51 @@ namespace Walnut
         wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
         renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
-        //renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
+
+        static wgpu::Sampler m_defaultTextureSampler = nullptr;
+        if (!m_defaultTextureSampler)
+        {
+            wgpu::SamplerDescriptor samplerDesc;
+            samplerDesc.addressModeU = wgpu::AddressMode::Repeat;
+            samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
+            samplerDesc.addressModeW = wgpu::AddressMode::Repeat;
+            samplerDesc.magFilter = wgpu::FilterMode::Linear;
+            samplerDesc.minFilter = wgpu::FilterMode::Linear;
+            samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+            samplerDesc.lodMinClamp = 0.0f;
+            samplerDesc.lodMaxClamp = 8.0f;
+            samplerDesc.compare = wgpu::CompareFunction::Undefined;
+            samplerDesc.maxAnisotropy = 1;
+            m_defaultTextureSampler = GraphicsAPI::WebGPU::GetDevice().createSampler(samplerDesc);
+        }
+
+        // Create a binding
+        std::vector<wgpu::BindGroupEntry> bindings;
+        bindings.resize(2);
+        bindings[0].binding = 0;
+        bindings[0].textureView = (WGPUTextureView)mainImage->GetDescriptorSet();
+        bindings[1].binding = 1;
+        bindings[1].sampler = m_defaultTextureSampler;
+
+        static wgpu::BindGroup bindGroup;
+        if (!bindGroup)
+        {
+            wgpu::BindGroupDescriptor bindGroupDesc;
+            bindGroupDesc.layout = mainImage->PlatformImageRef()->GetDescriptorSetLayout();
+            bindGroupDesc.entryCount = bindings.size();
+            bindGroupDesc.entries = bindings.data();
+            bindGroup = GraphicsAPI::WebGPU::GetDevice().createBindGroup(bindGroupDesc);
+        }
+
+        renderPass.setBindGroup(0, bindGroup, 0, nullptr);
         renderPass.draw(3, 1, 0, 0);
+
+        renderPass.end();
+
+        wgpu::CommandBufferDescriptor cmdBufferDescriptor;
+        //cmdBufferDescriptor.label = "Command buffer";
+        wgpu::CommandBuffer commands = encoder.finish(cmdBufferDescriptor);
+        GraphicsAPI::WebGPU::GetQueue().submit(commands);
     }
 
     void GlfwWebGPURenderingBackend::FrameRenderImGui(void* draw_data)

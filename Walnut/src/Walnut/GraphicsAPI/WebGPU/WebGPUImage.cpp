@@ -109,15 +109,20 @@ void WebGPUImage::CreateSampler()
 
 void WebGPUImage::CreateDescriptorSet()
 {
-    wgpu::BindGroupLayoutEntry entry{};
-    entry.binding = 0;
-    entry.visibility = wgpu::ShaderStage::Fragment;
-    entry.texture.sampleType = wgpu::TextureSampleType::Float;
-    entry.texture.viewDimension = wgpu::TextureViewDimension::_2D;
+    std::vector<wgpu::BindGroupLayoutEntry> entries;
+    entries.resize(2);
+    entries[0].binding = 0;
+    entries[0].visibility = wgpu::ShaderStage::Fragment;
+    entries[0].texture.sampleType = wgpu::TextureSampleType::Float;
+    entries[0].texture.viewDimension = wgpu::TextureViewDimension::_2D;
+    entries[0].texture.multisampled = false;
+    entries[1].binding = 1;
+    entries[1].visibility = wgpu::ShaderStage::Fragment;
+    entries[1].sampler.type = wgpu::SamplerBindingType::Filtering;
     // Create a bind group layout
 	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
-	bindGroupLayoutDesc.entryCount = 1;
-	bindGroupLayoutDesc.entries = &entry;
+	bindGroupLayoutDesc.entryCount = entries.size();
+	bindGroupLayoutDesc.entries = entries.data();
     m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
     assert(m_bindGroupLayout);
 }

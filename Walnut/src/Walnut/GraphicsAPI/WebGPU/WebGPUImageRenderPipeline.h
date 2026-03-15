@@ -18,16 +18,17 @@ public:
 
     wgpu::RenderPipeline GetPipeline() const { return m_pipeline; }
     wgpu::PipelineLayout GetPipelineLayout() const { return m_pipelineLayout; }
+    wgpu::BindGroup GetBindGroup() const { return m_bindGroup; }
 
 private:
     void CreatePipelineLayout(const std::vector<wgpu::BindGroupLayout>& descriptorSetLayouts);
     void CreatePipeline();
     void PrepareShaders();
 
-    wgpu::PipelineLayout m_pipelineLayout;
-    wgpu::RenderPipeline m_pipeline;
-    wgpu::ShaderModule m_vertexShader;
-    wgpu::ShaderModule m_fragmentShader;
+    wgpu::PipelineLayout m_pipelineLayout = nullptr;
+    wgpu::RenderPipeline m_pipeline = nullptr;
+    wgpu::ShaderModule m_shaderModule = nullptr;
+    wgpu::BindGroup m_bindGroup = nullptr;
 };
 
 
