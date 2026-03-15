@@ -194,20 +194,17 @@ namespace Walnut
         bindings[1].binding = 1;
         bindings[1].sampler = m_defaultTextureSampler;
 
-        static wgpu::BindGroup bindGroup;
-        if (!bindGroup)
-        {
-            wgpu::BindGroupDescriptor bindGroupDesc;
-            bindGroupDesc.layout = mainImage->PlatformImageRef()->GetDescriptorSetLayout();
-            bindGroupDesc.entryCount = bindings.size();
-            bindGroupDesc.entries = bindings.data();
-            bindGroup = GraphicsAPI::WebGPU::GetDevice().createBindGroup(bindGroupDesc);
-        }
+        wgpu::BindGroupDescriptor bindGroupDesc;
+        bindGroupDesc.layout = mainImage->PlatformImageRef()->GetDescriptorSetLayout();
+        bindGroupDesc.entryCount = bindings.size();
+        bindGroupDesc.entries = bindings.data();
+        wgpu::BindGroup bindGroup = GraphicsAPI::WebGPU::GetDevice().createBindGroup(bindGroupDesc);
 
         renderPass.setBindGroup(0, bindGroup, 0, nullptr);
         renderPass.draw(3, 1, 0, 0);
 
         renderPass.end();
+        nextTexture.release();
 
         wgpu::CommandBufferDescriptor cmdBufferDescriptor;
         //cmdBufferDescriptor.label = "Command buffer";
