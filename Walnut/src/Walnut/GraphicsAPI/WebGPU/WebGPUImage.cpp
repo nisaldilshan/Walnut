@@ -62,9 +62,14 @@ void WebGPUImage::CreateImageView()
     m_textureView = m_texture.createView(tex_view_desc);
 }
 
-uint64_t WebGPUImage::GetDescriptorSet()
+uint64_t WebGPUImage::GetDescriptorSet() const 
 {
     return reinterpret_cast<uint64_t>((void*)m_textureView); 
+}
+
+wgpu::BindGroupLayout WebGPUImage::GetDescriptorSetLayout() const
+{
+    return m_bindGroupLayout;
 }
 
 bool WebGPUImage::ImageAvailable()
@@ -104,5 +109,17 @@ void WebGPUImage::CreateSampler()
 
 void WebGPUImage::CreateDescriptorSet()
 {
+    wgpu::BindGroupLayoutEntry entry{};
+    entry.binding = 0;
+    entry.visibility = wgpu::ShaderStage::Fragment;
+    entry.texture.sampleType = wgpu::TextureSampleType::Float;
+    entry.texture.viewDimension = wgpu::TextureViewDimension::_2D;
+    // Create a bind group layout
+	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
+	bindGroupLayoutDesc.entryCount = 1;
+	bindGroupLayoutDesc.entries = &entry;
+    m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
+    assert(m_bindGroupLayout);
 }
-}
+
+} // namespace GraphicsAPI

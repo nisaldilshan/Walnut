@@ -572,6 +572,11 @@ const ImGui_ImplVulkanH_Window &Vulkan::GetWindowData()
     return g_MainWindowData;
 }
 
+VkFormat Vulkan::GetDepthFormat()
+{
+	return VK_FORMAT_D32_SFLOAT;
+};
+
 // IMAGE
 
 

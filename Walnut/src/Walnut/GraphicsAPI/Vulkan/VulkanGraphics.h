@@ -65,6 +65,7 @@ public:
 	static VkDescriptorPool GetDescriptorPool();
 	static int GetMinImageCount();
 	static const ImGui_ImplVulkanH_Window& GetWindowData();
+	static  VkFormat GetDepthFormat();
 };
 
 

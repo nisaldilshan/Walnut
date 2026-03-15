@@ -2,6 +2,11 @@
 
 #include "../../RenderingBackend.h"
 
+namespace GraphicsAPI
+{
+	class WebGPUImageRenderPipeline;
+}
+
 namespace Walnut {
 
 class GlfwWebGPURenderingBackend : public RenderingBackend
@@ -34,6 +39,7 @@ public:
 
 private:
 	WalnutWindowHandleType* m_windowHandle = nullptr;
+	std::unique_ptr<GraphicsAPI::WebGPUImageRenderPipeline> m_imageRenderPipeline = nullptr;
 };
 
 

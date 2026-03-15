@@ -327,4 +327,4 @@ VkBuffer VulkanImage::GetStagingBuffer()
     return m_StagingBuffer;
 }
 
-} // namespace
+} // namespace GraphicsAPI

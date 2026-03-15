@@ -160,4 +160,9 @@ namespace GraphicsAPI
 		assert(g_queue);
         return g_queue;
     }
+
+    wgpu::TextureFormat WebGPU::GetDepthFormat()
+    {
+        return wgpu::TextureFormat::Depth24Plus;
+    }
 }

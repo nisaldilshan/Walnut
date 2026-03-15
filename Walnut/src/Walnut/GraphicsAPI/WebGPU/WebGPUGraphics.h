@@ -19,6 +19,7 @@ public:
 	static wgpu::TextureFormat GetSwapChainFormat();
 	static wgpu::Device GetDevice();
 	static wgpu::Queue GetQueue();
+	static wgpu::TextureFormat GetDepthFormat();
 };
 
 }
