@@ -7,6 +7,11 @@
 #include <webgpu/webgpu.hpp>
 
 #include "WebGPUGraphics.h"
+
+#include "WebGPUImageRenderPipeline.h"
+#include <Walnut/Image.h>
+#include "WebGPUImage.h"
+
 #include <iostream>
 
 namespace Walnut
@@ -102,6 +107,9 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
     {
+        auto& platformImage = mainImage->PlatformImageRef();
+        std::vector<wgpu::BindGroupLayout> layouts{platformImage->GetDescriptorSetLayout()};                                       
+        m_imageRenderPipeline = std::make_unique<GraphicsAPI::WebGPUImageRenderPipeline>(layouts);
     }
 
     void GlfwWebGPURenderingBackend::DestroyMainImagePipeline()
@@ -118,7 +126,42 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
     {
-        assert(false);
+        wgpu::SurfaceTexture surfaceTexture;
+        GraphicsAPI::WebGPU::GetSurface().getCurrentTexture(&surfaceTexture);
+        if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal) {
+            assert(false);
+            return;
+        }
+
+        wgpu::Texture tex(surfaceTexture.texture); 
+        wgpu::TextureView nextTexture = tex.createView();
+        if (!nextTexture) {
+            assert(false);
+            return;
+        }
+
+        wgpu::RenderPassColorAttachment renderPassColorAttachment{};
+        renderPassColorAttachment.view = nextTexture;
+        renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+        renderPassColorAttachment.resolveTarget = nullptr;
+        renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
+        renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
+        renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
+
+        wgpu::RenderPassDescriptor renderPassDesc{};
+        renderPassDesc.colorAttachmentCount = 1;
+        renderPassDesc.colorAttachments = &renderPassColorAttachment;
+        renderPassDesc.timestampWrites = nullptr;
+        //renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
+
+        wgpu::CommandEncoderDescriptor commandEncoderDesc;
+        //commandEncoderDesc.label = "Command Encoder";
+        wgpu::CommandEncoder encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
+        wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
+
+        renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
+        //renderPass.setBindGroup(0, m_bindGroup, 0, nullptr);
+        renderPass.draw(3, 1, 0, 0);
     }
 
     void GlfwWebGPURenderingBackend::FrameRenderImGui(void* draw_data)

@@ -8,8 +8,7 @@ class WebGPUImageRenderPipeline
 {
 
 public:
-    WebGPUImageRenderPipeline(wgpu::RenderPassEncoder renderPass, 
-                        std::vector<wgpu::BindGroupLayout>& descriptorSetLayouts);
+    WebGPUImageRenderPipeline(std::vector<wgpu::BindGroupLayout>& descriptorSetLayouts);
     ~WebGPUImageRenderPipeline();
 
     WebGPUImageRenderPipeline(const WebGPUImageRenderPipeline&) = delete;
@@ -17,16 +16,16 @@ public:
     WebGPUImageRenderPipeline(WebGPUImageRenderPipeline&&) = delete;
     WebGPUImageRenderPipeline& operator=(WebGPUImageRenderPipeline&&) = delete;
 
-    wgpu::RenderPipeline GetPipeline() const { return m_Pipeline; }
-    wgpu::PipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
+    wgpu::RenderPipeline GetPipeline() const { return m_pipeline; }
+    wgpu::PipelineLayout GetPipelineLayout() const { return m_pipelineLayout; }
 
 private:
     void CreatePipelineLayout(const std::vector<wgpu::BindGroupLayout>& descriptorSetLayouts);
-    void CreatePipeline(wgpu::RenderPassEncoder renderPass);
+    void CreatePipeline();
     void PrepareShaders();
 
-    wgpu::PipelineLayout m_PipelineLayout;
-    wgpu::RenderPipeline m_Pipeline;
+    wgpu::PipelineLayout m_pipelineLayout;
+    wgpu::RenderPipeline m_pipeline;
     wgpu::ShaderModule m_vertexShader;
     wgpu::ShaderModule m_fragmentShader;
 };
