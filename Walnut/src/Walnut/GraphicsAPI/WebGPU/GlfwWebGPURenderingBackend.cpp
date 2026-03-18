@@ -156,14 +156,14 @@ namespace Walnut
         // depthAttachment.depthClearValue = 1.0f; // Standard clear to far plane
 
         wgpu::RenderPassDescriptor renderPassDesc{};
-        //renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
+        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
         renderPassDesc.timestampWrites = nullptr;
         //renderPassDesc.depthStencilAttachment = &depthAttachment;
 
         wgpu::CommandEncoderDescriptor commandEncoderDesc;
-        //commandEncoderDesc.label = "Command Encoder";
+        commandEncoderDesc.label = wgpu::StringView("MainImage CommandEncoder");
         wgpu::CommandEncoder encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
         wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
@@ -176,7 +176,7 @@ namespace Walnut
         nextTexture.release();
 
         wgpu::CommandBufferDescriptor cmdBufferDescriptor;
-        //cmdBufferDescriptor.label = "Command buffer";
+        cmdBufferDescriptor.label = wgpu::StringView("MainImage CommandBuffer");
         wgpu::CommandBuffer commands = encoder.finish(cmdBufferDescriptor);
         GraphicsAPI::WebGPU::GetQueue().submit(commands);
     }
@@ -200,7 +200,7 @@ namespace Walnut
         }
 
         wgpu::CommandEncoderDescriptor commandEncoderDesc;
-        //commandEncoderDesc.label = "Command Encoder";
+        commandEncoderDesc.label = wgpu::StringView("MainImage CommandEncoder");
         wgpu::CommandEncoder encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
         
 
@@ -216,7 +216,7 @@ namespace Walnut
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
         renderPassDesc.timestampWrites = nullptr;
-        //renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
+        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
         wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
         ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, renderPass);
@@ -226,7 +226,7 @@ namespace Walnut
         nextTexture.release();
 
         wgpu::CommandBufferDescriptor cmdBufferDescriptor{};
-        //cmdBufferDescriptor.label = "Command buffer";
+        cmdBufferDescriptor.label = wgpu::StringView("MainImage CommandBuffer");
         wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
         GraphicsAPI::WebGPU::GetQueue().submit(command);
     }

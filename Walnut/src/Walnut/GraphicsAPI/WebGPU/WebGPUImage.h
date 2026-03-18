@@ -36,6 +36,7 @@ namespace GraphicsAPI
         uint32_t m_width, m_height;
         uint32_t m_DataFormat;
         void* m_imageBuffer;
+        wgpu::Sampler m_sampler;
         wgpu::BindGroupLayout m_bindGroupLayout;
         wgpu::BindGroup m_bindGroup;
     };

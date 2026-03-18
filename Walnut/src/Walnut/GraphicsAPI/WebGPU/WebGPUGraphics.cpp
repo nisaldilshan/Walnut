@@ -107,13 +107,13 @@ namespace GraphicsAPI
 		callbackInfo.userdata2 = nullptr;
 
 		wgpu::DeviceDescriptor deviceDesc;
-		//deviceDesc.label = "My Device";
+		deviceDesc.label = wgpu::StringView("My Device");
 		deviceDesc.nextInChain = nullptr;
 		deviceDesc.requiredFeatureCount = 0;
 		deviceDesc.requiredLimits = &requiredLimits;
 		deviceDesc.uncapturedErrorCallbackInfo = callbackInfo;
 		deviceDesc.defaultQueue.nextInChain = nullptr;
-		//deviceDesc.defaultQueue.label = "The default queue";
+		deviceDesc.defaultQueue.label = wgpu::StringView("The default queue");
 		g_device = adapter.requestDevice(deviceDesc);
 		adapter.release();
 		assert(g_device);

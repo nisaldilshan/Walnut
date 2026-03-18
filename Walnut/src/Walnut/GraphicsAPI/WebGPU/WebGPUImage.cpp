@@ -1,4 +1,5 @@
 #include "WebGPUImage.h"
+#include <array>
 
 namespace Walnut
 {
@@ -37,7 +38,7 @@ void WebGPUImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, u
     m_textureFormat = Walnut::Utils::WalnutFormatToWebGPUFormat(imageFormat);
     
     wgpu::TextureDescriptor tex_desc = {};
-    //tex_desc.label = "Dear ImGui Font Texture";
+    tex_desc.label = wgpu::StringView("Dear ImGui Font Texture");
     tex_desc.dimension = WGPUTextureDimension_2D;
     tex_desc.size.width = width;
     tex_desc.size.height = height;
@@ -110,6 +111,18 @@ void WebGPUImage::UploadToBuffer(const void *data, size_t uploadSize, size_t ali
 
 void WebGPUImage::CreateSampler()
 {
+    wgpu::SamplerDescriptor samplerDesc;
+    samplerDesc.addressModeU = wgpu::AddressMode::Repeat;
+    samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
+    samplerDesc.addressModeW = wgpu::AddressMode::Repeat;
+    samplerDesc.magFilter = wgpu::FilterMode::Linear;
+    samplerDesc.minFilter = wgpu::FilterMode::Linear;
+    samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+    samplerDesc.lodMinClamp = 0.0f;
+    samplerDesc.lodMaxClamp = 8.0f;
+    samplerDesc.compare = wgpu::CompareFunction::Undefined;
+    samplerDesc.maxAnisotropy = 1;
+    m_sampler = GraphicsAPI::WebGPU::GetDevice().createSampler(samplerDesc);
 }
 
 void WebGPUImage::CreateDescriptorSet()
@@ -131,29 +144,11 @@ void WebGPUImage::CreateDescriptorSet()
     m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
     assert(m_bindGroupLayout);
 
-    static wgpu::Sampler m_defaultTextureSampler = nullptr;
-    if (!m_defaultTextureSampler)
-    {
-        wgpu::SamplerDescriptor samplerDesc;
-        samplerDesc.addressModeU = wgpu::AddressMode::Repeat;
-        samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
-        samplerDesc.addressModeW = wgpu::AddressMode::Repeat;
-        samplerDesc.magFilter = wgpu::FilterMode::Linear;
-        samplerDesc.minFilter = wgpu::FilterMode::Linear;
-        samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
-        samplerDesc.lodMinClamp = 0.0f;
-        samplerDesc.lodMaxClamp = 8.0f;
-        samplerDesc.compare = wgpu::CompareFunction::Undefined;
-        samplerDesc.maxAnisotropy = 1;
-        m_defaultTextureSampler = GraphicsAPI::WebGPU::GetDevice().createSampler(samplerDesc);
-    }
-
-    std::vector<wgpu::BindGroupEntry> bindings;
-    bindings.resize(2);
+    std::array<wgpu::BindGroupEntry, 2> bindings;
     bindings[0].binding = 0;
     bindings[0].textureView = m_textureView;
     bindings[1].binding = 1;
-    bindings[1].sampler = m_defaultTextureSampler;
+    bindings[1].sampler = m_sampler;
 
     wgpu::BindGroupDescriptor bindGroupDesc;
     bindGroupDesc.layout = m_bindGroupLayout;
