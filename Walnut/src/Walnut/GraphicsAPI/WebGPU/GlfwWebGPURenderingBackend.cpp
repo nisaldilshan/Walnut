@@ -148,19 +148,11 @@ namespace Walnut
         renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
         renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
 
-        // wgpu::RenderPassDepthStencilAttachment depthAttachment{};
-        // // This must match the TextureFormat::Depth24Plus that your pipeline expects
-        // depthAttachment.view = myDepthTextureView; 
-        // depthAttachment.depthLoadOp = wgpu::LoadOp::Clear;
-        // depthAttachment.depthStoreOp = wgpu::StoreOp::Store;
-        // depthAttachment.depthClearValue = 1.0f; // Standard clear to far plane
-
         wgpu::RenderPassDescriptor renderPassDesc{};
         renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
         renderPassDesc.timestampWrites = nullptr;
-        //renderPassDesc.depthStencilAttachment = &depthAttachment;
 
         wgpu::CommandEncoderDescriptor commandEncoderDesc;
         commandEncoderDesc.label = wgpu::StringView("MainImage CommandEncoder");
@@ -213,10 +205,10 @@ namespace Walnut
         renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
 
         wgpu::RenderPassDescriptor renderPassDesc{};
+        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
         renderPassDesc.timestampWrites = nullptr;
-        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
         wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
         ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, renderPass);
