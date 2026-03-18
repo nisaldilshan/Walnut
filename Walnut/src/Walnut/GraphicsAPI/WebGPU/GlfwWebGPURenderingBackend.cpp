@@ -16,6 +16,14 @@
 
 namespace Walnut
 {
+    struct WebGPUFrameBeginEndData
+    {
+        wgpu::CommandEncoder encoder;
+        wgpu::RenderPassEncoder renderPass;
+        wgpu::TextureView nextTexture;
+    };
+    WebGPUFrameBeginEndData g_frameData{};
+
     GlfwWebGPURenderingBackend::GlfwWebGPURenderingBackend()
 	{}
 
@@ -118,109 +126,61 @@ namespace Walnut
 
     void GlfwWebGPURenderingBackend::FrameBegin()
     {
+        wgpu::SurfaceTexture surfaceTexture;
+        GraphicsAPI::WebGPU::GetSurface().getCurrentTexture(&surfaceTexture);
+        if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal) {
+            assert(false);
+            return;
+        }
+
+        wgpu::Texture tex(surfaceTexture.texture); 
+        g_frameData.nextTexture = tex.createView();
+        if (!g_frameData.nextTexture) {
+            assert(false);
+            return;
+        }
+
+        wgpu::RenderPassColorAttachment renderPassColorAttachment{};
+        renderPassColorAttachment.view = g_frameData.nextTexture;
+        renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+        renderPassColorAttachment.resolveTarget = nullptr;
+        renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
+        renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
+        renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
+
+        wgpu::RenderPassDescriptor renderPassDesc{};
+        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
+        renderPassDesc.colorAttachmentCount = 1;
+        renderPassDesc.colorAttachments = &renderPassColorAttachment;
+        renderPassDesc.timestampWrites = nullptr;
+
+        wgpu::CommandEncoderDescriptor commandEncoderDesc;
+        commandEncoderDesc.label = wgpu::StringView("MainImage CommandEncoder");
+        g_frameData.encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
+        g_frameData.renderPass = g_frameData.encoder.beginRenderPass(renderPassDesc);
     }
 
     void GlfwWebGPURenderingBackend::FrameEnd()
     {
+        g_frameData.renderPass.end();
+        g_frameData.nextTexture.release();
+
+        wgpu::CommandBufferDescriptor cmdBufferDescriptor;
+        cmdBufferDescriptor.label = wgpu::StringView("MainImage CommandBuffer");
+        wgpu::CommandBuffer commands = g_frameData.encoder.finish(cmdBufferDescriptor);
+        GraphicsAPI::WebGPU::GetQueue().submit(commands);
     }
 
     void GlfwWebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
     {
-        wgpu::SurfaceTexture surfaceTexture;
-        GraphicsAPI::WebGPU::GetSurface().getCurrentTexture(&surfaceTexture);
-        if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal) {
-            assert(false);
-            return;
-        }
-
-        wgpu::Texture tex(surfaceTexture.texture); 
-        wgpu::TextureView nextTexture = tex.createView();
-        if (!nextTexture) {
-            assert(false);
-            return;
-        }
-
-        wgpu::RenderPassColorAttachment renderPassColorAttachment{};
-        renderPassColorAttachment.view = nextTexture;
-        renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-        renderPassColorAttachment.resolveTarget = nullptr;
-        renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
-        renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
-        renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
-
-        wgpu::RenderPassDescriptor renderPassDesc{};
-        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
-        renderPassDesc.colorAttachmentCount = 1;
-        renderPassDesc.colorAttachments = &renderPassColorAttachment;
-        renderPassDesc.timestampWrites = nullptr;
-
-        wgpu::CommandEncoderDescriptor commandEncoderDesc;
-        commandEncoderDesc.label = wgpu::StringView("MainImage CommandEncoder");
-        wgpu::CommandEncoder encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
-        wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
-
-        renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
-
-        renderPass.setBindGroup(0, mainImage->PlatformImageRef()->GetBindGroup(), 0, nullptr);
-        renderPass.draw(3, 1, 0, 0);
-
-        renderPass.end();
-        nextTexture.release();
-
-        wgpu::CommandBufferDescriptor cmdBufferDescriptor;
-        cmdBufferDescriptor.label = wgpu::StringView("MainImage CommandBuffer");
-        wgpu::CommandBuffer commands = encoder.finish(cmdBufferDescriptor);
-        GraphicsAPI::WebGPU::GetQueue().submit(commands);
+        g_frameData.renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
+        g_frameData.renderPass.setBindGroup(0, mainImage->PlatformImageRef()->GetBindGroup(), 0, nullptr);
+        g_frameData.renderPass.draw(3, 1, 0, 0);
     }
 
     void GlfwWebGPURenderingBackend::FrameRenderImGui(void* draw_data)
     {
-        wgpu::SurfaceTexture surfaceTexture;
-        GraphicsAPI::WebGPU::GetSurface().getCurrentTexture(&surfaceTexture);
-        if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal) {
-            // Handle resize, timeout, or lost context here
-            assert(false);
-            return;
-        }
-
-        wgpu::Texture tex(surfaceTexture.texture); 
-        wgpu::TextureView nextTexture = tex.createView();
-        if (!nextTexture) {
-            std::cerr << "Cannot acquire next swap chain texture" << std::endl;
-            assert(false);
-            return;
-        }
-
-        wgpu::CommandEncoderDescriptor commandEncoderDesc;
-        commandEncoderDesc.label = wgpu::StringView("MainImage CommandEncoder");
-        wgpu::CommandEncoder encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
-        
-
-        wgpu::RenderPassColorAttachment renderPassColorAttachment{};
-        renderPassColorAttachment.view = nextTexture;
-        renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-        renderPassColorAttachment.resolveTarget = nullptr;
-        renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
-        renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
-        renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
-
-        wgpu::RenderPassDescriptor renderPassDesc{};
-        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
-        renderPassDesc.colorAttachmentCount = 1;
-        renderPassDesc.colorAttachments = &renderPassColorAttachment;
-        renderPassDesc.timestampWrites = nullptr;
-        wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
-
-        ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, renderPass);
-
-        renderPass.end();
-
-        nextTexture.release();
-
-        wgpu::CommandBufferDescriptor cmdBufferDescriptor{};
-        cmdBufferDescriptor.label = wgpu::StringView("MainImage CommandBuffer");
-        wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
-        GraphicsAPI::WebGPU::GetQueue().submit(command);
+        ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, g_frameData.renderPass);
     }
 
     void GlfwWebGPURenderingBackend::FramePresent()
