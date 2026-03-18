@@ -62,12 +62,17 @@ void WebGPUImage::CreateImageView()
     m_textureView = m_texture.createView(tex_view_desc);
 }
 
-uint64_t WebGPUImage::GetDescriptorSet() const 
+uint64_t WebGPUImage::GetHandleForImGui() const
 {
-    return reinterpret_cast<uint64_t>((void*)m_textureView); 
+    return reinterpret_cast<uint64_t>((void*)m_textureView);
 }
 
-wgpu::BindGroupLayout WebGPUImage::GetDescriptorSetLayout() const
+wgpu::BindGroup WebGPUImage::GetBindGroup() const 
+{
+    return m_bindGroup; 
+}
+
+wgpu::BindGroupLayout WebGPUImage::GetBindGroupLayout() const
 {
     return m_bindGroupLayout;
 }
@@ -125,6 +130,36 @@ void WebGPUImage::CreateDescriptorSet()
 	bindGroupLayoutDesc.entries = entries.data();
     m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
     assert(m_bindGroupLayout);
+
+    static wgpu::Sampler m_defaultTextureSampler = nullptr;
+    if (!m_defaultTextureSampler)
+    {
+        wgpu::SamplerDescriptor samplerDesc;
+        samplerDesc.addressModeU = wgpu::AddressMode::Repeat;
+        samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
+        samplerDesc.addressModeW = wgpu::AddressMode::Repeat;
+        samplerDesc.magFilter = wgpu::FilterMode::Linear;
+        samplerDesc.minFilter = wgpu::FilterMode::Linear;
+        samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+        samplerDesc.lodMinClamp = 0.0f;
+        samplerDesc.lodMaxClamp = 8.0f;
+        samplerDesc.compare = wgpu::CompareFunction::Undefined;
+        samplerDesc.maxAnisotropy = 1;
+        m_defaultTextureSampler = GraphicsAPI::WebGPU::GetDevice().createSampler(samplerDesc);
+    }
+
+    std::vector<wgpu::BindGroupEntry> bindings;
+    bindings.resize(2);
+    bindings[0].binding = 0;
+    bindings[0].textureView = m_textureView;
+    bindings[1].binding = 1;
+    bindings[1].sampler = m_defaultTextureSampler;
+
+    wgpu::BindGroupDescriptor bindGroupDesc;
+    bindGroupDesc.layout = m_bindGroupLayout;
+    bindGroupDesc.entryCount = bindings.size();
+    bindGroupDesc.entries = bindings.data();
+    m_bindGroup = GraphicsAPI::WebGPU::GetDevice().createBindGroup(bindGroupDesc);
 }
 
 } // namespace GraphicsAPI

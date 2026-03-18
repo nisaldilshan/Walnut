@@ -86,7 +86,7 @@ public:
 		const uint32_t viewportWidth = ImGui::GetContentRegionAvail().x;
         const uint32_t viewportHeight = ImGui::GetContentRegionAvail().y;
         if (m_image) {
-            ImGui::Image(m_image->GetDescriptorSet(), {(float)m_image->GetWidth(),(float)m_image->GetWidth()});
+            ImGui::Image(m_image->GetHandle(), {(float)m_image->GetWidth(),(float)m_image->GetWidth()});
 		}
 		ImGui::End();
         ImGui::PopStyleVar();

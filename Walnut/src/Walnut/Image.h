@@ -38,7 +38,7 @@ namespace Walnut {
 
 		void SetData(const void* data);
 
-		uint64_t GetDescriptorSet();
+		uint64_t GetHandle();
 
 		void Resize(uint32_t width, uint32_t height);
 

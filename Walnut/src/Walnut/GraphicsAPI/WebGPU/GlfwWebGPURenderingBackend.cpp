@@ -108,7 +108,7 @@ namespace Walnut
     void GlfwWebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
     {
         auto& platformImage = mainImage->PlatformImageRef();
-        std::vector<wgpu::BindGroupLayout> layouts{platformImage->GetDescriptorSetLayout()};                                       
+        std::vector<wgpu::BindGroupLayout> layouts{platformImage->GetBindGroupLayout()};                                       
         m_imageRenderPipeline = std::make_unique<GraphicsAPI::WebGPUImageRenderPipeline>(layouts);
     }
 
@@ -169,38 +169,7 @@ namespace Walnut
 
         renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
 
-        static wgpu::Sampler m_defaultTextureSampler = nullptr;
-        if (!m_defaultTextureSampler)
-        {
-            wgpu::SamplerDescriptor samplerDesc;
-            samplerDesc.addressModeU = wgpu::AddressMode::Repeat;
-            samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
-            samplerDesc.addressModeW = wgpu::AddressMode::Repeat;
-            samplerDesc.magFilter = wgpu::FilterMode::Linear;
-            samplerDesc.minFilter = wgpu::FilterMode::Linear;
-            samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
-            samplerDesc.lodMinClamp = 0.0f;
-            samplerDesc.lodMaxClamp = 8.0f;
-            samplerDesc.compare = wgpu::CompareFunction::Undefined;
-            samplerDesc.maxAnisotropy = 1;
-            m_defaultTextureSampler = GraphicsAPI::WebGPU::GetDevice().createSampler(samplerDesc);
-        }
-
-        // Create a binding
-        std::vector<wgpu::BindGroupEntry> bindings;
-        bindings.resize(2);
-        bindings[0].binding = 0;
-        bindings[0].textureView = (WGPUTextureView)mainImage->GetDescriptorSet();
-        bindings[1].binding = 1;
-        bindings[1].sampler = m_defaultTextureSampler;
-
-        wgpu::BindGroupDescriptor bindGroupDesc;
-        bindGroupDesc.layout = mainImage->PlatformImageRef()->GetDescriptorSetLayout();
-        bindGroupDesc.entryCount = bindings.size();
-        bindGroupDesc.entries = bindings.data();
-        wgpu::BindGroup bindGroup = GraphicsAPI::WebGPU::GetDevice().createBindGroup(bindGroupDesc);
-
-        renderPass.setBindGroup(0, bindGroup, 0, nullptr);
+        renderPass.setBindGroup(0, mainImage->PlatformImageRef()->GetBindGroup(), 0, nullptr);
         renderPass.draw(3, 1, 0, 0);
 
         renderPass.end();
