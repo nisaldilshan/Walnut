@@ -17,7 +17,7 @@ namespace Walnut {
 		typedef VulkanRenderingBackend BackendType;
 	#elif (RENDERER_BACKEND == 3)
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::WebGPU;
-		typedef GlfwWebGPURenderingBackend BackendType;
+		typedef WebGPURenderingBackend BackendType;
 	#else
 		RenderingBackend::BACKEND RenderingBackend::s_backend = RenderingBackend::BACKEND::None;
 	#endif

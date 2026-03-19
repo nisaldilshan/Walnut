@@ -9,15 +9,15 @@ namespace GraphicsAPI
 
 namespace Walnut {
 
-class GlfwWebGPURenderingBackend : public RenderingBackend
+class WebGPURenderingBackend : public RenderingBackend
 {
 public:
-	GlfwWebGPURenderingBackend();
-	~GlfwWebGPURenderingBackend();
-	GlfwWebGPURenderingBackend(const GlfwWebGPURenderingBackend&) = delete;
-	GlfwWebGPURenderingBackend& operator=(const GlfwWebGPURenderingBackend&) = delete;
-	GlfwWebGPURenderingBackend(GlfwWebGPURenderingBackend&&) = delete;
-	GlfwWebGPURenderingBackend& operator=(GlfwWebGPURenderingBackend&&) = delete;
+	WebGPURenderingBackend();
+	~WebGPURenderingBackend();
+	WebGPURenderingBackend(const WebGPURenderingBackend&) = delete;
+	WebGPURenderingBackend& operator=(const WebGPURenderingBackend&) = delete;
+	WebGPURenderingBackend(WebGPURenderingBackend&&) = delete;
+	WebGPURenderingBackend& operator=(WebGPURenderingBackend&&) = delete;
 
 	void Init(WalnutWindowHandleType* windowHandle) override;
 	void SetupWindow(int width, int height) override;

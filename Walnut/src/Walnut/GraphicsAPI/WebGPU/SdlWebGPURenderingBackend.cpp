@@ -13,7 +13,7 @@
 namespace Walnut
 {
 
-    void GlfwWebGPURenderingBackend::CreateImGuiPipeline()
+    void WebGPURenderingBackend::CreateImGuiPipeline()
     {
         ImGui_ImplSDL3_InitForOther(m_windowHandle);
 
@@ -24,13 +24,13 @@ namespace Walnut
         ImGui_ImplWGPU_Init(&initInfo);
     }
 
-    void GlfwWebGPURenderingBackend::StartImGuiFrame()
+    void WebGPURenderingBackend::StartImGuiFrame()
     {
         ImGui_ImplWGPU_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
     }
 
-    void GlfwWebGPURenderingBackend::DestroyImGuiPipeline()
+    void WebGPURenderingBackend::DestroyImGuiPipeline()
     {
         ImGui_ImplWGPU_Shutdown();
         ImGui_ImplSDL3_Shutdown();

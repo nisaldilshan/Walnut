@@ -17,7 +17,7 @@
 namespace Walnut
 {
 
-    void GlfwWebGPURenderingBackend::CreateImGuiPipeline()
+    void WebGPURenderingBackend::CreateImGuiPipeline()
     {
         ImGui_ImplGlfw_InitForOther(m_windowHandle, true);
 
@@ -28,13 +28,13 @@ namespace Walnut
         ImGui_ImplWGPU_Init(&initInfo);
     }
 
-    void GlfwWebGPURenderingBackend::StartImGuiFrame()
+    void WebGPURenderingBackend::StartImGuiFrame()
     {
         ImGui_ImplWGPU_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
     }
 
-    void GlfwWebGPURenderingBackend::DestroyImGuiPipeline()
+    void WebGPURenderingBackend::DestroyImGuiPipeline()
     {
         ImGui_ImplWGPU_Shutdown();
         ImGui_ImplGlfw_Shutdown();

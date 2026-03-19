@@ -16,13 +16,13 @@ struct WebGPUFrameBeginEndData
 };
 WebGPUFrameBeginEndData g_frameData{};
 
-GlfwWebGPURenderingBackend::GlfwWebGPURenderingBackend()
+WebGPURenderingBackend::WebGPURenderingBackend()
 {}
 
-GlfwWebGPURenderingBackend::~GlfwWebGPURenderingBackend()
+WebGPURenderingBackend::~WebGPURenderingBackend()
 {}
 
-void GlfwWebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle)
+void WebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle)
 {
     m_windowHandle = windowHandle;
 
@@ -51,7 +51,7 @@ void GlfwWebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle)
     }
 }
 
-void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)
+void WebGPURenderingBackend::SetupWindow(int width, int height)
 {
     if (!GraphicsAPI::WebGPU::GetSurface())
     {
@@ -69,27 +69,27 @@ void GlfwWebGPURenderingBackend::SetupWindow(int width, int height)
     config.alphaMode = wgpu::CompositeAlphaMode::Auto;
     GraphicsAPI::WebGPU::GetSurface().configure(config);
 }
-bool GlfwWebGPURenderingBackend::NeedToResizeWindow()
+bool WebGPURenderingBackend::NeedToResizeWindow()
 {
     return false;
 }
 
-void GlfwWebGPURenderingBackend::ResizeWindow(int width, int height)
+void WebGPURenderingBackend::ResizeWindow(int width, int height)
 {
 }
 
-void GlfwWebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
+void WebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
 {
     auto& platformImage = mainImage->PlatformImageRef();
     std::vector<wgpu::BindGroupLayout> layouts{platformImage->GetBindGroupLayout()};                                       
     m_imageRenderPipeline = std::make_unique<GraphicsAPI::WebGPUImageRenderPipeline>(layouts);
 }
 
-void GlfwWebGPURenderingBackend::DestroyMainImagePipeline()
+void WebGPURenderingBackend::DestroyMainImagePipeline()
 {
 }
 
-void GlfwWebGPURenderingBackend::FrameBegin()
+void WebGPURenderingBackend::FrameBegin()
 {
     wgpu::SurfaceTexture surfaceTexture;
     GraphicsAPI::WebGPU::GetSurface().getCurrentTexture(&surfaceTexture);
@@ -125,7 +125,7 @@ void GlfwWebGPURenderingBackend::FrameBegin()
     g_frameData.renderPass = g_frameData.encoder.beginRenderPass(renderPassDesc);
 }
 
-void GlfwWebGPURenderingBackend::FrameEnd()
+void WebGPURenderingBackend::FrameEnd()
 {
     g_frameData.renderPass.end();
     g_frameData.nextTexture.release();
@@ -136,19 +136,19 @@ void GlfwWebGPURenderingBackend::FrameEnd()
     GraphicsAPI::WebGPU::GetQueue().submit(commands);
 }
 
-void GlfwWebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
+void WebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
 {
     g_frameData.renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
     g_frameData.renderPass.setBindGroup(0, mainImage->PlatformImageRef()->GetBindGroup(), 0, nullptr);
     g_frameData.renderPass.draw(3, 1, 0, 0);
 }
 
-void GlfwWebGPURenderingBackend::FrameRenderImGui(void* draw_data)
+void WebGPURenderingBackend::FrameRenderImGui(void* draw_data)
 {
     ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, g_frameData.renderPass);
 }
 
-void GlfwWebGPURenderingBackend::FramePresent()
+void WebGPURenderingBackend::FramePresent()
 {
     GraphicsAPI::WebGPU::GetSurface().present();
 
@@ -159,17 +159,17 @@ void GlfwWebGPURenderingBackend::FramePresent()
 #endif
 }
 
-WalnutWindowHandleType* GlfwWebGPURenderingBackend::GetWindowHandle()
+WalnutWindowHandleType* WebGPURenderingBackend::GetWindowHandle()
 {
     return m_windowHandle;
 }
 
-void GlfwWebGPURenderingBackend::Shutdown()
+void WebGPURenderingBackend::Shutdown()
 {
     
 }
 
-void GlfwWebGPURenderingBackend::Cleanup()
+void WebGPURenderingBackend::Cleanup()
 {
 }
 
