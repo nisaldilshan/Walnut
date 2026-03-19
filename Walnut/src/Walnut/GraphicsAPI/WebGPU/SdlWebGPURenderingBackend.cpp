@@ -7,10 +7,29 @@
 #include <webgpu/webgpu.hpp>
 
 #include "WebGPUGraphics.h"
+
+#include "WebGPUImageRenderPipeline.h"
+#include <Walnut/Image.h>
+#include "WebGPUImage.h"
+
 #include <iostream>
 
 namespace Walnut
 {
+    struct WebGPUFrameBeginEndData
+    {
+        wgpu::CommandEncoder encoder;
+        wgpu::RenderPassEncoder renderPass;
+        wgpu::TextureView nextTexture;
+    };
+    WebGPUFrameBeginEndData g_frameData{};
+
+    GlfwWebGPURenderingBackend::GlfwWebGPURenderingBackend()
+	{}
+
+	GlfwWebGPURenderingBackend::~GlfwWebGPURenderingBackend()
+	{}
+
     void GlfwWebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle)
     {
         m_windowHandle = windowHandle;
@@ -62,10 +81,12 @@ namespace Walnut
     {
         return false;
     }
+
     void GlfwWebGPURenderingBackend::ResizeWindow(int width, int height)
     {
     }
-    void GlfwWebGPURenderingBackend::ConfigureImGui()
+
+    void GlfwWebGPURenderingBackend::CreateImGuiPipeline()
     {
         ImGui_ImplSDL3_InitForOther(m_windowHandle);
 
@@ -80,34 +101,47 @@ namespace Walnut
     {
         ImGui_ImplWGPU_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
-		ImGui::NewFrame();
     }
 
-    void GlfwWebGPURenderingBackend::FrameRender(void* draw_data)
+    void GlfwWebGPURenderingBackend::DestroyImGuiPipeline()
+    {
+        ImGui_ImplWGPU_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
+        if (GraphicsAPI::WebGPU::GetSurface())
+        {
+            GraphicsAPI::WebGPU::GetSurface().release();
+        }
+    }
+
+    void GlfwWebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
+    {
+        auto& platformImage = mainImage->PlatformImageRef();
+        std::vector<wgpu::BindGroupLayout> layouts{platformImage->GetBindGroupLayout()};                                       
+        m_imageRenderPipeline = std::make_unique<GraphicsAPI::WebGPUImageRenderPipeline>(layouts);
+    }
+
+    void GlfwWebGPURenderingBackend::DestroyMainImagePipeline()
+    {
+    }
+
+    void GlfwWebGPURenderingBackend::FrameBegin()
     {
         wgpu::SurfaceTexture surfaceTexture;
         GraphicsAPI::WebGPU::GetSurface().getCurrentTexture(&surfaceTexture);
         if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal) {
-            // Handle resize, timeout, or lost context here
             assert(false);
             return;
         }
 
         wgpu::Texture tex(surfaceTexture.texture); 
-        wgpu::TextureView nextTexture = tex.createView();
-        if (!nextTexture) {
-            std::cerr << "Cannot acquire next swap chain texture" << std::endl;
+        g_frameData.nextTexture = tex.createView();
+        if (!g_frameData.nextTexture) {
             assert(false);
             return;
         }
 
-        wgpu::CommandEncoderDescriptor commandEncoderDesc;
-        //commandEncoderDesc.label = "Command Encoder";
-        wgpu::CommandEncoder encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
-        
-
         wgpu::RenderPassColorAttachment renderPassColorAttachment{};
-        renderPassColorAttachment.view = nextTexture;
+        renderPassColorAttachment.view = g_frameData.nextTexture;
         renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
         renderPassColorAttachment.resolveTarget = nullptr;
         renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
@@ -115,22 +149,38 @@ namespace Walnut
         renderPassColorAttachment.clearValue = wgpu::Color{ 0.05, 0.05, 0.05, 1.0 };
 
         wgpu::RenderPassDescriptor renderPassDesc{};
+        renderPassDesc.label = wgpu::StringView("MainImage RenderPass");
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
         renderPassDesc.timestampWrites = nullptr;
-        //renderPassDesc.label = "GlfwWebGPURenderingBackend Render Pass";
-        wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
-        ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, renderPass);
+        wgpu::CommandEncoderDescriptor commandEncoderDesc;
+        commandEncoderDesc.label = wgpu::StringView("MainImage CommandEncoder");
+        g_frameData.encoder = GraphicsAPI::WebGPU::GetDevice().createCommandEncoder(commandEncoderDesc);
+        g_frameData.renderPass = g_frameData.encoder.beginRenderPass(renderPassDesc);
+    }
 
-        renderPass.end();
+    void GlfwWebGPURenderingBackend::FrameEnd()
+    {
+        g_frameData.renderPass.end();
+        g_frameData.nextTexture.release();
 
-        nextTexture.release();
+        wgpu::CommandBufferDescriptor cmdBufferDescriptor;
+        cmdBufferDescriptor.label = wgpu::StringView("MainImage CommandBuffer");
+        wgpu::CommandBuffer commands = g_frameData.encoder.finish(cmdBufferDescriptor);
+        GraphicsAPI::WebGPU::GetQueue().submit(commands);
+    }
 
-        wgpu::CommandBufferDescriptor cmdBufferDescriptor{};
-        //cmdBufferDescriptor.label = "Command buffer";
-        wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
-        GraphicsAPI::WebGPU::GetQueue().submit(command);
+    void GlfwWebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
+    {
+        g_frameData.renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
+        g_frameData.renderPass.setBindGroup(0, mainImage->PlatformImageRef()->GetBindGroup(), 0, nullptr);
+        g_frameData.renderPass.draw(3, 1, 0, 0);
+    }
+
+    void GlfwWebGPURenderingBackend::FrameRenderImGui(void* draw_data)
+    {
+        ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, g_frameData.renderPass);
     }
 
     void GlfwWebGPURenderingBackend::FramePresent()
@@ -149,16 +199,13 @@ namespace Walnut
         return m_windowHandle;
     }
 
-    void GlfwWebGPURenderingBackend::Shutdown()
-    {
-        ImGui_ImplWGPU_Shutdown();
-        ImGui_ImplSDL3_Shutdown();
-        if (GraphicsAPI::WebGPU::GetSurface())
-        {
-            GraphicsAPI::WebGPU::GetSurface().release();
-        }
-    }
-    void GlfwWebGPURenderingBackend::Cleanup()
-    {
-    }
+	void GlfwWebGPURenderingBackend::Shutdown()
+	{
+		
+	}
+
+	void GlfwWebGPURenderingBackend::Cleanup()
+	{
+	}
+
 }
