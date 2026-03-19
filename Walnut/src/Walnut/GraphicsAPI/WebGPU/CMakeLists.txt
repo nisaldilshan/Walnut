@@ -3,6 +3,7 @@ add_library (walnut-graphics-webgpu STATIC
                     WebGPUGraphics.cpp
                     WebGPUImage.cpp
                     WebGPUImageRenderPipeline.cpp
+                    WebGPURenderingBackend.cpp
                     ${imgui_INCLUDE_DIRS}/imgui_impl_wgpu.cpp
                 )
 
