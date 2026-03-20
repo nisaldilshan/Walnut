@@ -274,9 +274,14 @@ void VulkanImage::CreateDescriptorSet()
     }
 }
 
-uint64_t VulkanImage::GetDescriptorSet() const
+uint64_t VulkanImage::GetHandleForImGui() const
 {
-	return reinterpret_cast<uint64_t>(m_DescriptorSet);
+    return reinterpret_cast<uint64_t>(GetDescriptorSet());
+}
+
+VkDescriptorSet VulkanImage::GetDescriptorSet() const
+{
+	return m_DescriptorSet;
 }
 
 VkDescriptorSetLayout VulkanImage::GetDescriptorSetLayout() const

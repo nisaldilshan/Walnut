@@ -1,5 +1,24 @@
+add_library(walnut-imgui-vulkan STATIC
+    ${imgui_INCLUDE_DIRS}/imgui.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_demo.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_draw.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_tables.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_widgets.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_impl_vulkan.cpp
+)
+
+target_link_libraries(walnut-imgui-vulkan PUBLIC imgui::imgui Vulkan::Loader)
+if (WINDOWING_SYSTEM STREQUAL "SDL")
+    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_sdl3.cpp)
+    target_link_libraries(walnut-imgui-vulkan PUBLIC SDL3::SDL3)
+else()
+    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_glfw.cpp)
+    target_link_libraries(walnut-imgui-vulkan PUBLIC glfw)
+endif()
+
+###################################################################################################################################
+
 add_library (walnut-graphics-vulkan STATIC
-                    ImGuiBuildVulkan.cpp
                     VulkanGraphics.cpp
                     VulkanImage.cpp
                     VulkanImageRenderPipeline.cpp
@@ -7,6 +26,7 @@ add_library (walnut-graphics-vulkan STATIC
                 )
 
 target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)  
+target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui walnut-imgui-vulkan)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut-graphics-vulkan PRIVATE SdlVulkanRenderingBackend.cpp)
@@ -20,7 +40,6 @@ if(APPLE)
     if(CMAKE_SYSTEM_NAME MATCHES "iOS")
         target_include_directories(walnut-graphics-vulkan PUBLIC /Users/nisal/Downloads/MoltenVK/MoltenVK/include)
         target_link_libraries(walnut-graphics-vulkan PUBLIC 
-                                imgui::imgui 
                                 /Users/nisal/Downloads/MoltenVK/MoltenVK/static/MoltenVK.xcframework/ios-arm64_x86_64-simulator/libMoltenVK.a
                                 "-framework Metal"
                                 "-framework MetalKit"
@@ -30,12 +49,11 @@ if(APPLE)
                                 "-framework CoreVideo"
                                 "-framework IOKit"
                             )
-
     else()
-        target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui moltenvk::moltenvk)
+        target_link_libraries(walnut-graphics-vulkan PUBLIC moltenvk::moltenvk)
     endif()
 else()
-    target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui Vulkan::Loader)
+    target_link_libraries(walnut-graphics-vulkan PUBLIC Vulkan::Loader)
     find_package (vulkan-validationlayers REQUIRED)
     # Create a custom target that echoes the path during the build step
     add_custom_target(PrintVulkanLayerPath ALL

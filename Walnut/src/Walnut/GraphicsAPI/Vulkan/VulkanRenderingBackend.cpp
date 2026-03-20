@@ -65,7 +65,7 @@ namespace Walnut
         vkCmdSetScissor(fd->CommandBuffer, 0, 1, &scissor);
         
         // Bind the descriptor set containing your VkImageView and a VkSampler
-        auto descriptorSet = reinterpret_cast<VkDescriptorSet>(mainImage->GetDescriptorSet());
+        auto descriptorSet = reinterpret_cast<VkDescriptorSet>(mainImage->GetHandle());
         vkCmdBindDescriptorSets(
             fd->CommandBuffer, 
             VK_PIPELINE_BIND_POINT_GRAPHICS, 
