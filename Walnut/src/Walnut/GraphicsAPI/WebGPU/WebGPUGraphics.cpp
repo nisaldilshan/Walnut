@@ -1,7 +1,5 @@
 #include "WebGPUGraphics.h"
 
-#include "../../GLM/GLM.h"
-
 #ifdef USE_SDL
 #include <sdl3webgpu.h>
 #else
@@ -62,15 +60,17 @@ namespace GraphicsAPI
 		requiredLimits.maxVertexAttributes = 6;
 		requiredLimits.maxVertexBuffers = 1;
 
-		struct VertexAttributes {
-			glm::vec3 position;
-			glm::vec3 normal;
-			glm::vec3 color;
-			glm::vec2 uv;
-		}; // This structure is defined just to get an idea about max values. You may define the actual VertexAttributes struct in your application.
+		// This structure is defined just to get an idea about max values. 
+		// You may define the actual VertexAttributes struct in your application.
+		// struct VertexAttributes {
+		// 	glm::vec3 position;
+		// 	glm::vec3 normal;
+		// 	glm::vec3 color;
+		// 	glm::vec2 uv;
+		// }; // size - 4 * (3 + 3 + 3 + 2) = 44 bytes
 		// TODO : use the same VertexAttributes structure in here and in the application.
-		requiredLimits.maxBufferSize = 150000 * sizeof(VertexAttributes);
-		requiredLimits.maxVertexBufferArrayStride = sizeof(VertexAttributes);
+		requiredLimits.maxBufferSize = 150000 * 44;
+		requiredLimits.maxVertexBufferArrayStride = 44;
 		requiredLimits.minStorageBufferOffsetAlignment = limits.minStorageBufferOffsetAlignment;
 		requiredLimits.minUniformBufferOffsetAlignment = limits.minUniformBufferOffsetAlignment;
 		//requiredLimits.maxInterStageShaderComponents = 17;
