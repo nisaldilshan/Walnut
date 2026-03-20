@@ -126,7 +126,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	spec.Name = "Walnut Example";
 	spec.Width = 1280;
 	spec.Height = 720;
-	spec.UseImGui = false;
+	spec.UseImGui = true;
 
 	Walnut::Application* app = new Walnut::Application(spec);
 	auto exampleLayer = std::make_shared<ExampleLayer>(app);
