@@ -9,6 +9,8 @@
 #include <imgui_impl_glfw.h>
 
 #include <glad/glad.h>
+#include <Walnut/Image.h>
+
 #include <iostream>
 
 namespace Walnut
@@ -37,7 +39,7 @@ namespace Walnut
 	{
 	}
 
-	void OpenGLRenderingBackend::ConfigureImGui()
+	void OpenGLRenderingBackend::CreateImGuiPipeline()
 	{
 		ImGui_ImplGlfw_InitForOpenGL(m_windowHandle, true);
 #ifdef __EMSCRIPTEN__
@@ -49,23 +51,25 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::StartImGuiFrame()
 	{
-		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
 	}
 
-	void OpenGLRenderingBackend::UploadFonts()
-	{
-	}
+	void OpenGLRenderingBackend::DestroyImGuiPipeline()
+    {
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+    }
 
-	void OpenGLRenderingBackend::FrameRender(void* draw_data)
-	{
-		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
-		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
-	}
+    void OpenGLRenderingBackend::FrameBegin()
+    {
+    }
 
-	void OpenGLRenderingBackend::FramePresent()
+    void OpenGLRenderingBackend::FrameEnd()
+    {
+    }
+
+    void OpenGLRenderingBackend::FramePresent()
 	{
 		glfwSwapBuffers(m_windowHandle);
 	}
@@ -77,8 +81,7 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::Shutdown()
 	{
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		
 	}
 
 	void OpenGLRenderingBackend::Cleanup()

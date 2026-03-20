@@ -1,8 +1,34 @@
+add_library(walnut-imgui-webgpu STATIC
+    ${imgui_INCLUDE_DIRS}/imgui.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_demo.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_draw.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_tables.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_widgets.cpp
+    ${imgui_INCLUDE_DIRS}/imgui_impl_wgpu.cpp
+)
+
+set_source_files_properties(${imgui_INCLUDE_DIRS}/imgui_impl_wgpu.cpp PROPERTIES COMPILE_DEFINITIONS "IMGUI_IMPL_WEBGPU_BACKEND_DAWN=1")
+
+if(APPLE)
+set_source_files_properties(${imgui_INCLUDE_DIRS}/imgui_impl_wgpu.cpp PROPERTIES COMPILE_FLAGS "-x objective-c++")
+else()           
+endif()
+target_link_libraries(walnut-imgui-webgpu PUBLIC imgui::imgui webgpu)
+if (WINDOWING_SYSTEM STREQUAL "SDL")
+    target_sources(walnut-imgui-webgpu PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_sdl3.cpp)
+    target_link_libraries(walnut-imgui-webgpu PUBLIC SDL3::SDL3)
+else()
+    target_sources(walnut-imgui-webgpu PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_glfw.cpp)
+    target_link_libraries(walnut-imgui-webgpu PUBLIC glfw)
+endif()
+
+###################################################################################################################################
+
 add_library (walnut-graphics-webgpu STATIC
-                    ImGuiBuildWGPU.cpp
                     WebGPUGraphics.cpp
                     WebGPUImage.cpp
-                    ${imgui_INCLUDE_DIRS}/imgui_impl_wgpu.cpp
+                    WebGPUImageRenderPipeline.cpp
+                    WebGPURenderingBackend.cpp
                 )
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
@@ -18,7 +44,7 @@ if (WINDOWING_SYSTEM STREQUAL "SDL")
     FetchContent_MakeAvailable(sdl3webgpu)
 
     target_sources(walnut-graphics-webgpu PRIVATE SDLWebGPURenderingBackend.cpp)
-    target_link_libraries(walnut-graphics-webgpu PUBLIC sdl3webgpu)
+    target_link_libraries(walnut-graphics-webgpu PUBLIC sdl3webgpu SDL3::SDL3)
 else()
     if(WIN32)
         set(GLFW_BUILD_WIN32 1)
@@ -42,13 +68,5 @@ else()
     target_link_libraries(walnut-graphics-webgpu PUBLIC glfw3webgpu glfw)
 endif()
 
-
-set_source_files_properties(${imgui_INCLUDE_DIRS}/imgui_impl_wgpu.cpp PROPERTIES COMPILE_DEFINITIONS "IMGUI_IMPL_WEBGPU_BACKEND_DAWN=1")
-
-if(APPLE)
-set_source_files_properties(${imgui_INCLUDE_DIRS}/imgui_impl_wgpu.cpp PROPERTIES COMPILE_FLAGS "-x objective-c++")
-else()           
-endif()
-
 target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
-target_link_libraries(walnut-graphics-webgpu PUBLIC imgui::imgui glm::glm webgpu)
+target_link_libraries(walnut-graphics-webgpu PUBLIC imgui::imgui webgpu walnut-imgui-webgpu)

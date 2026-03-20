@@ -1,7 +1,5 @@
 #include "VulkanImage.h"
 
-#include <imgui_impl_vulkan.h>
-
 #include "../../ImageFormat.h"
 
 namespace Walnut
@@ -226,12 +224,69 @@ void VulkanImage::CreateSampler()
 
 void VulkanImage::CreateDescriptorSet()
 {
-    m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    //m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    // Following implemenation replaces the usage of ImGui_ImplVulkan_AddTexture()
+
+    // if (!ImGui::GetCurrentContext()) {
+    //     assert(false);
+    //     return;
+    // }
+
+    // Create Descriptor Set Layout:
+    {
+        VkDescriptorSetLayoutBinding binding[1] = {};
+        binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        binding[0].descriptorCount = 1;
+        binding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        info.bindingCount = 1;
+        info.pBindings = binding;
+        VkResult err = vkCreateDescriptorSetLayout(Vulkan::GetDevice(), &info, Vulkan::GetAllocator(), &m_DescriptorSetLayout);
+        Vulkan::check_vk_result(err);
+    }
+
+    // Create Descriptor Set:
+    {
+        VkDescriptorSetAllocateInfo alloc_info = {};
+        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        alloc_info.descriptorPool = Vulkan::GetDescriptorPool();
+        alloc_info.descriptorSetCount = 1;
+        alloc_info.pSetLayouts = &m_DescriptorSetLayout;
+        VkResult err = vkAllocateDescriptorSets(Vulkan::GetDevice(), &alloc_info, &m_DescriptorSet);
+        Vulkan::check_vk_result(err);
+    }
+
+    // Update the Descriptor Set:
+    {
+        VkDescriptorImageInfo desc_image[1] = {};
+        desc_image[0].sampler = m_Sampler;
+        desc_image[0].imageView = m_ImageView;
+        desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        VkWriteDescriptorSet write_desc[1] = {};
+        write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_desc[0].dstSet = m_DescriptorSet;
+        write_desc[0].descriptorCount = 1;
+        write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write_desc[0].pImageInfo = desc_image;
+        vkUpdateDescriptorSets(Vulkan::GetDevice(), 1, write_desc, 0, nullptr);
+    }
 }
 
-ImTextureID VulkanImage::GetDescriptorSet()
+uint64_t VulkanImage::GetHandleForImGui() const
 {
-	return (ImTextureID)m_DescriptorSet;
+    return reinterpret_cast<uint64_t>(GetDescriptorSet());
+}
+
+VkDescriptorSet VulkanImage::GetDescriptorSet() const
+{
+	return m_DescriptorSet;
+}
+
+VkDescriptorSetLayout VulkanImage::GetDescriptorSetLayout() const
+{
+    return m_DescriptorSetLayout;
 }
 
 bool VulkanImage::ImageAvailable()
@@ -244,8 +299,9 @@ bool VulkanImage::ImageAvailable()
 
 void VulkanImage::ResourceFree()
 {
-    auto func = [  sampler = m_Sampler, imageView = m_ImageView, image = m_Image,
-                        memory = m_Memory, stagingBuffer = m_StagingBuffer, stagingBufferMemory = m_StagingBufferMemory]()
+    auto func = [   sampler = m_Sampler, imageView = m_ImageView, image = m_Image,
+                    memory = m_Memory, stagingBuffer = m_StagingBuffer, 
+                    stagingBufferMemory = m_StagingBufferMemory, descriptorSetLayout = m_DescriptorSetLayout]()
     {
         vkDestroySampler(Vulkan::GetDevice(), sampler, nullptr);
         vkDestroyImageView(Vulkan::GetDevice(), imageView, nullptr);
@@ -253,6 +309,7 @@ void VulkanImage::ResourceFree()
         vkFreeMemory(Vulkan::GetDevice(), memory, nullptr);
         vkDestroyBuffer(Vulkan::GetDevice(), stagingBuffer, nullptr);
         vkFreeMemory(Vulkan::GetDevice(), stagingBufferMemory, nullptr); 
+        vkDestroyDescriptorSetLayout(Vulkan::GetDevice(), descriptorSetLayout, nullptr);
     };
 
     Vulkan::SubmitResourceFree(func);
@@ -263,6 +320,11 @@ void VulkanImage::ResourceFree()
     m_Memory = 0;
     m_StagingBuffer = 0;
     m_StagingBufferMemory = 0;
+
+    // Actual destruction of the descriptor set happens when associated descriptoPool destructs (Vulkan::GetDescriptorPool())
+    // It works for now but may be not good for performance
+    m_DescriptorSet = 0; 
+    m_DescriptorSetLayout = 0;
 }
 
 VkBuffer VulkanImage::GetStagingBuffer()
@@ -270,4 +332,4 @@ VkBuffer VulkanImage::GetStagingBuffer()
     return m_StagingBuffer;
 }
 
-} // namespace
+} // namespace GraphicsAPI

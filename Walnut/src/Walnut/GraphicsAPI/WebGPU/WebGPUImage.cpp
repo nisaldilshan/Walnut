@@ -1,4 +1,5 @@
 #include "WebGPUImage.h"
+#include <array>
 
 namespace Walnut
 {
@@ -37,7 +38,7 @@ void WebGPUImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, u
     m_textureFormat = Walnut::Utils::WalnutFormatToWebGPUFormat(imageFormat);
     
     wgpu::TextureDescriptor tex_desc = {};
-    //tex_desc.label = "Dear ImGui Font Texture";
+    tex_desc.label = wgpu::StringView("Dear ImGui Font Texture");
     tex_desc.dimension = WGPUTextureDimension_2D;
     tex_desc.size.width = width;
     tex_desc.size.height = height;
@@ -62,9 +63,19 @@ void WebGPUImage::CreateImageView()
     m_textureView = m_texture.createView(tex_view_desc);
 }
 
-ImTextureID WebGPUImage::GetDescriptorSet()
+uint64_t WebGPUImage::GetHandleForImGui() const
 {
-    return (ImTextureID)(void*)m_textureView; 
+    return reinterpret_cast<uint64_t>((void*)m_textureView);
+}
+
+wgpu::BindGroup WebGPUImage::GetBindGroup() const 
+{
+    return m_bindGroup; 
+}
+
+wgpu::BindGroupLayout WebGPUImage::GetBindGroupLayout() const
+{
+    return m_bindGroupLayout;
 }
 
 bool WebGPUImage::ImageAvailable()
@@ -100,9 +111,50 @@ void WebGPUImage::UploadToBuffer(const void *data, size_t uploadSize, size_t ali
 
 void WebGPUImage::CreateSampler()
 {
+    wgpu::SamplerDescriptor samplerDesc;
+    samplerDesc.addressModeU = wgpu::AddressMode::Repeat;
+    samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
+    samplerDesc.addressModeW = wgpu::AddressMode::Repeat;
+    samplerDesc.magFilter = wgpu::FilterMode::Linear;
+    samplerDesc.minFilter = wgpu::FilterMode::Linear;
+    samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+    samplerDesc.lodMinClamp = 0.0f;
+    samplerDesc.lodMaxClamp = 8.0f;
+    samplerDesc.compare = wgpu::CompareFunction::Undefined;
+    samplerDesc.maxAnisotropy = 1;
+    m_sampler = GraphicsAPI::WebGPU::GetDevice().createSampler(samplerDesc);
 }
 
 void WebGPUImage::CreateDescriptorSet()
 {
+    std::vector<wgpu::BindGroupLayoutEntry> entries;
+    entries.resize(2);
+    entries[0].binding = 0;
+    entries[0].visibility = wgpu::ShaderStage::Fragment;
+    entries[0].texture.sampleType = wgpu::TextureSampleType::Float;
+    entries[0].texture.viewDimension = wgpu::TextureViewDimension::_2D;
+    entries[0].texture.multisampled = false;
+    entries[1].binding = 1;
+    entries[1].visibility = wgpu::ShaderStage::Fragment;
+    entries[1].sampler.type = wgpu::SamplerBindingType::Filtering;
+    // Create a bind group layout
+	wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
+	bindGroupLayoutDesc.entryCount = entries.size();
+	bindGroupLayoutDesc.entries = entries.data();
+    m_bindGroupLayout = WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
+    assert(m_bindGroupLayout);
+
+    std::array<wgpu::BindGroupEntry, 2> bindings;
+    bindings[0].binding = 0;
+    bindings[0].textureView = m_textureView;
+    bindings[1].binding = 1;
+    bindings[1].sampler = m_sampler;
+
+    wgpu::BindGroupDescriptor bindGroupDesc;
+    bindGroupDesc.layout = m_bindGroupLayout;
+    bindGroupDesc.entryCount = bindings.size();
+    bindGroupDesc.entries = bindings.data();
+    m_bindGroup = GraphicsAPI::WebGPU::GetDevice().createBindGroup(bindGroupDesc);
 }
-}
+
+} // namespace GraphicsAPI

@@ -23,7 +23,9 @@ namespace GraphicsAPI
         void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
         void CreateSampler();
         void CreateDescriptorSet();
-        ImTextureID GetDescriptorSet();
+        uint64_t GetHandleForImGui() const;
+        wgpu::BindGroup GetBindGroup() const;
+        wgpu::BindGroupLayout GetBindGroupLayout() const;
         bool ImageAvailable();
         void ResourceFree();
         VkBuffer GetStagingBuffer();
@@ -34,5 +36,8 @@ namespace GraphicsAPI
         uint32_t m_width, m_height;
         uint32_t m_DataFormat;
         void* m_imageBuffer;
+        wgpu::Sampler m_sampler;
+        wgpu::BindGroupLayout m_bindGroupLayout;
+        wgpu::BindGroup m_bindGroup;
     };
 }

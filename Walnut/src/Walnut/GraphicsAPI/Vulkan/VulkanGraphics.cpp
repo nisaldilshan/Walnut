@@ -31,10 +31,11 @@ static VkDevice                 g_Device = VK_NULL_HANDLE;
 static uint32_t                 g_QueueFamily = (uint32_t)-1;
 static VkQueue                  g_Queue = VK_NULL_HANDLE;
 static VkDebugReportCallbackEXT g_DebugReport = VK_NULL_HANDLE;
-static VkPipelineCache          g_PipelineCache = VK_NULL_HANDLE;
 static VkDescriptorPool         g_DescriptorPool = VK_NULL_HANDLE;
 
 static VkSurfaceKHR             g_surface = VK_NULL_HANDLE;
+// All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
+// Your real engine/app may not use them.
 static ImGui_ImplVulkanH_Window g_MainWindowData;
 
 static int                      g_MinImageCount = 2;
@@ -328,12 +329,11 @@ void Vulkan::CleanupVulkanWindow()
 	ImGui_ImplVulkanH_DestroyWindow(g_Instance, g_Device, &g_MainWindowData, g_Allocator);
 }
 
-void Vulkan::FrameRender(void* draw_data)
+void Vulkan::FrameBegin()
 {
 	VkResult err;
 
 	VkSemaphore image_acquired_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
-	VkSemaphore render_complete_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
 	err = vkAcquireNextImageKHR(g_Device, g_MainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &g_MainWindowData.FrameIndex);
 	if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 	{
@@ -379,10 +379,14 @@ void Vulkan::FrameRender(void* draw_data)
 		info.pClearValues = &g_MainWindowData.ClearValue;
 		vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 	}
+}
 
-	// Record dear imgui primitives into command buffer
-	ImGui_ImplVulkan_RenderDrawData((ImDrawData*)draw_data, fd->CommandBuffer);
-
+void Vulkan::FrameEnd()
+{
+	VkResult err;
+	VkSemaphore image_acquired_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
+	VkSemaphore render_complete_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
+	ImGui_ImplVulkanH_Frame* fd = &g_MainWindowData.Frames[g_MainWindowData.FrameIndex];
 	// Submit command buffer
 	vkCmdEndRenderPass(fd->CommandBuffer);
 
@@ -425,55 +429,6 @@ void Vulkan::FramePresent()
 	g_MainWindowData.SemaphoreIndex = (g_MainWindowData.SemaphoreIndex + 1) % g_MainWindowData.ImageCount; // Now we can use the next set of semaphores
 }
 
-void Vulkan::ConfigureRendererBackend()
-{
-    ImGui_ImplVulkan_InitInfo init_info = {};
-    init_info.Instance = g_Instance;
-    init_info.PhysicalDevice = g_PhysicalDevice;
-    init_info.Device = g_Device;
-    init_info.QueueFamily = g_QueueFamily;
-    init_info.Queue = g_Queue;
-    init_info.PipelineCache = g_PipelineCache;
-    init_info.DescriptorPool = g_DescriptorPool;
-    init_info.MinImageCount = g_MinImageCount;
-    init_info.ImageCount = g_MainWindowData.ImageCount;
-    init_info.Allocator = g_Allocator;
-    init_info.CheckVkResultFn = check_vk_result;
-
-	ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
-	init_info.PipelineInfoMain.RenderPass = wd->RenderPass;
-	init_info.PipelineInfoMain.Subpass = 0;
-    init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-    ImGui_ImplVulkan_Init(&init_info);
-}
-
-void Vulkan::UploadFonts()
-{
-    // Use any command queue
-    VkCommandPool command_pool = g_MainWindowData.Frames[g_MainWindowData.FrameIndex].CommandPool;
-    VkCommandBuffer command_buffer = g_MainWindowData.Frames[g_MainWindowData.FrameIndex].CommandBuffer;
-
-    VkResult err = vkResetCommandPool(g_Device, command_pool, 0);
-    check_vk_result(err);
-    VkCommandBufferBeginInfo begin_info = {};
-    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    err = vkBeginCommandBuffer(command_buffer, &begin_info);
-    check_vk_result(err);
-
-    VkSubmitInfo end_info = {};
-    end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    end_info.commandBufferCount = 1;
-    end_info.pCommandBuffers = &command_buffer;
-    err = vkEndCommandBuffer(command_buffer);
-    check_vk_result(err);
-    err = vkQueueSubmit(g_Queue, 1, &end_info, VK_NULL_HANDLE);
-    check_vk_result(err);
-
-    err = vkDeviceWaitIdle(g_Device);
-    check_vk_result(err);
-}
-
 VkCommandPool Vulkan::GetCommandPool()
 {
     VkCommandPool command_pool = g_MainWindowData.Frames[g_MainWindowData.FrameIndex].CommandPool;
@@ -502,7 +457,6 @@ void Vulkan::QueueSubmit(VkSubmitInfo info)
 
 void Vulkan::ResizeVulkanWindow(int width, int height)
 {
-    ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
     ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, 
 										&g_MainWindowData, g_QueueFamily, g_Allocator, 
 										width, height, g_MinImageCount, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -583,12 +537,12 @@ VkPhysicalDevice Vulkan::GetPhysicalDevice()
 	return g_PhysicalDevice;
 }
 
-uint32_t Vulkan::GetQueueFamilyIndex()
+uint32_t Vulkan::GetQueueFamily()
 {
     return g_QueueFamily;
 }
 
-VkQueue Vulkan::GetDeviceQueue()
+VkQueue Vulkan::GetQueue()
 {
     return g_Queue;
 }
@@ -602,6 +556,26 @@ VkSurfaceKHR* Vulkan::GetSurface()
 {
     return &g_surface;
 }
+
+VkDescriptorPool Vulkan::GetDescriptorPool()
+{
+	return g_DescriptorPool;
+}
+
+int Vulkan::GetMinImageCount()
+{
+    return g_MinImageCount;
+}
+
+const ImGui_ImplVulkanH_Window &Vulkan::GetWindowData()
+{
+    return g_MainWindowData;
+}
+
+VkFormat Vulkan::GetDepthFormat()
+{
+	return VK_FORMAT_D32_SFLOAT;
+};
 
 // IMAGE
 

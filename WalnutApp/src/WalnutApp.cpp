@@ -13,21 +13,63 @@
 class ExampleLayer : public Walnut::Layer
 {
 public:
-	virtual void OnAttach() override
+	ExampleLayer(Walnut::Application* app) 
+		: appPtr(app)
 	{
 	}
+
+	virtual void OnAttach() override
+	{}
 
 	virtual void OnDetach() override
-	{
-
-	}
+	{}
 
 	virtual void OnUpdate(float ts) override
 	{
+		const auto& mainImage = appPtr->MainImageRef();
+		if (mainImage) {
+			MainImageRender();
+		}
 	}
 
-	virtual void OnUIRender() override
+	virtual void OnUIRender() override // This will be called only if UseImGui is set to true
 	{
+		const auto& mainImage = appPtr->MainImageRef();
+		assert(!mainImage);
+		ImGuiRender();
+	}
+
+	void MainImageRender()
+    {
+        Walnut::Timer timer;
+
+		static uint32_t windowWidth = 0;
+		static uint32_t windowHeight = 0;
+
+		auto& mainImage = appPtr->MainImageRef();
+        if (windowWidth != mainImage->GetWidth() ||
+            windowHeight != mainImage->GetHeight())
+        {
+			windowWidth = mainImage->GetWidth();
+			windowHeight = mainImage->GetHeight();
+            delete[] m_imageData;
+            m_imageData = new uint32_t[windowWidth * windowHeight];
+        }
+
+        for (size_t i = 0; i < windowWidth * windowHeight; i++)
+        {
+            m_imageData[i] = Walnut::Random::UInt();
+            m_imageData[i] |= 0xff000000; // remove randomnes from alpha channel
+        }
+		mainImage->SetData(m_imageData);
+
+        m_lastRenderTime = timer.ElapsedMillis();
+    }
+
+	void ImGuiRender()
+	{
+		Walnut::Timer timer;
+
 		ImGui::Begin("Settings");
         ImGui::Text("Last render: %.3fms", m_lastRenderTime);
 
@@ -41,32 +83,27 @@ public:
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Viewport");
-		m_viewportWidth = ImGui::GetContentRegionAvail().x;
-        m_viewportHeight = ImGui::GetContentRegionAvail().y;
-        if (m_image)
-            ImGui::Image(m_image->GetDescriptorSet(), {(float)m_image->GetWidth(),(float)m_image->GetWidth()});
+		const uint32_t viewportWidth = ImGui::GetContentRegionAvail().x;
+        const uint32_t viewportHeight = ImGui::GetContentRegionAvail().y;
+        if (m_image) {
+            ImGui::Image(m_image->GetHandle(), {(float)m_image->GetWidth(),(float)m_image->GetWidth()});
+		}
 		ImGui::End();
         ImGui::PopStyleVar();
 
 		ImGui::ShowDemoWindow();
-        Render();
-	}
 
-	void Render()
-    {
-        Walnut::Timer timer;
-
-        if (!m_image ||
-            m_viewportWidth != m_image->GetWidth() ||
-            m_viewportHeight != m_image->GetHeight())
+		if (!m_image ||
+            viewportWidth != m_image->GetWidth() ||
+            viewportHeight != m_image->GetHeight())
         {
 			m_image.reset();
-			m_image = std::make_shared<Walnut::Image>(m_viewportWidth, m_viewportHeight, Walnut::ImageFormat::RGBA);
+			m_image = std::make_shared<Walnut::Image>(viewportWidth, viewportHeight, Walnut::ImageFormat::RGBA);
             delete[] m_imageData;
-            m_imageData = new uint32_t[m_viewportWidth * m_viewportHeight];
+            m_imageData = new uint32_t[viewportWidth * viewportHeight];
         }
 
-        for (size_t i = 0; i < m_viewportWidth * m_viewportHeight; i++)
+        for (size_t i = 0; i < viewportWidth * viewportHeight; i++)
         {
             m_imageData[i] = Walnut::Random::UInt();
             m_imageData[i] |= 0xff000000; // remove randomnes from alpha channel
@@ -74,26 +111,26 @@ public:
 
         m_image->SetData(m_imageData);
 
-        m_lastRenderTime = timer.ElapsedMillis();
-        
-    }
+		m_lastRenderTime = timer.ElapsedMillis();
+	}
 private:
     std::shared_ptr<Walnut::Image> m_image;
     uint32_t* m_imageData = nullptr;
-    uint32_t m_viewportWidth = 0;
-    uint32_t m_viewportHeight = 0;
     float m_lastRenderTime = 0.0f;
+	Walnut::Application* appPtr = nullptr;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
 	Walnut::ApplicationSpecification spec;
 	spec.Name = "Walnut Example";
-	// spec.Width = 320;
-	// spec.Height = 480;
+	spec.Width = 1280;
+	spec.Height = 720;
+	spec.UseImGui = true;
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	app->PushLayer<ExampleLayer>();
+	auto exampleLayer = std::make_shared<ExampleLayer>(app);
+	app->PushLayer(exampleLayer);
 	app->SetMenubarCallback([app]()
 	{
 		assert(ImGui::GetCurrentContext()); // This will fail in windows if walnut shared lib is used
