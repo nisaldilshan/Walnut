@@ -96,7 +96,7 @@ namespace Walnut {
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::WebGPU)
 		{
-			sdlWindowType = 0;
+			sdlWindowType = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 		}
 		else
 		{
