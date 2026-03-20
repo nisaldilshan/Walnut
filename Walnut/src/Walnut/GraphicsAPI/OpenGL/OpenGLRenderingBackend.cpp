@@ -127,7 +127,7 @@ namespace Walnut
     {
 		// Bind your texture to texture unit 0
 		glActiveTexture(GL_TEXTURE0);
-		const auto textureiD = mainImage->GetDescriptorSet();
+		const auto textureiD = mainImage->GetHandle();
 		glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)textureiD);
 
 		// Bind your shader and textures via uniforms
