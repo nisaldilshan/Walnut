@@ -24,7 +24,7 @@ class Walnut(ConanFile):
     
     default_options = {
         "rendering_backend": "Vulkan",
-        "windowing_system": "GLFW",
+        "windowing_system": "SDL",
         "fPIC": True,
         "glad*:no_loader": False,
         "glad*:spec": "gl",
@@ -77,7 +77,7 @@ class Walnut(ConanFile):
                 self.requires("glad/0.1.33")
             elif self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-loader/1.3.239.0")
-                self.requires("vulkan-validationlayers/1.3.243.0")
+                self.requires("vulkan-validationlayers/1.3.239.0")
             elif self.options.rendering_backend == "WebGPU":
                 pass
                 #self.requires("WebGPU/latest")
@@ -104,7 +104,7 @@ class Walnut(ConanFile):
         if self.options.windowing_system == "GLFW":
             self.requires("glfw/3.4")
         elif self.options.windowing_system == "SDL":
-            pass
+            self.requires("sdl/3.4.0")
         else:
             raise ConanInvalidConfiguration("Unsupported windowing system")
 

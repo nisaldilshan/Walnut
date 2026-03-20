@@ -26,17 +26,6 @@ message(STATUS "CMake Source Dir " + ${CMAKE_SOURCE_DIR})
 message(STATUS "CMake Binary Dir " + ${CMAKE_BINARY_DIR})
 
 include(FetchContent)
-set(SDL_HIDAPI_LIBUSB OFF)
-# 2. Declare SDL3 source
-FetchContent_Declare(
-    SDL3
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        release-3.4.0
-    QUIET
-    SOURCE_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-src
-    BINARY_DIR     ${CMAKE_SOURCE_DIR}/external_deps/sdl3-build
-    SUBBUILD_DIR   ${CMAKE_SOURCE_DIR}/external_deps/sdl3-subbuild
-)
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
@@ -53,8 +42,7 @@ message(STATUS "RENDERER" + ${RENDERER})
 message(STATUS "WINDOWING_SYSTEM" + ${WINDOWING_SYSTEM})
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    # 3. Make SDL3 available (Downloads and configures)
-    FetchContent_MakeAvailable(SDL3)
+    find_package(sdl3 REQUIRED)
     add_compile_definitions(USE_SDL)
 else()
     find_package(glfw3 REQUIRED)
