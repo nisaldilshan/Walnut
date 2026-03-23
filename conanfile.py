@@ -51,7 +51,6 @@ class Walnut(ConanFile):
 
     def requirements(self):
         self.requires("imgui/1.92.5-docking")
-        self.requires("glm/0.9.9.8")
         self.requires("stb/cci.20230920")
         print("Using rendering backend " + str(self.options.rendering_backend));
         if self.settings.os == 'Macos':

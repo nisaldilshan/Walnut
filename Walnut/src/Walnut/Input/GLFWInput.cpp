@@ -19,7 +19,7 @@ namespace Walnut {
 		return state == GLFW_PRESS;
 	}
 
-	glm::vec2 Input::GetMousePosition()
+	std::array<float, 2> Input::GetMousePosition()
 	{
 		WalnutWindowHandleType* windowHandle = Application::Get().GetWindowHandle();
 

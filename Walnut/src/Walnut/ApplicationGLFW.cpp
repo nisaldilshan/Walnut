@@ -9,8 +9,6 @@
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
-#include <Walnut/GLM/GLM.h>
-
 #include "RenderingBackend.h"
 #include "Image.h"
 

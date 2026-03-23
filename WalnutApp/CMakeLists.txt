@@ -12,7 +12,7 @@ set_target_properties(App PROPERTIES BUNDLE TRUE)
 endif()
 
 target_include_directories(App PRIVATE ../Walnut/src)
-target_link_libraries(App PRIVATE glm::glm imgui::imgui)
+target_link_libraries(App PRIVATE imgui::imgui)
 if (WIN32)
 target_link_libraries(App PRIVATE walnut)
 

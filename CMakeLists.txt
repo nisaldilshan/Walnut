@@ -29,7 +29,6 @@ include(FetchContent)
 
 set(CONAN_DISABLE_CHECK_COMPILER On)
 find_package(imgui REQUIRED)
-find_package(glm REQUIRED)
 find_package(stb REQUIRED)
 
 set(CMAKE_INSTALL_RPATH "@executable_path")
@@ -110,7 +109,7 @@ endif()
 
 target_compile_definitions(walnut PRIVATE Walnut_EXPORTS)
 target_include_directories(walnut PRIVATE "Walnut/src")
-target_link_libraries(walnut PUBLIC stb::stb glm::glm imgui::imgui)
+target_link_libraries(walnut PUBLIC stb::stb imgui::imgui)
 
 if (RENDERER STREQUAL "OpenGL")
     target_link_libraries(walnut PUBLIC walnut-graphics-opengl)
