@@ -24,7 +24,7 @@ class Walnut(ConanFile):
     
     default_options = {
         "rendering_backend": "Vulkan",
-        "windowing_system": "SDL",
+        "windowing_system": "GLFW",
         "fPIC": True,
         "glad*:no_loader": False,
         "glad*:spec": "gl",
