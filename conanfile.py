@@ -153,13 +153,13 @@ class Walnut(ConanFile):
 
     def package_info(self):
         if self.options.rendering_backend == "OpenGL":
-            self.cpp_info.libs = ["walnut", "walnut-graphics-opengl"]
+            self.cpp_info.libs = ["walnut", "walnut-graphics-opengl", "walnut-imgui-opengl"]
             self.cpp_info.defines = ["RENDERER_BACKEND=1"]
         elif self.options.rendering_backend == "Vulkan":
             self.cpp_info.libs = ["walnut", "walnut-graphics-vulkan", "walnut-imgui-vulkan"]
             self.cpp_info.defines = ["RENDERER_BACKEND=2"]
         else:
-            self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu", "glfw3webgpu"]
+            self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu", "walnut-imgui-webgpu", "glfw3webgpu"]
             self.cpp_info.defines = ["RENDERER_BACKEND=3"]
 
         if self.settings.os == 'Android':
