@@ -1,10 +1,10 @@
 add_library(walnut-imgui-opengl STATIC
-    ${imgui_INCLUDE_DIRS}/imgui.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_demo.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_draw.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_tables.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_widgets.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_impl_opengl3.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_demo.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_draw.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_tables.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_widgets.cpp
+    ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_opengl3.cpp
 )
 
 if(ANDROID)
@@ -14,10 +14,10 @@ endif()
 
 target_link_libraries(walnut-imgui-opengl PUBLIC imgui::imgui glad::glad)
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_sources(walnut-imgui-opengl PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_sdl3.cpp)
+    target_sources(walnut-imgui-opengl PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_sdl3.cpp)
     target_link_libraries(walnut-imgui-opengl PUBLIC SDL3::SDL3)
 else()
-    target_sources(walnut-imgui-opengl PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_glfw.cpp)
+    target_sources(walnut-imgui-opengl PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_glfw.cpp)
     target_link_libraries(walnut-imgui-opengl PUBLIC glfw)
 endif()
 
@@ -42,7 +42,7 @@ add_library (walnut-graphics-opengl STATIC
                     OpenGLRenderingBackend.cpp 
                 )
 
-target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src) 
+target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src ${imgui_INCLUDE_DIRS}/../res/bindings) 
 target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui walnut-imgui-opengl)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
