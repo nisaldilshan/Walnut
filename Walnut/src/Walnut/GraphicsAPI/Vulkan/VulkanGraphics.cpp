@@ -19,7 +19,7 @@ void Vulkan::check_vk_result(VkResult err)
 
 #ifdef _DEBUG
 #define IMGUI_VULKAN_DEBUG_REPORT
-constexpr bool isDebugBuild = true;
+constexpr bool isDebugBuild = false; // Disabling validation layers, with conan2 it does not work for some reason.
 #else
 constexpr bool isDebugBuild = false;
 #endif

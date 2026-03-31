@@ -1,18 +1,18 @@
 add_library(walnut-imgui-vulkan STATIC
-    ${imgui_INCLUDE_DIRS}/imgui.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_demo.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_draw.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_tables.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_widgets.cpp
-    ${imgui_INCLUDE_DIRS}/imgui_impl_vulkan.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_demo.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_draw.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_tables.cpp
+    ${imgui_INCLUDE_DIRS}/../res/src/imgui_widgets.cpp
+    ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_vulkan.cpp
 )
 
 target_link_libraries(walnut-imgui-vulkan PUBLIC imgui::imgui Vulkan::Loader)
 if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_sdl3.cpp)
+    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_sdl3.cpp)
     target_link_libraries(walnut-imgui-vulkan PUBLIC SDL3::SDL3)
 else()
-    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/imgui_impl_glfw.cpp)
+    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_glfw.cpp)
     target_link_libraries(walnut-imgui-vulkan PUBLIC glfw)
 endif()
 
@@ -25,7 +25,7 @@ add_library (walnut-graphics-vulkan STATIC
                     VulkanRenderingBackend.cpp
                 )
 
-target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src)  
+target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src ${imgui_INCLUDE_DIRS}/../res/bindings)  
 target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui walnut-imgui-vulkan)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")

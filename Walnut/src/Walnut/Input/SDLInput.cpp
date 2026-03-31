@@ -2,6 +2,7 @@
 
 #include <Walnut/Application.h>
 #include <SDL3/SDL.h>
+#include <array>
 
 namespace Walnut {
 
@@ -19,7 +20,7 @@ namespace Walnut {
 		return false; //state == GLFW_PRESS;
 	}
 
-	glm::vec2 Input::GetMousePosition()
+	std::array<float, 2> Input::GetMousePosition()
 	{
 		WalnutWindowHandleType* windowHandle = Application::Get().GetWindowHandle();
 

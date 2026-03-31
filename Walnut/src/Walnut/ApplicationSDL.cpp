@@ -8,7 +8,6 @@
 #include <thread>
 #include <imgui.h>
 
-#include <Walnut/GLM/GLM.h>
 #include <imgui_impl_sdl3.h>
 #include <SDL3/SDL.h>
 
@@ -277,7 +276,7 @@ namespace Walnut {
 
 		const auto now = std::chrono::steady_clock::now();
 		const float timeDiff = std::chrono::duration_cast<std::chrono::duration<float>>(now - m_LastFrameTimePoint).count();
-		m_TimeStep = glm::min<float>(timeDiff, 0.1f);
+		m_TimeStep = std::min<float>(timeDiff, 0.1f);
 		m_LastFrameTimePoint = now;
 	}
 

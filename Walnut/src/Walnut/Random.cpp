@@ -1,4 +1,5 @@
 #include "Random.h"
+#include <array>
 
 namespace Walnut {
 
@@ -24,16 +25,14 @@ namespace Walnut {
     {
 		return (float)s_Distribution(s_RandomEngine) / (float)std::numeric_limits<uint32_t>::max();
 	}
-    glm::vec3 Random::Vec3()
+
+    std::array<float, 3> Random::Vec3()
     {
-		return glm::vec3(Float(), Float(), Float());
+		return { Float(), Float(), Float() };
 	}
-    glm::vec3 Random::Vec3(float min, float max)
+
+    std::array<float, 3> Random::Vec3(float min, float max)
     {
-		return glm::vec3(Float() * (max - min) + min, Float() * (max - min) + min, Float() * (max - min) + min);
-	}
-    glm::vec3 Random::InUnitSphere()
-    {
-		return glm::normalize(Vec3(-1.0f, 1.0f));
+		return { Float() * (max - min) + min, Float() * (max - min) + min, Float() * (max - min) + min };
 	}
 }

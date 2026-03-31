@@ -2,8 +2,6 @@
 
 #include "KeyCodes.h"
 
-#include <glm/ext.hpp>
-
 namespace Walnut {
 
 	class Input
@@ -12,7 +10,7 @@ namespace Walnut {
 		static bool IsKeyDown(KeyCode keycode);
 		static bool IsMouseButtonDown(MouseButton button);
 
-		static glm::vec2 GetMousePosition();
+		static std::array<float, 2> GetMousePosition();
 
 		static void SetCursorMode(CursorMode mode);
 	};
