@@ -39,7 +39,7 @@ public:
 
 private:
 	WalnutWindowHandleType* m_windowHandle = nullptr;
-	std::unique_ptr<GraphicsAPI::VulkanImageRenderPipeline> m_imageRenderPipeline = nullptr;
+	std::unique_ptr<GraphicsAPI::VulkanImageRenderPipeline> m_imageRenderPipeline;
 };
 
 
