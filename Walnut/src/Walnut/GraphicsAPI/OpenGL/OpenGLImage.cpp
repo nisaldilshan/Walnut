@@ -17,11 +17,6 @@ namespace Utils
 namespace GraphicsAPI
 {
 
-size_t OpenGLImage::CreateUploadBuffer(size_t upload_size)
-{
-    return 1;
-}
-
 void OpenGLImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height)
 {
     m_Width = width;
@@ -44,7 +39,7 @@ void OpenGLImage::CreateImageView()
 {
 }
 
-void OpenGLImage::UploadToBuffer(const void *data, size_t uploadSize, size_t alignedSize)
+void OpenGLImage::UploadToBuffer(const void *data, size_t uploadSize)
 {
     glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)m_texture);
 	// Load up the new data
@@ -73,11 +68,6 @@ bool OpenGLImage::ImageAvailable()
 void OpenGLImage::ResourceFree()
 {
     glDeleteTextures(1, &m_texture);
-}
-
-OpenGLImage::VkBuffer OpenGLImage::GetStagingBuffer()
-{
-    return 0;
 }
 
 }

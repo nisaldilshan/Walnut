@@ -12,23 +12,18 @@ namespace GraphicsAPI
 {
     class OpenGLImage
     {
-        typedef int VkCommandBuffer;
-        typedef int VkBuffer;
     public:
         OpenGLImage() = default;
         ~OpenGLImage() = default;
 
-        size_t CreateUploadBuffer(size_t upload_size);
         void CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height);
         void CreateImageView();
-        void CopyToImage(VkCommandBuffer command_buffer, uint32_t width, uint32_t height);
-        void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
+        void UploadToBuffer(const void* data, size_t uploadSize);
         void CreateSampler();
         void CreateDescriptorSet();
         uint64_t GetHandleForImGui();
         bool ImageAvailable();
         void ResourceFree();
-        VkBuffer GetStagingBuffer();
     private:
         GLuint m_texture;
         uint32_t m_Width, m_Height;
