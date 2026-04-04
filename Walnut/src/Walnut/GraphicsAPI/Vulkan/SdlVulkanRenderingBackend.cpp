@@ -1,10 +1,12 @@
 #include "VulkanRenderingBackend.h"
-#include <iostream>
-
-#include <imgui_impl_sdl3.h>
-#include <SDL3/SDL_vulkan.h>
 
 #include "VulkanGraphics.h"
+
+#include <SDL3/SDL_vulkan.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_vulkan.h>
+
+#include <iostream>
 
 namespace Walnut
 {
@@ -61,7 +63,7 @@ namespace Walnut
         init_info.PipelineCache = VK_NULL_HANDLE;
         init_info.DescriptorPool = GraphicsAPI::Vulkan::GetDescriptorPool();
         init_info.MinImageCount = GraphicsAPI::Vulkan::GetMinImageCount();
-        init_info.ImageCount = GraphicsAPI::Vulkan::GetWindowData().ImageCount;
+        init_info.ImageCount = GraphicsAPI::Vulkan::GetImageCount();
         init_info.Allocator = GraphicsAPI::Vulkan::GetAllocator();
         init_info.CheckVkResultFn = [](VkResult err) {
             if (err == 0)
@@ -71,7 +73,7 @@ namespace Walnut
                 abort();
         };
 
-        init_info.PipelineInfoMain.RenderPass = GraphicsAPI::Vulkan::GetWindowData().RenderPass;
+        init_info.PipelineInfoMain.RenderPass = GraphicsAPI::Vulkan::GetRenderPass();
         init_info.PipelineInfoMain.Subpass = 0;
         init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         ImGui_ImplVulkan_Init(&init_info);
@@ -80,7 +82,6 @@ namespace Walnut
 
     void VulkanRenderingBackend::StartImGuiFrame()
     {
-		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
     }

@@ -1,9 +1,10 @@
 #include "VulkanRenderingBackend.h"
 
+#include "VulkanGraphics.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "VulkanGraphics.h"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
@@ -78,7 +79,6 @@ namespace Walnut
 
     void VulkanRenderingBackend::StartImGuiFrame()
     {
-		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
     }
