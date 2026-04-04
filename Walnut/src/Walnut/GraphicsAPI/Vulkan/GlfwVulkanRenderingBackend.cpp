@@ -5,6 +5,7 @@
 
 #include "VulkanGraphics.h"
 #include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
 
 #include <iostream>
 
@@ -20,7 +21,7 @@ namespace Walnut
         uint32_t extensionsCount = 0;
 	    const char* const* glfwExtensions = glfwGetRequiredInstanceExtensions(&extensionsCount);
 
-        ImVector<const char*> extensions;
+        std::vector<const char*> extensions;
         for (uint32_t n = 0; n < extensionsCount; n++) {
             // if (std::string(glfwExtensions[n]) == "VK_KHR_portability_enumeration") { 
             //     // TODO: somehow vkCreateInstance function fails when this extension is present
@@ -58,7 +59,7 @@ namespace Walnut
         init_info.PipelineCache = VK_NULL_HANDLE;
         init_info.DescriptorPool = GraphicsAPI::Vulkan::GetDescriptorPool();
         init_info.MinImageCount = GraphicsAPI::Vulkan::GetMinImageCount();
-        init_info.ImageCount = GraphicsAPI::Vulkan::GetWindowData().ImageCount;
+        init_info.ImageCount = GraphicsAPI::Vulkan::GetImageCount();
         init_info.Allocator = GraphicsAPI::Vulkan::GetAllocator();
         init_info.CheckVkResultFn = [](VkResult err) {
             if (err == 0)
@@ -68,7 +69,7 @@ namespace Walnut
                 abort();
         };
 
-        init_info.PipelineInfoMain.RenderPass = GraphicsAPI::Vulkan::GetWindowData().RenderPass;
+        init_info.PipelineInfoMain.RenderPass = GraphicsAPI::Vulkan::GetRenderPass();
         init_info.PipelineInfoMain.Subpass = 0;
         init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         ImGui_ImplVulkan_Init(&init_info);

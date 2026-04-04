@@ -6,7 +6,10 @@
 #include <Walnut/Image.h>
 #include "VulkanImage.h"
 
+#include <imgui_impl_vulkan.h>
+
 #include <iostream>
+#include <cassert>
 
 namespace Walnut
 { 
@@ -44,30 +47,28 @@ namespace Walnut
             return;
         }
 
-        const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
-        const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
-
         assert(m_imageRenderPipeline != VK_NULL_HANDLE);
-        vkCmdBindPipeline(fd->CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_imageRenderPipeline->GetPipeline());
+        vkCmdBindPipeline(GraphicsAPI::Vulkan::GetCurrentCommmandBuffer(), 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, m_imageRenderPipeline->GetPipeline());
 
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(wd.Width);
-        viewport.height = static_cast<float>(wd.Height);
+        viewport.width = static_cast<float>(GraphicsAPI::Vulkan::GetWidth());
+        viewport.height = static_cast<float>(GraphicsAPI::Vulkan::GetHeight());
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(fd->CommandBuffer, 0, 1, &viewport);
+        vkCmdSetViewport(GraphicsAPI::Vulkan::GetCurrentCommmandBuffer(), 0, 1, &viewport);
 
-        const uint32_t w = wd.Width;
-        const uint32_t h = wd.Height;
+        const uint32_t w = GraphicsAPI::Vulkan::GetWidth();
+        const uint32_t h = GraphicsAPI::Vulkan::GetHeight();
         VkRect2D scissor{{ 0, 0 }, { w, h }};
-        vkCmdSetScissor(fd->CommandBuffer, 0, 1, &scissor);
+        vkCmdSetScissor(GraphicsAPI::Vulkan::GetCurrentCommmandBuffer(), 0, 1, &scissor);
         
         // Bind the descriptor set containing your VkImageView and a VkSampler
         auto descriptorSet = reinterpret_cast<VkDescriptorSet>(mainImage->GetHandle());
         vkCmdBindDescriptorSets(
-            fd->CommandBuffer, 
+            GraphicsAPI::Vulkan::GetCurrentCommmandBuffer(), 
             VK_PIPELINE_BIND_POINT_GRAPHICS, 
             m_imageRenderPipeline->GetPipelineLayout(), 
             0, 1, &descriptorSet, 
@@ -75,16 +76,14 @@ namespace Walnut
         );
 
         // Draw the 3 vertices to trigger the vertex shader logic
-        vkCmdDraw(fd->CommandBuffer, 3, 1, 0, 0);
+        vkCmdDraw(GraphicsAPI::Vulkan::GetCurrentCommmandBuffer(), 3, 1, 0, 0);
     }
 
     void VulkanRenderingBackend::FrameRenderImGui(void *draw_data)
     {
-        const auto& wd = GraphicsAPI::Vulkan::GetWindowData();
-        const ImGui_ImplVulkanH_Frame* fd = &wd.Frames[wd.FrameIndex];
-
         // Record dear imgui primitives into command buffer
-        ImGui_ImplVulkan_RenderDrawData((ImDrawData*)draw_data, fd->CommandBuffer);
+        ImGui_ImplVulkan_RenderDrawData((ImDrawData*)draw_data, 
+                                    GraphicsAPI::Vulkan::GetCurrentCommmandBuffer());
     }
 
     void VulkanRenderingBackend::FrameEnd()
@@ -108,7 +107,7 @@ namespace Walnut
         std::vector<VkDescriptorSetLayout> layouts{platformImage->GetDescriptorSetLayout()};
         GraphicsAPI::VertexInputLayout vertexInputLayout; // vertexInputLayout disabled                                       
         m_imageRenderPipeline = std::make_unique<GraphicsAPI::VulkanImageRenderPipeline>(
-            GraphicsAPI::Vulkan::GetWindowData().RenderPass, layouts, vertexInputLayout);
+            GraphicsAPI::Vulkan::GetRenderPass(), layouts, vertexInputLayout);
     }
 
     void VulkanRenderingBackend::DestroyMainImagePipeline()

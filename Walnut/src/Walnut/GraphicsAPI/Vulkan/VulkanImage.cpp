@@ -1,6 +1,7 @@
 #include "VulkanImage.h"
 
 #include "../../ImageFormat.h"
+#include <cassert>
 
 namespace Walnut
 {
