@@ -107,15 +107,8 @@ namespace Walnut {
 
 	void Image::SetData(const void* data)
 	{
-		const size_t upload_size = m_Width * m_Height * Utils::BytesPerPixel(m_Format);
-
-		if (!m_rendererBackendImage->GetStagingBuffer())
-		{
-			// Create the Upload Buffer
-			m_AlignedSize = m_rendererBackendImage->CreateUploadBuffer(upload_size);
-		}
-
-		m_rendererBackendImage->UploadToBuffer(data, upload_size, m_AlignedSize);
+		const size_t uploadSize = m_Width * m_Height * Utils::BytesPerPixel(m_Format);
+		m_rendererBackendImage->UploadToBuffer(data, uploadSize);
 	}
 
     uint64_t Image::GetHandle() // returns the image handle to be used in ImGui::Image()

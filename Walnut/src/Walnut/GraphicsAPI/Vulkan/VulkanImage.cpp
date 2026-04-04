@@ -168,16 +168,22 @@ void VulkanImage::CopyToImage(VkCommandBuffer command_buffer, uint32_t width, ui
     vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &use_barrier);
 }
 
-void VulkanImage::UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize)
+void VulkanImage::UploadToBuffer(const void* data, size_t uploadSize)
 {
+    if (!GetStagingBuffer())
+    {
+        // Create the Upload Buffer
+        m_alignedSize = CreateUploadBuffer(uploadSize);
+    }
+
     char* map = NULL;
-    VkResult err = vkMapMemory(Vulkan::GetDevice(), m_StagingBufferMemory, 0, alignedSize, 0, (void**)(&map));
+    VkResult err = vkMapMemory(Vulkan::GetDevice(), m_StagingBufferMemory, 0, m_alignedSize, 0, (void**)(&map));
     Vulkan::check_vk_result(err);
     memcpy(map, data, uploadSize);
     VkMappedMemoryRange range[1] = {};
     range[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range[0].memory = m_StagingBufferMemory;
-    range[0].size = alignedSize;
+    range[0].size = m_alignedSize;
     err = vkFlushMappedMemoryRanges(Vulkan::GetDevice(), 1, range);
     Vulkan::check_vk_result(err);
     vkUnmapMemory(Vulkan::GetDevice(), m_StagingBufferMemory);
