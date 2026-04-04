@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <optional>
-#include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan.h>
 
 namespace GraphicsAPI
@@ -37,7 +36,7 @@ class Vulkan
 {
 public:
 	static void check_vk_result(VkResult err);
-	static void SetupVulkan(ImVector<const char*> extensions);
+	static void SetupVulkan(std::vector<const char*> extensions);
 	static void SetupVulkanWindow(int width, int height);
 	static void CleanupVulkan();
 	static void CleanupVulkanWindow();
@@ -52,7 +51,6 @@ public:
 	static void GraphicsDeviceWaitIdle();
 	static void FreeGraphicsResources();
 	static void SubmitResourceFree(std::function<void()> func);
-	static void SetClearColor(ImVec4 clear_color);
 	static QueueFamilyIndices FindQueueFamilies();
 	
 	static VkInstance GetInstance();
@@ -63,9 +61,13 @@ public:
 	static VkAllocationCallbacks* GetAllocator();
 	static VkSurfaceKHR* GetSurface();
 	static VkDescriptorPool GetDescriptorPool();
-	static int GetMinImageCount();
-	static const ImGui_ImplVulkanH_Window& GetWindowData();
-	static  VkFormat GetDepthFormat();
+	static uint32_t GetMinImageCount();
+	static uint32_t GetImageCount();
+	static VkFormat GetDepthFormat();
+	static VkCommandBuffer GetCurrentCommmandBuffer();
+	static VkRenderPass GetRenderPass();
+	static uint32_t GetWidth();
+	static uint32_t GetHeight();
 };
 
 

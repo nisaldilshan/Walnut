@@ -6,21 +6,17 @@
 #include "WebGPUGraphics.h"
 #include <Walnut/ImageFormat.h>
 
-#include <imgui_impl_wgpu.h>
-
 namespace GraphicsAPI
 {
     class WebGPUImage
     {
-        typedef int VkBuffer;
     public:
         WebGPUImage() = default;
         ~WebGPUImage() = default;
 
-        size_t CreateUploadBuffer(size_t upload_size);
         void CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height);
         void CreateImageView();
-        void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
+        void UploadToBuffer(const void* data, size_t uploadSize);
         void CreateSampler();
         void CreateDescriptorSet();
         uint64_t GetHandleForImGui() const;
@@ -28,7 +24,6 @@ namespace GraphicsAPI
         wgpu::BindGroupLayout GetBindGroupLayout() const;
         bool ImageAvailable();
         void ResourceFree();
-        VkBuffer GetStagingBuffer();
     private:
         wgpu::Texture m_texture = nullptr;
         wgpu::TextureView m_textureView = nullptr;

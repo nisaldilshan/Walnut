@@ -1,4 +1,5 @@
 #include "VulkanImageRenderPipeline.h"
+#include <cassert>
 
 namespace GraphicsAPI
 {

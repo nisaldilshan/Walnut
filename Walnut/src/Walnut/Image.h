@@ -54,7 +54,6 @@ namespace Walnut {
 		uint32_t m_Width, m_Height;
 		ImageFormat m_Format;
 		std::unique_ptr<GraphicsAPI::ImageType> m_rendererBackendImage;
-		size_t m_AlignedSize = 0;
 	};
 
 }

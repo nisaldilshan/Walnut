@@ -1,5 +1,7 @@
 #include "VulkanGraphics.h"
 
+#include <imgui_impl_vulkan.h>
+
 #include <iostream>
 #include <vector>
 #include <array>
@@ -38,7 +40,7 @@ static VkSurfaceKHR             g_surface = VK_NULL_HANDLE;
 // Your real engine/app may not use them.
 static ImGui_ImplVulkanH_Window g_MainWindowData;
 
-static int                      g_MinImageCount = 2;
+static uint32_t                 g_MinImageCount = 2;
 static bool                     g_SwapChainRebuild = false;
 
 // Unlike g_MainWindowData.FrameIndex, this is not the the swapchain image index
@@ -70,7 +72,7 @@ static void printAvailableDeviceExtensions(VkPhysicalDevice physicalDevice) {
     }
 }
 
-void Vulkan::SetupVulkan(ImVector<const char*> extensions)
+void Vulkan::SetupVulkan(std::vector<const char*> extensions)
 {
 	VkResult err;
 	VkInstanceCreateInfo create_info = {};
@@ -95,8 +97,8 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 	// Create Vulkan Instance
 	{
 		create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		create_info.enabledExtensionCount = (uint32_t)extensions.Size;
-		create_info.ppEnabledExtensionNames = extensions.Data;
+		create_info.enabledExtensionCount = (uint32_t)extensions.size();
+		create_info.ppEnabledExtensionNames = extensions.data();
 		const char** extensions_ext = nullptr;
 		if constexpr (isDebugBuild) {
 			// Enabling validation layers
@@ -105,10 +107,10 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 			create_info.ppEnabledLayerNames = layers;
 
 			// Enable debug report extension (we need additional storage, so we duplicate the user array to add our new extension to it)
-			extensions_ext = (const char**)malloc(sizeof(const char*) * ((uint32_t)extensions.Size + 1));
-			memcpy(extensions_ext, extensions.Data, (uint32_t)extensions.Size * sizeof(const char*));
-			extensions_ext[(uint32_t)extensions.Size] = "VK_EXT_debug_report";
-			create_info.enabledExtensionCount = (uint32_t)extensions.Size + 1;
+			extensions_ext = (const char**)malloc(sizeof(const char*) * ((uint32_t)extensions.size() + 1));
+			memcpy(extensions_ext, extensions.data(), (uint32_t)extensions.size() * sizeof(const char*));
+			extensions_ext[(uint32_t)extensions.size()] = "VK_EXT_debug_report";
+			create_info.enabledExtensionCount = (uint32_t)extensions.size() + 1;
 			create_info.ppEnabledExtensionNames = extensions_ext;
 		}
 		// Create Vulkan Instance without any debug feature
@@ -267,14 +269,6 @@ void Vulkan::SetupVulkan(ImVector<const char*> extensions)
 	}
 }
 
-void Vulkan::SetClearColor(ImVec4 clear_color)
-{
-    g_MainWindowData.ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-    g_MainWindowData.ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-    g_MainWindowData.ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-    g_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
-}
-
 void Vulkan::SetupVulkanWindow(int width, int height)
 {
 	g_MainWindowData.Surface = g_surface;
@@ -307,7 +301,13 @@ void Vulkan::SetupVulkanWindow(int width, int height)
 										&g_MainWindowData, g_QueueFamily, g_Allocator, 
 										width, height, g_MinImageCount, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     s_ResourceFreeQueue.resize(g_MainWindowData.ImageCount);
-	SetClearColor(ImVec4(0.45f, 0.55f, 0.60f, 1.00f));
+	
+	// set clear color
+	ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	g_MainWindowData.ClearValue.color.float32[0] = clearColor.x * clearColor.w;
+    g_MainWindowData.ClearValue.color.float32[1] = clearColor.y * clearColor.w;
+    g_MainWindowData.ClearValue.color.float32[2] = clearColor.z * clearColor.w;
+    g_MainWindowData.ClearValue.color.float32[3] = clearColor.w;
 }
 
 void Vulkan::CleanupVulkan()
@@ -562,19 +562,40 @@ VkDescriptorPool Vulkan::GetDescriptorPool()
 	return g_DescriptorPool;
 }
 
-int Vulkan::GetMinImageCount()
+uint32_t Vulkan::GetMinImageCount()
 {
     return g_MinImageCount;
 }
 
-const ImGui_ImplVulkanH_Window &Vulkan::GetWindowData()
+uint32_t Vulkan::GetImageCount()
 {
-    return g_MainWindowData;
+    return g_MainWindowData.ImageCount;
 }
 
 VkFormat Vulkan::GetDepthFormat()
 {
 	return VK_FORMAT_D32_SFLOAT;
+}
+
+VkCommandBuffer Vulkan::GetCurrentCommmandBuffer()
+{
+	const ImGui_ImplVulkanH_Frame* fd = &g_MainWindowData.Frames[g_MainWindowData.FrameIndex];
+    return fd->CommandBuffer;
+}
+
+VkRenderPass Vulkan::GetRenderPass()
+{
+    return g_MainWindowData.RenderPass;
+}
+
+uint32_t Vulkan::GetWidth()
+{
+    return g_MainWindowData.Width;
+}
+
+uint32_t Vulkan::GetHeight()
+{
+    return g_MainWindowData.Height;
 };
 
 // IMAGE

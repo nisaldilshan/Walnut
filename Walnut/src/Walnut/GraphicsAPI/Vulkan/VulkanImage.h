@@ -10,11 +10,10 @@ namespace GraphicsAPI
     public:
         VulkanImage();
         ~VulkanImage();
-        size_t CreateUploadBuffer(size_t upload_size);
         void CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height);
         void CreateImageView();
         void CopyToImage(VkCommandBuffer command_buffer, uint32_t width, uint32_t height);
-        void UploadToBuffer(const void* data, size_t uploadSize, size_t alignedSize);
+        void UploadToBuffer(const void* data, size_t uploadSize);
         void CreateSampler();
         void CreateDescriptorSet();
         uint64_t GetHandleForImGui() const;
@@ -22,9 +21,11 @@ namespace GraphicsAPI
         VkDescriptorSetLayout GetDescriptorSetLayout() const;
         bool ImageAvailable();
         void ResourceFree();
-        VkBuffer GetStagingBuffer();
 
     private:
+        size_t CreateUploadBuffer(size_t upload_size);
+        VkBuffer GetStagingBuffer();
+
         VkImage m_Image = VK_NULL_HANDLE;
         uint32_t m_width = 0;
         uint32_t m_height = 0;
@@ -36,7 +37,7 @@ namespace GraphicsAPI
         VkDeviceMemory m_StagingBufferMemory = VK_NULL_HANDLE;
         VkCommandPool m_commandPool = VK_NULL_HANDLE;
         VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
-
+        size_t m_alignedSize = 0;
         VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorSet m_DescriptorSet = VK_NULL_HANDLE;
     };

@@ -26,11 +26,6 @@ namespace Utils
 namespace GraphicsAPI
 {
 
-size_t WebGPUImage::CreateUploadBuffer(size_t upload_size)
-{
-    return 1;
-}
-
 void WebGPUImage::CreateImage(Walnut::ImageFormat imageFormat, uint32_t width, uint32_t height)
 {
     m_width = width;
@@ -87,12 +82,7 @@ void WebGPUImage::ResourceFree()
 {
 }
 
-WebGPUImage::VkBuffer WebGPUImage::GetStagingBuffer()
-{
-    return 0;
-}
-
-void WebGPUImage::UploadToBuffer(const void *data, size_t uploadSize, size_t alignedSize)
+void WebGPUImage::UploadToBuffer(const void *data, size_t uploadSize)
 {
     wgpu::TexelCopyTextureInfo dst_view = {};
     dst_view.texture = m_texture;
