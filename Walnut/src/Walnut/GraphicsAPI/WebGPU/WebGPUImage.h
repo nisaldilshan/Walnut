@@ -6,8 +6,6 @@
 #include "WebGPUGraphics.h"
 #include <Walnut/ImageFormat.h>
 
-#include <imgui_impl_wgpu.h>
-
 namespace GraphicsAPI
 {
     class WebGPUImage

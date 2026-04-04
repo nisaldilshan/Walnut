@@ -5,6 +5,8 @@
 #include <Walnut/Image.h>
 #include "WebGPUImage.h"
 
+#include <imgui_impl_wgpu.h>
+
 namespace Walnut 
 {
 

@@ -8,8 +8,6 @@
 #endif
 #include "OpenGLGraphics.h"
 #include <Walnut/ImageFormat.h>
-#include <imgui_impl_opengl3.h>
-
 namespace GraphicsAPI
 {
     class OpenGLImage
