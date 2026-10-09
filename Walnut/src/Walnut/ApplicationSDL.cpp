@@ -50,6 +50,9 @@ namespace Walnut {
     {
 		int w, h;
 		SDL_GetWindowSize(win, &w, &h);
+		if (w == 0 || h == 0) {
+			return; // minimised: a zero-extent swapchain or image is invalid, keep the old ones until restored
+		}
 		m_RenderingBackend->SetupWindow(w, h);
 		std::cout << "Resized window to: x=" << w << ", y=" << h << std::endl;
 		if (m_Specification.UseImGui) {
