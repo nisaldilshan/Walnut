@@ -69,6 +69,9 @@ namespace Walnut {
     {
 		int w, h;
 		glfwGetFramebufferSize(win, &w, &h);
+		if (w == 0 || h == 0) {
+			return; // minimised: a zero-extent swapchain or image is invalid, keep the old ones until restored
+		}
 		m_RenderingBackend->SetupWindow(w, h);
 
 		if (m_Specification.UseImGui) {

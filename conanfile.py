@@ -7,7 +7,7 @@ from conan.tools.files import copy
 
 class Walnut(ConanFile):
     name = "walnut"
-    version = "2.0.0"
+    version = "2.1.0"
     url = "https://github.com/nisaldilshan/Walnut"
     homepage = "https://github.com/TheCherno/Walnut"
     description = "Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies"
