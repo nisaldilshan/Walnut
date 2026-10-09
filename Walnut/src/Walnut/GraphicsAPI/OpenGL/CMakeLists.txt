@@ -1,24 +1,6 @@
-add_library(walnut-imgui-opengl STATIC
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_demo.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_draw.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_tables.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_widgets.cpp
-    ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_opengl3.cpp
-)
-
+walnut_add_imgui_backend(walnut-imgui-opengl opengl3 glad::glad)
 if(ANDROID)
     target_compile_definitions(walnut-imgui-opengl PUBLIC IMGUI_IMPL_OPENGL_ES3)
-else()
-endif()
-
-target_link_libraries(walnut-imgui-opengl PUBLIC imgui::imgui glad::glad)
-if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_sources(walnut-imgui-opengl PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_sdl3.cpp)
-    target_link_libraries(walnut-imgui-opengl PUBLIC SDL3::SDL3)
-else()
-    target_sources(walnut-imgui-opengl PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_glfw.cpp)
-    target_link_libraries(walnut-imgui-opengl PUBLIC glfw)
 endif()
 
 ###################################################################################################################################
@@ -30,19 +12,21 @@ if(ANDROID)
     message(STATUS "GLES3_LIBRARY= " ${GLES3_LIBRARY})
 else()
     find_package (OpenGL REQUIRED)
-    find_package(X11 REQUIRED)
     message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
-    message(STATUS "X11_LIBRARIES= " ${X11_LIBRARIES})
+    if(UNIX AND NOT APPLE)
+        find_package(X11 REQUIRED)
+        message(STATUS "X11_LIBRARIES= " ${X11_LIBRARIES})
+    endif()
 endif()
 
 
 add_library (walnut-graphics-opengl STATIC
                     OpenGLGraphics.cpp
-                    OpenGLImage.cpp  
-                    OpenGLRenderingBackend.cpp 
+                    OpenGLImage.cpp
+                    OpenGLRenderingBackend.cpp
                 )
 
-target_include_directories(walnut-graphics-opengl PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src ${imgui_INCLUDE_DIRS}/../res/bindings) 
+target_include_directories(walnut-graphics-opengl PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Walnut/src>)
 target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui walnut-imgui-opengl)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
@@ -75,4 +59,3 @@ if (APPLE)
         "-framework IOKit"
     )
 endif ()
-

@@ -1,0 +1,25 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Renderer and windowing system this Walnut package was built with.
+set(WALNUT_RENDERER "@RENDERER@")
+set(WALNUT_WINDOWING_SYSTEM "@WINDOWING_SYSTEM@")
+
+find_dependency(imgui)
+
+if(WALNUT_WINDOWING_SYSTEM STREQUAL "SDL")
+    find_dependency(SDL3)
+else()
+    find_dependency(glfw3)
+endif()
+
+if(WALNUT_RENDERER STREQUAL "OpenGL")
+    find_dependency(glad)
+elseif(WALNUT_RENDERER STREQUAL "Vulkan")
+    find_dependency(@WALNUT_VULKAN_PACKAGE@)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/WalnutTargets.cmake")
+
+check_required_components(Walnut)

@@ -1,0 +1,89 @@
+{
+  "name": "walnut",
+  "version": "2.1.0",
+  "description": "Application framework built on Dear ImGui with Vulkan and OpenGL rendering backends",
+  "homepage": "https://github.com/nisaldilshan/Walnut",
+  "license": "MIT",
+  "supports": "!uwp & !android & !ios & !emscripten",
+  "dependencies": [
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental"
+      ]
+    },
+    "stb",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "default-features": [
+    "glfw",
+    "vulkan"
+  ],
+  "features": {
+    "glfw": {
+      "description": "GLFW windowing system (exclusive with sdl)",
+      "dependencies": [
+        "glfw3",
+        {
+          "name": "imgui",
+          "features": [
+            "glfw-binding"
+          ]
+        }
+      ]
+    },
+    "opengl": {
+      "description": "OpenGL rendering backend (exclusive with vulkan)",
+      "dependencies": [
+        {
+          "name": "glad",
+          "features": [
+            "gl-api-41"
+          ]
+        },
+        {
+          "name": "imgui",
+          "features": [
+            "opengl3-binding"
+          ]
+        }
+      ]
+    },
+    "sdl": {
+      "description": "SDL3 windowing system (exclusive with glfw)",
+      "dependencies": [
+        {
+          "name": "sdl3",
+          "features": [
+            "vulkan"
+          ]
+        },
+        {
+          "name": "imgui",
+          "features": [
+            "sdl3-binding"
+          ]
+        }
+      ]
+    },
+    "vulkan": {
+      "description": "Vulkan rendering backend (exclusive with opengl)",
+      "dependencies": [
+        {
+          "name": "imgui",
+          "features": [
+            "vulkan-binding"
+          ]
+        },
+        "vulkan"
+      ]
+    }
+  }
+}
