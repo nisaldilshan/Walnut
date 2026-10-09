@@ -22,9 +22,10 @@ Each build uses exactly one renderer and one windowing system. Dependencies come
 | WebGPU | GLFW | ✅ | ❌ not supported |
 | WebGPU | SDL3 | ❌ fails to build | ❌ not supported |
 
-✅ means the library and the example app build and the app runs. Verified on Windows 11 with MSVC (Visual Studio 2022), Debug builds.
+✅ means the library and the example app build, on Windows (MSVC) and Linux (GCC). CI builds every ✅ combination on each pull request (see `.github/workflows/ci.yml`). The apps have been run on Windows only; CI has no GPU, so on Linux they are built but not launched.
 
-- **Other platforms.** The build files also have code paths for Linux, macOS, Android, iOS and Emscripten, but these are not verified at the moment. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide MoltenVK, so install it separately (e.g. `brew install molten-vk`).
+- **Other platforms.** The build files also have code paths for macOS, Android, iOS and Emscripten, but these are not verified at the moment. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide MoltenVK, so install it separately (e.g. `brew install molten-vk`).
+- **Linux system packages.** With vcpkg, some ports expect build tools and X11/Wayland headers from the system. The "Install system packages" step in `.github/workflows/ci.yml` lists the apt packages that are needed on Ubuntu. With Conan, the recipes can install them for you when you pass `-c tools.system.package_manager:mode=install`.
 - **WebGPU with vcpkg.** Walnut's WebGPU backend downloads its own Dawn build, and imgui's WebGPU backend has to be compiled from Conan's imgui sources. vcpkg's imgui only works with vcpkg's own (newer) Dawn. CMake stops with an error if you try this combination.
 - **WebGPU + SDL3 with Conan.** The downloaded `sdl3webgpu` helper does not compile against the downloaded Dawn version.
 
@@ -140,6 +141,8 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 | `conanfile.py` | Conan recipe |
 | `vcpkg.json` | vcpkg manifest for building Walnut itself |
 | `ports/walnut/` | vcpkg port for consumers |
+| `tests/package/` | Minimal app that CI builds against the installed Walnut package |
+| `.github/workflows/ci.yml` | CI: builds every supported combination with Conan and vcpkg on Windows and Linux |
 | `cmake/` | CMake modules: dependency lookup (all Conan/vcpkg differences), install rules, package config template |
 
 The Premake files (`premake5.lua`, `WalnutExternal.lua`, `scripts/Setup.bat`) and `testing/conan-profiles/` come from earlier versions of the project and are not maintained.
