@@ -60,15 +60,15 @@
       "description": "SDL3 windowing system (exclusive with glfw)",
       "dependencies": [
         {
-          "name": "sdl3",
-          "features": [
-            "vulkan"
-          ]
-        },
-        {
           "name": "imgui",
           "features": [
             "sdl3-binding"
+          ]
+        },
+        {
+          "name": "sdl3",
+          "features": [
+            "vulkan"
           ]
         }
       ]
@@ -82,7 +82,17 @@
             "vulkan-binding"
           ]
         },
-        "vulkan"
+        "vulkan",
+        {
+          "$comment": "X11 and Wayland surface support, needed by GLFW and SDL3",
+          "name": "vulkan-loader",
+          "features": [
+            "wayland",
+            "xcb",
+            "xlib"
+          ],
+          "platform": "linux"
+        }
       ]
     }
   }

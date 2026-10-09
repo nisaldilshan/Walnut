@@ -49,6 +49,10 @@ include(cmake/WalnutDependencies.cmake)
 set(CMAKE_INSTALL_RPATH "@executable_path")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
+# The static graphics libraries end up in walnut, which is a shared library on Linux and macOS.
+if(NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "iOS")
     set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
