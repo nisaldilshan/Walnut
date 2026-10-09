@@ -1,0 +1,136 @@
+# Builds Walnut for every supported renderer + windowing system combination,
+# with dependencies from Conan and from vcpkg, on Windows and Linux.
+name: CI
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+# A new push to a pull request cancels the runs still going for the previous push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conan:
+    name: Conan ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # windows-latest has Visual Studio 2026, which the CMake 3.31 that some
+        # ConanCenter recipes (e.g. vulkan-loader/1.3.239.0) build with does not know.
+        os: [ windows-2022, ubuntu-latest ]
+        renderer: [ Vulkan, OpenGL, WebGPU ]
+        windowing: [ GLFW, SDL ]
+        exclude:
+          # The sdl3webgpu helper Walnut downloads does not compile against the downloaded Dawn version.
+          - renderer: WebGPU
+            windowing: SDL
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          pip install "conan>=2.0,<3"
+          conan profile detect --force
+
+      - name: Restore Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          key: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ hashFiles('conanfile.py') }}
+          restore-keys: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-
+
+      - name: Build
+        # On Linux, Conan installs the system packages its recipes need (X11, OpenGL, ...) through apt.
+        run: >
+          conan build . --build=missing
+          -s build_type=Release -s compiler.cppstd=17
+          -o "&:rendering_backend=${{ matrix.renderer }}"
+          -o "&:windowing_system=${{ matrix.windowing }}"
+          ${{ runner.os == 'Linux' && '-c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True' || '' }}
+
+      - name: Remove Conan build folders before caching
+        run: conan cache clean "*"
+
+  vcpkg:
+    name: vcpkg ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest, ubuntu-latest ]
+        renderer: [ Vulkan, OpenGL ] # WebGPU is not supported with vcpkg
+        windowing: [ GLFW, SDL ]
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system packages
+        if: runner.os == 'Linux'
+        # Build tools and headers the vcpkg ports for X11, GLFW, SDL3 and the Vulkan loader expect from the system.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf autoconf-archive automake libtool libltdl-dev pkg-config bison xsltproc python3-jinja2 \
+            xorg-dev libxinerama-dev libxcursor-dev libx11-dev libxft-dev libxext-dev \
+            libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols libibus-1.0-dev
+
+      - name: Set up vcpkg
+        # Checks out vcpkg at the builtin-baseline from vcpkg.json.
+        run: |
+          baseline=$(jq -r '."builtin-baseline"' vcpkg.json)
+          root="$RUNNER_TEMP/vcpkg"
+          git init -q "$root"
+          git -C "$root" fetch -q --depth 1 https://github.com/microsoft/vcpkg.git "$baseline"
+          git -C "$root" checkout -q FETCH_HEAD
+          if [ "$RUNNER_OS" = "Windows" ]; then "$root/bootstrap-vcpkg.bat" -disableMetrics; else "$root/bootstrap-vcpkg.sh" -disableMetrics; fi
+          mkdir -p "$RUNNER_TEMP/vcpkg-cache"
+          echo "VCPKG_ROOT=$root" >> "$GITHUB_ENV"
+          echo "VCPKG_BINARY_SOURCES=clear;files,$RUNNER_TEMP/vcpkg-cache,readwrite" >> "$GITHUB_ENV"
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-cache
+          key: vcpkg-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ hashFiles('vcpkg.json') }}
+          # Binaries are keyed by their ABI hash, so packages cached for other combinations are safe to reuse.
+          restore-keys: vcpkg-${{ matrix.os }}-
+
+      - name: Configure
+        run: >
+          cmake -B build
+          -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+          -DRENDERER=${{ matrix.renderer }}
+          -DWINDOWING_SYSTEM=${{ matrix.windowing }}
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Install
+        run: cmake --install build --config Release --prefix install
+
+      - name: Build an app against the installed package
+        run: |
+          cmake -S tests/package -B build-package \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_MANIFEST_MODE=OFF \
+            -DVCPKG_INSTALLED_DIR="$PWD/build/vcpkg_installed" \
+            -DCMAKE_PREFIX_PATH="$PWD/install" \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-package --config Release --parallel

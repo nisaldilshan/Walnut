@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "walnut",
+  "version": "2.1.0",
+  "description": "Application framework built on Dear ImGui with Vulkan and OpenGL rendering backends",
+  "homepage": "https://github.com/nisaldilshan/Walnut",
+  "license": "MIT",
+  "builtin-baseline": "0699a19d0c6386247ce50d4dedbb8217d484d536",
+  "dependencies": [
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental"
+      ]
+    },
+    "stb"
+  ],
+  "features": {
+    "glfw": {
+      "description": "GLFW windowing system",
+      "dependencies": [
+        "glfw3",
+        {
+          "name": "imgui",
+          "features": [
+            "glfw-binding"
+          ]
+        }
+      ]
+    },
+    "opengl": {
+      "description": "OpenGL rendering backend",
+      "dependencies": [
+        {
+          "name": "glad",
+          "features": [
+            "gl-api-41"
+          ]
+        },
+        {
+          "name": "imgui",
+          "features": [
+            "opengl3-binding"
+          ]
+        }
+      ]
+    },
+    "sdl": {
+      "description": "SDL3 windowing system",
+      "dependencies": [
+        {
+          "name": "imgui",
+          "features": [
+            "sdl3-binding"
+          ]
+        },
+        {
+          "name": "sdl3",
+          "features": [
+            "vulkan"
+          ]
+        }
+      ]
+    },
+    "vulkan": {
+      "description": "Vulkan rendering backend",
+      "dependencies": [
+        {
+          "name": "imgui",
+          "features": [
+            "vulkan-binding"
+          ]
+        },
+        "vulkan",
+        {
+          "$comment": "X11 and Wayland surface support, needed by GLFW and SDL3",
+          "name": "vulkan-loader",
+          "features": [
+            "wayland",
+            "xcb",
+            "xlib"
+          ],
+          "platform": "linux"
+        }
+      ]
+    }
+  }
+}
