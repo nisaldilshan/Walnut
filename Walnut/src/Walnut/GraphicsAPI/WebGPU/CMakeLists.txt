@@ -1,25 +1,8 @@
-add_library(walnut-imgui-webgpu STATIC
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_demo.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_draw.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_tables.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_widgets.cpp
-    ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_wgpu.cpp
-)
+walnut_add_imgui_backend(walnut-imgui-webgpu wgpu webgpu)
 
-set_source_files_properties(${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_wgpu.cpp PROPERTIES COMPILE_DEFINITIONS "IMGUI_IMPL_WEBGPU_BACKEND_DAWN=1")
-
+set_source_files_properties(${WALNUT_IMGUI_RES_DIR}/bindings/imgui_impl_wgpu.cpp PROPERTIES COMPILE_DEFINITIONS "IMGUI_IMPL_WEBGPU_BACKEND_DAWN=1")
 if(APPLE)
-set_source_files_properties(${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_wgpu.cpp PROPERTIES COMPILE_FLAGS "-x objective-c++")
-else()           
-endif()
-target_link_libraries(walnut-imgui-webgpu PUBLIC imgui::imgui webgpu)
-if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_sources(walnut-imgui-webgpu PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_sdl3.cpp)
-    target_link_libraries(walnut-imgui-webgpu PUBLIC SDL3::SDL3)
-else()
-    target_sources(walnut-imgui-webgpu PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_glfw.cpp)
-    target_link_libraries(walnut-imgui-webgpu PUBLIC glfw)
+    set_source_files_properties(${WALNUT_IMGUI_RES_DIR}/bindings/imgui_impl_wgpu.cpp PROPERTIES COMPILE_FLAGS "-x objective-c++")
 endif()
 
 ###################################################################################################################################
@@ -68,5 +51,5 @@ else()
     target_link_libraries(walnut-graphics-webgpu PUBLIC glfw3webgpu glfw)
 endif()
 
-target_include_directories(walnut-graphics-webgpu PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src ${imgui_INCLUDE_DIRS}/../res/bindings) 
+target_include_directories(walnut-graphics-webgpu PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Walnut/src>)
 target_link_libraries(walnut-graphics-webgpu PUBLIC imgui::imgui webgpu walnut-imgui-webgpu)
