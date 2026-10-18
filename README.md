@@ -143,7 +143,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 | `ports/walnut/` | vcpkg port for consumers |
 | `tests/package/` | Minimal app that CI builds against the installed Walnut package |
 | `.github/workflows/ci.yml` | CI: builds every supported combination with Conan and vcpkg on Windows and Linux |
-| `cmake/` | CMake modules: dependency lookup (all Conan/vcpkg differences), install rules, package config template |
+| `cmake/` | CMake modules: build options, dependency lookup (`WalnutConan.cmake`, `WalnutVcpkg.cmake`), install rules, package config template |
 
 The Premake files (`premake5.lua`, `WalnutExternal.lua`, `scripts/Setup.bat`) and `testing/conan-profiles/` come from earlier versions of the project and are not maintained.
 

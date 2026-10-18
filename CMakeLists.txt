@@ -4,46 +4,34 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CXX_EXTENSIONS OFF)
 
+# Defaults for the RENDERER and WINDOWING_SYSTEM options.
+set(WALNUT_DEFAULT_RENDERER Vulkan)
+set(WALNUT_DEFAULT_WINDOWING_SYSTEM GLFW)
+
 # Has to run before project() so the vcpkg toolchain installs the right dependencies.
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/WalnutVcpkgFeatures.cmake)
 
-project (Walnut VERSION 2.1.0)
+project (Walnut VERSION 2.2.0)
 
 include(FetchContent)
 include(GNUInstallDirs)
 
 #### OPTIONS ###
-# Declared after project() so values set by the Conan toolchain take precedence.
-set(RENDERER "WebGPU" CACHE STRING "Renderer to be used: OpenGL, Vulkan or WebGPU")
-set(WINDOWING_SYSTEM "GLFW" CACHE STRING "Windowing system to be used: GLFW or SDL")
-option(WALNUT_BUILD_EXAMPLES "Build the WalnutApp example" ${PROJECT_IS_TOP_LEVEL})
-option(WALNUT_INSTALL "Generate install rules and the Walnut CMake package" ${PROJECT_IS_TOP_LEVEL})
-
-# The position in this list + 1 is the RENDERER_BACKEND value the sources check for.
-set(WALNUT_RENDERERS OpenGL Vulkan WebGPU)
-set_property(CACHE RENDERER PROPERTY STRINGS ${WALNUT_RENDERERS})
-set_property(CACHE WINDOWING_SYSTEM PROPERTY STRINGS GLFW SDL)
-
-list(FIND WALNUT_RENDERERS "${RENDERER}" WALNUT_RENDERER_INDEX)
-if(WALNUT_RENDERER_INDEX EQUAL -1)
-    message(FATAL_ERROR "Unknown RENDERER '${RENDERER}', expected one of: ${WALNUT_RENDERERS}")
-endif()
-if(NOT WINDOWING_SYSTEM MATCHES "^(GLFW|SDL)$")
-    message(FATAL_ERROR "Unknown WINDOWING_SYSTEM '${WINDOWING_SYSTEM}', expected GLFW or SDL")
-endif()
-math(EXPR WALNUT_RENDERER_BACKEND "${WALNUT_RENDERER_INDEX} + 1")
-string(TOLOWER "${RENDERER}" WALNUT_RENDERER_NAME)
-
-foreach(var RENDERER WINDOWING_SYSTEM
-            CMAKE_SYSTEM CMAKE_SYSTEM_NAME CMAKE_SYSTEM_VERSION CMAKE_SYSTEM_PROCESSOR CMAKE_HOST_SYSTEM
-            CMAKE_CXX_COMPILER CMAKE_CXX_COMPILER_ID CMAKE_CXX_COMPILER_VERSION CMAKE_BUILD_TYPE
-            CMAKE_SOURCE_DIR CMAKE_BINARY_DIR)
-    message(STATUS "${var}: ${${var}}")
-endforeach()
+# RENDERER, WINDOWING_SYSTEM, WALNUT_BUILD_EXAMPLES and WALNUT_INSTALL.
+include(cmake/WalnutOptions.cmake)
 
 #### DEPENDENCIES ###
-# Everything that differs between Conan and vcpkg is handled in this file.
-include(cmake/WalnutDependencies.cmake)
+# Dependencies come from vcpkg or Conan. Both files provide the same to the rest of the build:
+#   imgui::imgui, stb::stb          imgui and stb_image
+#   WALNUT_WINDOWING_TARGET         glfw or SDL3::SDL3
+#   WALNUT_VULKAN_PACKAGE           package providing the Vulkan loader: Vulkan, VulkanLoader or moltenvk
+#   WALNUT_VULKAN_TARGET            Vulkan loader target
+#   walnut_add_imgui_backend()      creates the imgui backend library for a renderer
+if(VCPKG_TOOLCHAIN)
+    include(cmake/WalnutVcpkg.cmake)
+else()
+    include(cmake/WalnutConan.cmake)
+endif()
 
 #### PLATFORM SETTINGS ###
 set(CMAKE_INSTALL_RPATH "@executable_path")

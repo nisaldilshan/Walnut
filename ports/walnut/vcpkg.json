@@ -1,6 +1,6 @@
 {
   "name": "walnut",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Application framework built on Dear ImGui with Vulkan and OpenGL rendering backends",
   "homepage": "https://github.com/nisaldilshan/Walnut",
   "license": "MIT",
