@@ -42,7 +42,11 @@ if(ANDROID)
     target_link_libraries(walnut-graphics-opengl PUBLIC ${GLES3_LIBRARY})
 elseif(IOS)
 else()
-    target_link_libraries(walnut-graphics-opengl PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+    # Imported targets rather than library paths, so the installed package does not hard-code them.
+    target_link_libraries(walnut-graphics-opengl PUBLIC OpenGL::GL)
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(walnut-graphics-opengl PUBLIC X11::X11)
+    endif()
 endif()
 
 

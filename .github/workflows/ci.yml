@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   conan:
-    name: Conan ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }}
+    name: Conan ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -26,10 +26,15 @@ jobs:
         os: [ windows-2022, ubuntu-latest ]
         renderer: [ Vulkan, OpenGL, WebGPU ]
         windowing: [ GLFW, SDL ]
+        build_type: [ Release ]
         exclude:
           # The sdl3webgpu helper Walnut downloads does not compile against the downloaded Dawn version.
           - renderer: WebGPU
             windowing: SDL
+        include:
+          # Debug builds of the default configuration.
+          - { os: windows-2022, renderer: Vulkan, windowing: GLFW, build_type: Debug }
+          - { os: ubuntu-latest, renderer: Vulkan, windowing: GLFW, build_type: Debug }
 
     steps:
       - uses: actions/checkout@v4
@@ -47,14 +52,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.conan2/p
-          key: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ hashFiles('conanfile.py') }}
-          restore-keys: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-
+          key: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.py') }}
+          restore-keys: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ matrix.build_type }}-
 
       - name: Build
         # On Linux, Conan installs the system packages its recipes need (X11, OpenGL, ...) through apt.
         run: >
           conan build . --build=missing
-          -s build_type=Release -s compiler.cppstd=17
+          -s build_type=${{ matrix.build_type }} -s compiler.cppstd=17
           -o "&:rendering_backend=${{ matrix.renderer }}"
           -o "&:windowing_system=${{ matrix.windowing }}"
           ${{ runner.os == 'Linux' && '-c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True' || '' }}
@@ -63,7 +68,7 @@ jobs:
         run: conan cache clean "*"
 
   vcpkg:
-    name: vcpkg ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }}
+    name: vcpkg ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -71,6 +76,11 @@ jobs:
         os: [ windows-latest, ubuntu-latest ]
         renderer: [ Vulkan, OpenGL ] # WebGPU is not supported with vcpkg
         windowing: [ GLFW, SDL ]
+        build_type: [ Release ]
+        include:
+          # Debug builds of the default configuration.
+          - { os: windows-latest, renderer: Vulkan, windowing: GLFW, build_type: Debug }
+          - { os: ubuntu-latest, renderer: Vulkan, windowing: GLFW, build_type: Debug }
 
     defaults:
       run:
@@ -107,7 +117,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/vcpkg-cache
-          key: vcpkg-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ matrix.build_type }}-${{ hashFiles('vcpkg.json') }}
           # Binaries are keyed by their ABI hash, so packages cached for other combinations are safe to reuse.
           restore-keys: vcpkg-${{ matrix.os }}-
 
@@ -117,20 +127,23 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
           -DRENDERER=${{ matrix.renderer }}
           -DWINDOWING_SYSTEM=${{ matrix.windowing }}
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
-        run: cmake --build build --config Release --parallel
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       - name: Install
-        run: cmake --install build --config Release --prefix install
+        run: cmake --install build --config ${{ matrix.build_type }} --prefix install
 
       - name: Build an app against the installed package
+        # Only the installed configuration is generated: vcpkg maps MinSizeRel and RelWithDebInfo to
+        # Release, which a Debug install does not have.
         run: |
           cmake -S tests/package -B build-package \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
             -DVCPKG_MANIFEST_MODE=OFF \
             -DVCPKG_INSTALLED_DIR="$PWD/build/vcpkg_installed" \
             -DCMAKE_PREFIX_PATH="$PWD/install" \
-            -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-package --config Release --parallel
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type }}
+          cmake --build build-package --config ${{ matrix.build_type }} --parallel
