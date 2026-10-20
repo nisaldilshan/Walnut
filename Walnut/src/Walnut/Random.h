@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <array>
 #include "ExportConfig.h"
 
 namespace Walnut {

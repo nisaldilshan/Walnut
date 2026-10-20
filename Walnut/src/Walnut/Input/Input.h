@@ -1,7 +1,7 @@
 #pragma once
 
 #include "KeyCodes.h"
-
+#include <array>
 namespace Walnut {
 
 	class Input
