@@ -2,6 +2,7 @@
 
 #include "../../ImageFormat.h"
 #include <cassert>
+#include <cstring>
 
 namespace Walnut
 {

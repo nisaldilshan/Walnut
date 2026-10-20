@@ -1,20 +1,4 @@
-add_library(walnut-imgui-vulkan STATIC
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_demo.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_draw.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_tables.cpp
-    ${imgui_INCLUDE_DIRS}/../res/src/imgui_widgets.cpp
-    ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_vulkan.cpp
-)
-
-target_link_libraries(walnut-imgui-vulkan PUBLIC imgui::imgui Vulkan::Loader)
-if (WINDOWING_SYSTEM STREQUAL "SDL")
-    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_sdl3.cpp)
-    target_link_libraries(walnut-imgui-vulkan PUBLIC SDL3::SDL3)
-else()
-    target_sources(walnut-imgui-vulkan PRIVATE ${imgui_INCLUDE_DIRS}/../res/bindings/imgui_impl_glfw.cpp)
-    target_link_libraries(walnut-imgui-vulkan PUBLIC glfw)
-endif()
+walnut_add_imgui_backend(walnut-imgui-vulkan vulkan ${WALNUT_VULKAN_TARGET})
 
 ###################################################################################################################################
 
@@ -25,7 +9,7 @@ add_library (walnut-graphics-vulkan STATIC
                     VulkanRenderingBackend.cpp
                 )
 
-target_include_directories(walnut-graphics-vulkan PUBLIC ${CMAKE_SOURCE_DIR}/Walnut/src ${imgui_INCLUDE_DIRS}/../res/bindings)  
+target_include_directories(walnut-graphics-vulkan PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Walnut/src>)
 target_link_libraries(walnut-graphics-vulkan PUBLIC imgui::imgui walnut-imgui-vulkan)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
@@ -36,10 +20,10 @@ else()
     target_link_libraries(walnut-graphics-vulkan PUBLIC glfw)
 endif()
 
-if(APPLE)
+if(WALNUT_VULKAN_PACKAGE STREQUAL "moltenvk")
     if(CMAKE_SYSTEM_NAME MATCHES "iOS")
         target_include_directories(walnut-graphics-vulkan PUBLIC /Users/nisal/Downloads/MoltenVK/MoltenVK/include)
-        target_link_libraries(walnut-graphics-vulkan PUBLIC 
+        target_link_libraries(walnut-graphics-vulkan PUBLIC
                                 /Users/nisal/Downloads/MoltenVK/MoltenVK/static/MoltenVK.xcframework/ios-arm64_x86_64-simulator/libMoltenVK.a
                                 "-framework Metal"
                                 "-framework MetalKit"
@@ -53,12 +37,12 @@ if(APPLE)
         target_link_libraries(walnut-graphics-vulkan PUBLIC moltenvk::moltenvk)
     endif()
 else()
-    target_link_libraries(walnut-graphics-vulkan PUBLIC Vulkan::Loader)
-    find_package (vulkan-validationlayers REQUIRED)
+    target_link_libraries(walnut-graphics-vulkan PUBLIC ${WALNUT_VULKAN_TARGET})
+endif()
+
+if(vulkan-validationlayers_FOUND)
     # Create a custom target that echoes the path during the build step
     add_custom_target(PrintVulkanLayerPath ALL
         COMMAND ${CMAKE_COMMAND} -E echo "VK_LAYER_PATH for validation layers is: $<IF:$<CONFIG:Debug>,${vulkan-validationlayers_PACKAGE_FOLDER_DEBUG},Disabled for non debug builds>"
     )
 endif()
-
-

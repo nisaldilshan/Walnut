@@ -11,14 +11,8 @@ target_sources(App PRIVATE
 set_target_properties(App PROPERTIES BUNDLE TRUE)
 endif()
 
-target_include_directories(App PRIVATE ../Walnut/src)
-target_link_libraries(App PRIVATE imgui::imgui)
-if (WIN32)
+# walnut brings in its include paths and imgui.
 target_link_libraries(App PRIVATE walnut)
-
-else()
-target_link_libraries(App PRIVATE walnut) #  "--shell-file /Users/nisal/dev/other/cpp/Walnut/WalnutApp/src/shell_minimal.html"
-endif()
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_link_libraries(App PRIVATE SDL3::SDL3) # SDL2::SDL2main

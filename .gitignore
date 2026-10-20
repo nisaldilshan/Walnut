@@ -24,3 +24,6 @@ conanbuildinfo.txt
 conaninfo.txt
 graph_info.json
 external_deps
+# vcpkg
+build-vcpkg
+vcpkg_installed
