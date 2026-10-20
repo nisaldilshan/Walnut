@@ -16,7 +16,7 @@
 namespace Walnut
 {
 
-	void OpenGLRenderingBackend::Init(GLFWwindow *windowHandle)
+	void OpenGLRenderingBackend::Init(GLFWwindow *windowHandle, bool /*enableValidation*/)
 	{
 		m_windowHandle = windowHandle;
 		
