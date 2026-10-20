@@ -25,6 +25,9 @@ namespace Walnut {
 		uint32_t Width = 1600;
 		uint32_t Height = 900;
 		bool UseImGui = true;
+		// Vulkan: turns on VK_LAYER_KHRONOS_validation + VK_EXT_debug_utils when the layer is
+		// installed; a no-op otherwise. Ignored by the OpenGL and WebGPU backends.
+		bool EnableGraphicsValidation = false;
 	};
 
 	class Walnut_API Application

@@ -32,11 +32,19 @@ struct QueueFamilyIndices
     }
 };
 
+// Config the host (e.g. RenderSys) hands in, instead of Vulkan setup being hard-coded.
+struct VulkanConfig
+{
+	// Enables VK_LAYER_KHRONOS_validation and VK_EXT_debug_utils when the layer is installed;
+	// silently has no effect otherwise. Messages are printed to stderr.
+	bool EnableValidation = false;
+};
+
 class Vulkan
 {
 public:
 	static void check_vk_result(VkResult err);
-	static void SetupVulkan(std::vector<const char*> extensions);
+	static void CreateDevice(std::vector<const char*> extensions, const VulkanConfig& config);
 	static void SetupVulkanWindow(int width, int height);
 	static void CleanupVulkan();
 	static void CleanupVulkanWindow();

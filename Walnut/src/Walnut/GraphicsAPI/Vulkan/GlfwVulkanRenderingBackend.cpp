@@ -12,7 +12,7 @@
 
 namespace Walnut
 {
-    void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle)
+    void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool enableValidation)
     {
         if (!glfwVulkanSupported())
         {
@@ -38,7 +38,7 @@ namespace Walnut
         m_windowHandle = windowHandle;
 
         // Setup Vulkan
-        GraphicsAPI::Vulkan::SetupVulkan(extensions);
+        GraphicsAPI::Vulkan::CreateDevice(extensions, GraphicsAPI::VulkanConfig{ enableValidation });
         // Create Window Surface
         VkResult err = glfwCreateWindowSurface(GraphicsAPI::Vulkan::GetInstance(), 
                                                 windowHandle, 

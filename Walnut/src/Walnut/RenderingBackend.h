@@ -19,7 +19,9 @@ namespace Walnut {
 		};
 		virtual ~RenderingBackend() = default;
 
-		virtual void Init(WalnutWindowHandleType* windowHandle) = 0;
+		// enableValidation is a request, not a guarantee: backends that don't support it (OpenGL, WebGPU) ignore it,
+		// and the Vulkan backend only honors it when VK_LAYER_KHRONOS_validation is actually installed.
+		virtual void Init(WalnutWindowHandleType* windowHandle, bool enableValidation) = 0;
 		virtual void Shutdown() = 0;
 		virtual void Cleanup() = 0;
 

@@ -20,20 +20,13 @@ void Vulkan::check_vk_result(VkResult err)
 		abort();
 }
 
-#ifdef _DEBUG
-#define IMGUI_VULKAN_DEBUG_REPORT
-constexpr bool isDebugBuild = false; // Disabling validation layers, with conan2 it does not work for some reason.
-#else
-constexpr bool isDebugBuild = false;
-#endif
-
 static VkAllocationCallbacks* 	g_Allocator = NULL;
 static VkInstance               g_Instance = VK_NULL_HANDLE;
 static VkPhysicalDevice         g_PhysicalDevice = VK_NULL_HANDLE;
 static VkDevice                 g_Device = VK_NULL_HANDLE;
 static uint32_t                 g_QueueFamily = (uint32_t)-1;
 static VkQueue                  g_Queue = VK_NULL_HANDLE;
-static VkDebugReportCallbackEXT g_DebugReport = VK_NULL_HANDLE;
+static VkDebugUtilsMessengerEXT g_DebugMessenger = VK_NULL_HANDLE;
 static VkDescriptorPool         g_DescriptorPool = VK_NULL_HANDLE;
 
 static VkSurfaceKHR             g_surface = VK_NULL_HANDLE;
@@ -59,6 +52,27 @@ static bool IsExtensionAvailable(const T& properties, const char* extension)
     return false;
 }
 
+static bool IsLayerAvailable(const char* layerName)
+{
+    uint32_t count = 0;
+    vkEnumerateInstanceLayerProperties(&count, nullptr);
+    std::vector<VkLayerProperties> layers(count);
+    vkEnumerateInstanceLayerProperties(&count, layers.data());
+    for (const auto& layer : layers)
+        if (strcmp(layer.layerName, layerName) == 0)
+            return true;
+    return false;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT,
+                                                          VkDebugUtilsMessageTypeFlagsEXT,
+                                                          const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+                                                          void*)
+{
+    fprintf(stderr, "[vulkan validation] %s\n", callbackData->pMessage);
+    return VK_FALSE;
+}
+
 static void printAvailableDeviceExtensions(VkPhysicalDevice physicalDevice) {
     uint32_t extensionCount = 0;
     vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
@@ -73,10 +87,9 @@ static void printAvailableDeviceExtensions(VkPhysicalDevice physicalDevice) {
     }
 }
 
-void Vulkan::SetupVulkan(std::vector<const char*> extensions)
+void Vulkan::CreateDevice(std::vector<const char*> extensions, const VulkanConfig& config)
 {
 	VkResult err;
-	VkInstanceCreateInfo create_info = {};
 
 	// Enumerate available extensions
 	uint32_t properties_count;
@@ -87,67 +100,67 @@ void Vulkan::SetupVulkan(std::vector<const char*> extensions)
 	check_vk_result(err);
 
 	// Enable required extensions
+	VkInstanceCreateFlags instanceFlags = 0;
 	if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)) {
 		extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 	}
 	if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)) {
 		extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-		create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+		instanceFlags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 	}
+
+	// Validation is best-effort: only turned on when asked for AND the layer/extension are
+	// actually installed, so a machine without LunarG's SDK (or Conan's package) just gets none.
+	std::vector<const char*> layers;
+	bool useValidation = false;
+	if (config.EnableValidation) {
+		if (IsLayerAvailable("VK_LAYER_KHRONOS_validation")) {
+			layers.push_back("VK_LAYER_KHRONOS_validation");
+			useValidation = IsExtensionAvailable(properties, VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+			if (useValidation)
+				extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+			else
+				fprintf(stderr, "[vulkan] VK_EXT_debug_utils is not available; validation messages will not be reported\n");
+		} else {
+			fprintf(stderr, "[vulkan] validation requested but VK_LAYER_KHRONOS_validation is not installed\n");
+		}
+	}
+
+	VkDebugUtilsMessengerCreateInfoEXT messengerInfo{};
+	messengerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	messengerInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+								  | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	messengerInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+							  | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+							  | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	messengerInfo.pfnUserCallback = DebugUtilsCallback;
+
+	VkApplicationInfo appInfo{};
+	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	appInfo.pApplicationName = "Walnut App";
+	appInfo.pEngineName = "Walnut";
+	appInfo.apiVersion = VK_API_VERSION_1_2;
 
 	// Create Vulkan Instance
 	{
+		VkInstanceCreateInfo create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		create_info.pNext = useValidation ? &messengerInfo : nullptr; // also reports errors from vkCreateInstance itself
+		create_info.flags = instanceFlags;
+		create_info.pApplicationInfo = &appInfo;
+		create_info.enabledLayerCount = (uint32_t)layers.size();
+		create_info.ppEnabledLayerNames = layers.data();
 		create_info.enabledExtensionCount = (uint32_t)extensions.size();
 		create_info.ppEnabledExtensionNames = extensions.data();
-		const char** extensions_ext = nullptr;
-		if constexpr (isDebugBuild) {
-			// Enabling validation layers
-			const char* layers[] = { "VK_LAYER_KHRONOS_validation" };
-			create_info.enabledLayerCount = 1;
-			create_info.ppEnabledLayerNames = layers;
 
-			// Enable debug report extension (we need additional storage, so we duplicate the user array to add our new extension to it)
-			extensions_ext = (const char**)malloc(sizeof(const char*) * ((uint32_t)extensions.size() + 1));
-			memcpy(extensions_ext, extensions.data(), (uint32_t)extensions.size() * sizeof(const char*));
-			extensions_ext[(uint32_t)extensions.size()] = "VK_EXT_debug_report";
-			create_info.enabledExtensionCount = (uint32_t)extensions.size() + 1;
-			create_info.ppEnabledExtensionNames = extensions_ext;
-		}
-		// Create Vulkan Instance without any debug feature
 		err = vkCreateInstance(&create_info, g_Allocator, &g_Instance);
 		check_vk_result(err);
-		free(extensions_ext);
 
-		if constexpr (isDebugBuild) {
-			// Get the function pointer (required for any extensions)
-			auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkCreateDebugReportCallbackEXT");
-			IM_ASSERT(vkCreateDebugReportCallbackEXT != NULL);
-
-			// Setup the debug report callback
-			VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
-			debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-			debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-			debug_report_ci.pfnCallback = [](VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-											 uint64_t object, size_t location, int32_t messageCode, const char *pLayerPrefix,
-											 const char *pMessage, void *pUserData) -> VkBool32
-			{
-				(void)flags;
-				(void)object;
-				(void)location;
-				(void)messageCode;
-				(void)pUserData;
-				(void)pLayerPrefix; // Unused arguments
-				fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
-				return VK_FALSE;
-			};
-			debug_report_ci.pUserData = NULL;
-
-			err = vkCreateDebugReportCallbackEXT(g_Instance, &debug_report_ci, g_Allocator, &g_DebugReport);
+		if (useValidation) {
+			auto vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(g_Instance, "vkCreateDebugUtilsMessengerEXT");
+			IM_ASSERT(vkCreateDebugUtilsMessengerEXT != NULL);
+			err = vkCreateDebugUtilsMessengerEXT(g_Instance, &messengerInfo, g_Allocator, &g_DebugMessenger);
 			check_vk_result(err);
-		}
-		else {
-			IM_UNUSED(g_DebugReport);
 		}
 	}
 
@@ -315,10 +328,9 @@ void Vulkan::CleanupVulkan()
 {
 	vkDestroyDescriptorPool(g_Device, g_DescriptorPool, g_Allocator);
 
-	if constexpr (isDebugBuild) {
-		// Remove the debug report callback
-		auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkDestroyDebugReportCallbackEXT");
-		vkDestroyDebugReportCallbackEXT(g_Instance, g_DebugReport, g_Allocator);
+	if (g_DebugMessenger != VK_NULL_HANDLE) {
+		auto vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(g_Instance, "vkDestroyDebugUtilsMessengerEXT");
+		vkDestroyDebugUtilsMessengerEXT(g_Instance, g_DebugMessenger, g_Allocator);
 	}
 
 	vkDestroyDevice(g_Device, g_Allocator);
