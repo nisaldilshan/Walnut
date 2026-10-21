@@ -10,7 +10,7 @@
 
 namespace Walnut
 {
-    void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle)
+    void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool enableValidation)
     {
         uint32_t sdl_extensions_count = 0;
         const char* const* sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extensions_count);
@@ -37,7 +37,7 @@ namespace Walnut
         m_windowHandle = windowHandle;
 
         // Setup Vulkan
-        GraphicsAPI::Vulkan::SetupVulkan(extensions);
+        GraphicsAPI::Vulkan::CreateDevice(extensions, GraphicsAPI::VulkanConfig{ enableValidation });
         // Create Window Surface
         const bool result = SDL_Vulkan_CreateSurface(windowHandle, 
                                             GraphicsAPI::Vulkan::GetInstance(), 

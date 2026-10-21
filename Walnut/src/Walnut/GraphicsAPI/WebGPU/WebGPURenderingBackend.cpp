@@ -24,7 +24,7 @@ WebGPURenderingBackend::WebGPURenderingBackend()
 WebGPURenderingBackend::~WebGPURenderingBackend()
 {}
 
-void WebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle)
+void WebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool /*enableValidation*/)
 {
     m_windowHandle = windowHandle;
 

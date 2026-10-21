@@ -128,7 +128,7 @@ namespace Walnut {
 			return;
 		}
 
-		m_RenderingBackend->Init(windowHandle);
+		m_RenderingBackend->Init(windowHandle, m_Specification.EnableGraphicsValidation);
 
 		glfwSetWindowUserPointer(windowHandle, this);
 		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {

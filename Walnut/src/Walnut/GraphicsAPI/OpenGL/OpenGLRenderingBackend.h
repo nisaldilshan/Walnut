@@ -14,7 +14,7 @@ public:
 	OpenGLRenderingBackend(OpenGLRenderingBackend&&) = delete;
 	OpenGLRenderingBackend& operator=(OpenGLRenderingBackend&&) = delete;
 
-	void Init(WalnutWindowHandleType* windowHandle) override;
+	void Init(WalnutWindowHandleType* windowHandle, bool enableValidation) override;
 	void SetupWindow(int width, int height) override;
 	bool NeedToResizeWindow() override;
 	void ResizeWindow(int width, int height) override;

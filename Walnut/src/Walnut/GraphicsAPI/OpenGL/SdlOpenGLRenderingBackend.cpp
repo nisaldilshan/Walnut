@@ -16,7 +16,7 @@
 namespace Walnut
 {
 	SDL_GLContext g_SDLcontext = NULL;
-	void OpenGLRenderingBackend::Init(WalnutWindowHandleType* windowHandle)
+	void OpenGLRenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool /*enableValidation*/)
 	{
 		m_windowHandle = windowHandle;
 

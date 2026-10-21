@@ -115,7 +115,7 @@ namespace Walnut {
 			return;
 		}
 
-		m_RenderingBackend->Init(windowHandle);
+		m_RenderingBackend->Init(windowHandle, m_Specification.EnableGraphicsValidation);
 
 		OnWindowResize(windowHandle);
 		if (m_Specification.UseImGui)
