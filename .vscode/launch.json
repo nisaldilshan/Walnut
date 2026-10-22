@@ -19,6 +19,17 @@
             "MIMode": "gdb"
         },
         {
+            "name": "(Web) Serve and Open",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "python3 -m http.server 8000 --directory ${workspaceFolder}/build/Debug/WalnutApp",
+            "serverReadyAction": {
+                "pattern": "Serving HTTP on .* port (\\d+)",
+                "uriFormat": "http://localhost:%s",
+                "action": "openExternally"
+            }
+        },
+        {
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
