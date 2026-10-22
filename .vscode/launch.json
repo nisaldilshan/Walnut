@@ -8,12 +8,12 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/WalnutApp/App",
+            "program": "${workspaceFolder}/build/Debug/WalnutApp/App",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/WalnutApp",
+            "cwd": "${workspaceFolder}/build/Debug/WalnutApp",
             "environment": [
-                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build" }
+                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build/Debug" }
             ],
             "externalConsole": false,
             "MIMode": "gdb"

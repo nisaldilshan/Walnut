@@ -50,7 +50,12 @@ elseif(RENDERER STREQUAL "Vulkan")
     find_package(${WALNUT_VULKAN_PACKAGE} REQUIRED)
 
 elseif(RENDERER STREQUAL "WebGPU")
-    set(WEBGPU_BACKEND DAWN)
+    if(EMSCRIPTEN)
+        # The browser provides WebGPU; emdawnwebgpu is Dawn's webgpu.h port on top of it.
+        set(WEBGPU_BACKEND EMDAWNWEBGPU)
+    else()
+        set(WEBGPU_BACKEND DAWN)
+    endif()
     FetchContent_Declare(
         WebGPU-distribution
         GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution.git

@@ -29,7 +29,9 @@ if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut-graphics-webgpu PRIVATE SdlWebGPURenderingBackend.cpp)
     target_link_libraries(walnut-graphics-webgpu PUBLIC sdl3webgpu SDL3::SDL3)
 else()
-    if(WIN32)
+    if(EMSCRIPTEN)
+        # glfw3webgpu creates the surface from the page's canvas, no native platform needed
+    elseif(WIN32)
         set(GLFW_BUILD_WIN32 1)
     elseif(APPLE)
         set(GLFW_BUILD_COCOA 1)
@@ -53,3 +55,8 @@ endif()
 
 target_include_directories(walnut-graphics-webgpu PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Walnut/src>)
 target_link_libraries(walnut-graphics-webgpu PUBLIC imgui::imgui webgpu walnut-imgui-webgpu)
+
+if(EMSCRIPTEN)
+    # webgpu.hpp's requestAdapter/requestDevice wait for the browser with emscripten_sleep
+    target_link_options(walnut-graphics-webgpu PUBLIC -sASYNCIFY=1)
+endif()
