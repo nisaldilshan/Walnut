@@ -8,15 +8,26 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/WalnutApp/App",
+            "program": "${workspaceFolder}/build/Debug/WalnutApp/App",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/WalnutApp",
+            "cwd": "${workspaceFolder}/build/Debug/WalnutApp",
             "environment": [
-                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build" }
+                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build/Debug" }
             ],
             "externalConsole": false,
             "MIMode": "gdb"
+        },
+        {
+            "name": "(Web) Serve and Open",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "python3 -m http.server 8000 --directory ${workspaceFolder}/build/Debug/WalnutApp",
+            "serverReadyAction": {
+                "pattern": "Serving HTTP on .* port (\\d+)",
+                "uriFormat": "http://localhost:%s",
+                "action": "debugWithChrome"
+            }
         },
         {
             "name": "(Windows) Launch",

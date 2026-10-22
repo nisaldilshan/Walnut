@@ -20,6 +20,12 @@ if(WINDOWING_SYSTEM STREQUAL "SDL")
     find_package(SDL3 REQUIRED)
     set(WALNUT_WINDOWING_TARGET SDL3::SDL3)
     set(WALNUT_IMGUI_PLATFORM_BINDING sdl3)
+elseif(EMSCRIPTEN)
+    # Emscripten ships its own GLFW, so there is no package to find.
+    add_library(glfw INTERFACE IMPORTED)
+    target_link_options(glfw INTERFACE -sUSE_GLFW=3)
+    set(WALNUT_WINDOWING_TARGET glfw)
+    set(WALNUT_IMGUI_PLATFORM_BINDING glfw)
 else()
     find_package(glfw3 REQUIRED)
     set(WALNUT_WINDOWING_TARGET glfw)
@@ -28,7 +34,9 @@ endif()
 
 #### RENDERER ###
 if(RENDERER STREQUAL "OpenGL")
-    find_package(glad REQUIRED)
+    if(NOT EMSCRIPTEN) # WebGL needs no loader
+        find_package(glad REQUIRED)
+    endif()
 
 elseif(RENDERER STREQUAL "Vulkan")
     if(APPLE)
@@ -42,7 +50,12 @@ elseif(RENDERER STREQUAL "Vulkan")
     find_package(${WALNUT_VULKAN_PACKAGE} REQUIRED)
 
 elseif(RENDERER STREQUAL "WebGPU")
-    set(WEBGPU_BACKEND DAWN)
+    if(EMSCRIPTEN)
+        # The browser provides WebGPU; emdawnwebgpu is Dawn's webgpu.h port on top of it.
+        set(WEBGPU_BACKEND EMDAWNWEBGPU)
+    else()
+        set(WEBGPU_BACKEND DAWN)
+    endif()
     FetchContent_Declare(
         WebGPU-distribution
         GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution.git

@@ -3,9 +3,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#ifndef __EMSCRIPTEN__
-#include <glad/glad.h>
-#endif
 #include "OpenGLGraphics.h"
 #include <Walnut/ImageFormat.h>
 namespace GraphicsAPI

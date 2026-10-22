@@ -95,6 +95,7 @@ namespace Walnut {
 #ifdef __EMSCRIPTEN__
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+			glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // render at device pixel resolution on HiDPI screens
 #else
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -114,6 +115,9 @@ namespace Walnut {
 		{
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+#ifdef __EMSCRIPTEN__
+			glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // render at device pixel resolution on HiDPI screens
+#endif
 		}
 		else
 		{

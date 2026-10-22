@@ -3,10 +3,15 @@
 #include "OpenGLGraphics.h"
 
 #include <imgui_impl_opengl3.h>
-#include <glad/glad.h>
 #include <Walnut/Image.h>
 
 #include <iostream>
+
+#ifdef __EMSCRIPTEN__
+#define WALNUT_GLSL_VERSION "#version 300 es\nprecision mediump float;\n"
+#else
+#define WALNUT_GLSL_VERSION "#version 330 core\n"
+#endif
 
 namespace Walnut
 { 
@@ -87,8 +92,7 @@ namespace Walnut
     {
 		glGenVertexArrays(1, &g_emptyVAO);
 
-		constexpr std::string_view vertexSrc = R"(
-			#version 330 core
+		constexpr std::string_view vertexSrc = WALNUT_GLSL_VERSION R"(
 			out vec2 v_TexCoord;
 			void main() {
 				v_TexCoord = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
@@ -96,8 +100,7 @@ namespace Walnut
 			}
 		)";
 
-		constexpr std::string_view fragmentSrc = R"(
-			#version 330 core
+		constexpr std::string_view fragmentSrc = WALNUT_GLSL_VERSION R"(
 			layout(location = 0) out vec4 color;
 			in vec2 v_TexCoord;
 			uniform float u_TilingFactor;
@@ -144,7 +147,9 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::FrameRenderImGui(void* draw_data)
 	{
+#ifndef __EMSCRIPTEN__ // WebGL has no GL_FRAMEBUFFER_SRGB
 		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
+#endif
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
 	}
 

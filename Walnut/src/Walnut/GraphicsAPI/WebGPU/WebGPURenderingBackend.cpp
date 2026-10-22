@@ -28,6 +28,8 @@ void WebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool /*e
 {
     m_windowHandle = windowHandle;
 
+    wgpu::InstanceDescriptor instanceDesc{};
+#ifndef __EMSCRIPTEN__ // Dawn toggles only exist in native Dawn
     std::vector<const char*> enabledToggles = {
         "allow_unsafe_apis",
     };
@@ -37,9 +39,8 @@ void WebGPURenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool /*e
     dawnToggles.enabledToggles = enabledToggles.data();
     dawnToggles.enabledToggleCount = enabledToggles.size();
     dawnToggles.disabledToggleCount = 0;
-
-    wgpu::InstanceDescriptor instanceDesc{};
     instanceDesc.nextInChain = &dawnToggles.chain;
+#endif
 
     GraphicsAPI::WebGPU::CreateInstance(instanceDesc);
     GraphicsAPI::WebGPU::CreateSurface(m_windowHandle);
@@ -152,10 +153,13 @@ void WebGPURenderingBackend::FrameRenderImGui(void* draw_data)
 
 void WebGPURenderingBackend::FramePresent()
 {
-    GraphicsAPI::WebGPU::GetSurface().present();
-
-#ifdef WEBGPU_BACKEND_WGPU
+#ifdef __EMSCRIPTEN__
+    // The browser presents the canvas when control returns to it at the end of the frame.
 #else
+    GraphicsAPI::WebGPU::GetSurface().present();
+#endif
+
+#if defined(WEBGPU_BACKEND_DAWN)
     // Check for pending error callbacks
     GraphicsAPI::WebGPU::GetDevice().tick();
 #endif
