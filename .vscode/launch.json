@@ -26,7 +26,7 @@
             "serverReadyAction": {
                 "pattern": "Serving HTTP on .* port (\\d+)",
                 "uriFormat": "http://localhost:%s",
-                "action": "openExternally"
+                "action": "debugWithChrome"
             }
         },
         {
