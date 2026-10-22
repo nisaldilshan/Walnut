@@ -20,6 +20,11 @@ else()
     target_link_libraries(App PUBLIC glfw)
 endif()
 
+if (RENDERER STREQUAL "WebGPU")
+    # Puts the WebGPU runtime library (e.g. libwebgpu_dawn.so) next to App; does nothing on Emscripten
+    target_copy_webgpu_binaries(App)
+endif()
+
 if (IS_EMSCRIPTEN)
     # Emit index.html (plus index.js/index.wasm) using shell.html as the page template,
     # so a static server pointed at the build folder serves the app at its root URL.
