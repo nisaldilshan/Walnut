@@ -1,4 +1,10 @@
-walnut_add_imgui_backend(walnut-imgui-opengl opengl3 glad::glad)
+if(EMSCRIPTEN)
+    set(WALNUT_GL_LOADER) # WebGL needs no loader
+else()
+    set(WALNUT_GL_LOADER glad::glad)
+endif()
+
+walnut_add_imgui_backend(walnut-imgui-opengl opengl3 ${WALNUT_GL_LOADER})
 if(ANDROID)
     target_compile_definitions(walnut-imgui-opengl PUBLIC IMGUI_IMPL_OPENGL_ES3)
 endif()
@@ -10,6 +16,7 @@ if(ANDROID)
     find_library(GLES3_LIBRARY libGLESv3.so HINTS ${GLES3_INCLUDE_DIR}/../lib)
     message(STATUS "GLES3_INCLUDE_DIR= " ${GLES3_INCLUDE_DIR})
     message(STATUS "GLES3_LIBRARY= " ${GLES3_LIBRARY})
+elseif(EMSCRIPTEN)
 else()
     find_package (OpenGL REQUIRED)
     message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
@@ -27,7 +34,7 @@ add_library (walnut-graphics-opengl STATIC
                 )
 
 target_include_directories(walnut-graphics-opengl PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Walnut/src>)
-target_link_libraries(walnut-graphics-opengl PUBLIC glad::glad imgui::imgui walnut-imgui-opengl)
+target_link_libraries(walnut-graphics-opengl PUBLIC ${WALNUT_GL_LOADER} imgui::imgui walnut-imgui-opengl)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut-graphics-opengl PRIVATE SdlOpenGLRenderingBackend.cpp)
@@ -41,6 +48,8 @@ endif()
 if(ANDROID)
     target_link_libraries(walnut-graphics-opengl PUBLIC ${GLES3_LIBRARY})
 elseif(IOS)
+elseif(EMSCRIPTEN)
+    target_link_options(walnut-graphics-opengl PUBLIC -sUSE_WEBGL2=1 -sFULL_ES3=1)
 else()
     # Imported targets rather than library paths, so the installed package does not hard-code them.
     target_link_libraries(walnut-graphics-opengl PUBLIC OpenGL::GL)

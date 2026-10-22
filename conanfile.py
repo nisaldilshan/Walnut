@@ -101,7 +101,8 @@ class Walnut(ConanFile):
 
         print("Using windowing system " + str(self.options.windowing_system));
         if self.options.windowing_system == "GLFW":
-            self.requires("glfw/3.4")
+            if self.settings.os != 'Emscripten': # Emscripten ships its own GLFW (-sUSE_GLFW=3)
+                self.requires("glfw/3.4")
         elif self.options.windowing_system == "SDL":
             self.requires("sdl/3.4.0")
         else:
