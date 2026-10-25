@@ -30,16 +30,16 @@ if (IS_EMSCRIPTEN)
     # so a static server pointed at the build folder serves the app at its root URL.
     # The renderer's own link flags (WebGL2, WebGPU) come from walnut-graphics-<renderer>.
     set(APP_SHELL_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Resources/shell.html")
-    set(APP_DEBUG_FLAGS " -s SAFE_HEAP=1")
-    if (RENDERER STREQUAL "OpenGL")
-        string(APPEND APP_DEBUG_FLAGS " -s GL_DEBUG=1 -s GL_ASSERTIONS=1")
-    endif()
     set_target_properties(App PROPERTIES
         OUTPUT_NAME index
         SUFFIX ".html"
-        LINK_DEPENDS "${APP_SHELL_FILE}"
-        LINK_FLAGS
-        " -s WASM=1${APP_DEBUG_FLAGS} --shell-file \"${APP_SHELL_FILE}\"")
+        LINK_DEPENDS "${APP_SHELL_FILE}")
+    target_link_options(App PRIVATE -sWASM=1 "SHELL:--shell-file \"${APP_SHELL_FILE}\"")
+    # Runtime checks that slow the app down, so not in the Release build hosted on GitHub Pages
+    target_link_options(App PRIVATE $<$<CONFIG:Debug>:-sSAFE_HEAP=1>)
+    if (RENDERER STREQUAL "OpenGL")
+        target_link_options(App PRIVATE "$<$<CONFIG:Debug>:-sGL_DEBUG=1;-sGL_ASSERTIONS=1>")
+    endif()
 endif()
 
 function(copy_runtime_dlls_at_build targetName)

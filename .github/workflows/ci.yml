@@ -1,5 +1,9 @@
-# Builds Walnut for every supported renderer + windowing system combination,
-# with dependencies from Conan and from vcpkg, on Windows and Linux.
+# Builds Walnut for every supported renderer + windowing system combination, with dependencies from
+# Conan and from vcpkg, on Windows and Linux, and for the browser (WebGL and WebGPU through Emscripten).
+# Each native job covers one renderer: it builds with GLFW first and then with SDL, so the two builds
+# share the job's setup and the dependencies they have in common. On Linux, every build also runs the
+# render test (tests/render) on Mesa's software renderers.
+# Pushes to master publish the browser builds of the example app to GitHub Pages.
 name: CI
 
 on:
@@ -14,9 +18,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   conan:
-    name: Conan ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }} ${{ matrix.build_type }}
+    name: Conan ${{ matrix.os }} ${{ matrix.renderer }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -25,16 +32,29 @@ jobs:
         # ConanCenter recipes (e.g. vulkan-loader/1.3.239.0) build with does not know.
         os: [ windows-2022, ubuntu-latest ]
         renderer: [ Vulkan, OpenGL, WebGPU ]
-        windowing: [ GLFW, SDL ]
         build_type: [ Release ]
-        exclude:
+        include:
           # The sdl3webgpu helper Walnut downloads does not compile against the downloaded Dawn version.
           - renderer: WebGPU
-            windowing: SDL
-        include:
+            glfw_only: true
           # Debug builds of the default configuration.
-          - { os: windows-2022, renderer: Vulkan, windowing: GLFW, build_type: Debug }
-          - { os: ubuntu-latest, renderer: Vulkan, windowing: GLFW, build_type: Debug }
+          - { os: windows-2022, renderer: Vulkan, build_type: Debug, glfw_only: true }
+          - { os: ubuntu-latest, renderer: Vulkan, build_type: Debug, glfw_only: true }
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      # On Linux, Conan installs the system packages its recipes need (X11, OpenGL, ...) through apt.
+      CONAN_ARGS: >-
+        --build=missing
+        -s build_type=${{ matrix.build_type }} -s compiler.cppstd=17
+        -o &:rendering_backend=${{ matrix.renderer }}
+        ${{ startsWith(matrix.os, 'ubuntu') && '-c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True' || '' }}
+      # Where cmake_layout puts the build inside the output folder: one folder per configuration with
+      # single-config generators (Linux), a shared one with Visual Studio (Windows).
+      CMAKE_BUILD_SUBDIR: build${{ startsWith(matrix.os, 'ubuntu') && format('/{0}', matrix.build_type) || '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -48,57 +68,80 @@ jobs:
           pip install "conan>=2.0,<3"
           conan profile detect --force
 
+      - name: Install render test packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb mesa-vulkan-drivers libgl1-mesa-dri
+
       - name: Restore Conan cache
         uses: actions/cache@v4
         with:
           path: ~/.conan2/p
-          key: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.py') }}
-          restore-keys: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ matrix.build_type }}-
+          key: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.py') }}
+          restore-keys: conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.build_type }}-
 
-      - name: Build
-        # On Linux, Conan installs the system packages its recipes need (X11, OpenGL, ...) through apt.
-        run: >
-          conan build . --build=missing
-          -s build_type=${{ matrix.build_type }} -s compiler.cppstd=17
-          -o "&:rendering_backend=${{ matrix.renderer }}"
-          -o "&:windowing_system=${{ matrix.windowing }}"
-          ${{ runner.os == 'Linux' && '-c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True' || '' }}
+      - name: Build (GLFW)
+        run: conan build . -of build-glfw $CONAN_ARGS -o "&:windowing_system=GLFW"
+
+      - name: Render test (GLFW)
+        if: runner.os == 'Linux'
+        run: .github/scripts/render-test.sh "build-glfw/$CMAKE_BUILD_SUBDIR"
+
+      - name: Build (SDL)
+        if: ${{ !matrix.glfw_only }}
+        run: conan build . -of build-sdl $CONAN_ARGS -o "&:windowing_system=SDL"
+
+      - name: Render test (SDL)
+        if: ${{ !matrix.glfw_only && runner.os == 'Linux' }}
+        run: .github/scripts/render-test.sh "build-sdl/$CMAKE_BUILD_SUBDIR"
+
+      - name: Upload render test images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-test-conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.build_type }}
+          path: build-*/**/render-test-*.png
+          if-no-files-found: ignore
 
       - name: Remove Conan build folders before caching
         run: conan cache clean "*"
 
   vcpkg:
-    name: vcpkg ${{ matrix.os }} ${{ matrix.renderer }} + ${{ matrix.windowing }} ${{ matrix.build_type }}
+    name: vcpkg ${{ matrix.os }} ${{ matrix.renderer }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ windows-latest, ubuntu-latest ]
         renderer: [ Vulkan, OpenGL ] # WebGPU is not supported with vcpkg
-        windowing: [ GLFW, SDL ]
         build_type: [ Release ]
         include:
           # Debug builds of the default configuration.
-          - { os: windows-latest, renderer: Vulkan, windowing: GLFW, build_type: Debug }
-          - { os: ubuntu-latest, renderer: Vulkan, windowing: GLFW, build_type: Debug }
+          - { os: windows-latest, renderer: Vulkan, build_type: Debug, glfw_only: true }
+          - { os: ubuntu-latest, renderer: Vulkan, build_type: Debug, glfw_only: true }
 
     defaults:
       run:
         shell: bash
+
+    env:
+      RENDERER: ${{ matrix.renderer }}
+      BUILD_TYPE: ${{ matrix.build_type }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install system packages
         if: runner.os == 'Linux'
-        # Build tools and headers the vcpkg ports for X11, GLFW, SDL3 and the Vulkan loader expect from the system.
+        # Build tools and headers the vcpkg ports for X11, GLFW, SDL3 and the Vulkan loader expect from
+        # the system, then the virtual display and software renderers for the render test.
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             autoconf autoconf-archive automake libtool libltdl-dev pkg-config bison xsltproc python3-jinja2 \
             xorg-dev libxinerama-dev libxcursor-dev libx11-dev libxft-dev libxext-dev \
             libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
-            libwayland-dev libxkbcommon-dev wayland-protocols libibus-1.0-dev
+            libwayland-dev libxkbcommon-dev wayland-protocols libibus-1.0-dev \
+            xvfb mesa-vulkan-drivers libgl1-mesa-dri
 
       - name: Set up vcpkg
         # Checks out vcpkg at the builtin-baseline from vcpkg.json.
@@ -117,33 +160,122 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/vcpkg-cache
-          key: vcpkg-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.windowing }}-${{ matrix.build_type }}-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.build_type }}-${{ hashFiles('vcpkg.json') }}
           # Binaries are keyed by their ABI hash, so packages cached for other combinations are safe to reuse.
           restore-keys: vcpkg-${{ matrix.os }}-
 
-      - name: Configure
-        run: >
-          cmake -B build
-          -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-          -DRENDERER=${{ matrix.renderer }}
-          -DWINDOWING_SYSTEM=${{ matrix.windowing }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+      - name: Build, install and build an app against the package (GLFW)
+        run: .github/scripts/vcpkg-build.sh GLFW
+
+      - name: Render test (GLFW)
+        if: runner.os == 'Linux'
+        run: .github/scripts/render-test.sh build-glfw
+
+      - name: Build, install and build an app against the package (SDL)
+        if: ${{ !matrix.glfw_only }}
+        run: .github/scripts/vcpkg-build.sh SDL
+
+      - name: Render test (SDL)
+        if: ${{ !matrix.glfw_only && runner.os == 'Linux' }}
+        run: .github/scripts/render-test.sh build-sdl
+
+      - name: Upload render test images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-test-vcpkg-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.build_type }}
+          path: build-*/**/render-test-*.png
+          if-no-files-found: ignore
+
+  web:
+    name: Web ${{ matrix.api }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { api: WebGL, renderer: OpenGL }
+          - { api: WebGPU, renderer: WebGPU }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          pip install "conan>=2.0,<3"
+          conan profile detect --force
+
+      - name: Restore Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          key: conan-web-${{ matrix.renderer }}-${{ hashFiles('conanfile.py', 'testing/conan-profiles/emscripten') }}
+          restore-keys: conan-web-${{ matrix.renderer }}-
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }} --parallel
+        # The emsdk package from the profile provides the Emscripten toolchain.
+        run: >
+          conan build . --build=missing
+          -pr:h testing/conan-profiles/emscripten -pr:b default
+          -s build_type=Release
+          -o "&:rendering_backend=${{ matrix.renderer }}"
+          -o "&:windowing_system=GLFW"
 
-      - name: Install
-        run: cmake --install build --config ${{ matrix.build_type }} --prefix install
-
-      - name: Build an app against the installed package
-        # Only the installed configuration is generated: vcpkg maps MinSizeRel and RelWithDebInfo to
-        # Release, which a Debug install does not have.
+      - name: Collect the app
         run: |
-          cmake -S tests/package -B build-package \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
-            -DVCPKG_MANIFEST_MODE=OFF \
-            -DVCPKG_INSTALLED_DIR="$PWD/build/vcpkg_installed" \
-            -DCMAKE_PREFIX_PATH="$PWD/install" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type }}
-          cmake --build build-package --config ${{ matrix.build_type }} --parallel
+          mkdir -p site
+          cp build/Release/WalnutApp/index.* site/
+          ls -l site
+
+      - name: Upload the app
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-${{ matrix.api }}
+          path: site/
+          if-no-files-found: error
+
+      - name: Remove Conan build folders before caching
+        run: conan cache clean "*"
+
+  pages:
+    name: Publish to GitHub Pages
+    # Only the latest master is published.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: web
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the apps
+        uses: actions/download-artifact@v4
+        with:
+          pattern: web-*
+          path: artifacts
+
+      - name: Assemble the site
+        # <site>/ has the landing page, <site>/webgl/ and <site>/webgpu/ the two builds of the app.
+        run: |
+          mkdir -p site
+          cp .github/pages/index.html site/
+          cp -r artifacts/web-WebGL site/webgl
+          cp -r artifacts/web-WebGPU site/webgpu
+          find site -type f
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

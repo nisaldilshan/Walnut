@@ -6,6 +6,13 @@ set(RENDERER "${WALNUT_DEFAULT_RENDERER}" CACHE STRING "Renderer to be used: Ope
 set(WINDOWING_SYSTEM "${WALNUT_DEFAULT_WINDOWING_SYSTEM}" CACHE STRING "Windowing system to be used: GLFW or SDL")
 option(WALNUT_BUILD_EXAMPLES "Build the WalnutApp example" ${PROJECT_IS_TOP_LEVEL})
 option(WALNUT_INSTALL "Generate install rules and the Walnut CMake package" ${PROJECT_IS_TOP_LEVEL})
+# The render test runs as a desktop program, so it is not built for the browser or mobile platforms.
+if(PROJECT_IS_TOP_LEVEL AND NOT CMAKE_SYSTEM_NAME MATCHES "^(Emscripten|Android|iOS)$")
+    set(WALNUT_BUILD_TESTS_DEFAULT ON)
+else()
+    set(WALNUT_BUILD_TESTS_DEFAULT OFF)
+endif()
+option(WALNUT_BUILD_TESTS "Build the render test (tests/render), run with ctest" ${WALNUT_BUILD_TESTS_DEFAULT})
 
 # The position in this list + 1 is the RENDERER_BACKEND value the sources check for.
 set(WALNUT_RENDERERS OpenGL Vulkan WebGPU)

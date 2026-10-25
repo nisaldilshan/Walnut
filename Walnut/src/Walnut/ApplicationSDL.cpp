@@ -259,6 +259,7 @@ namespace Walnut {
 				m_RenderingBackend->FrameRender(m_ImageToRender);
 			}
 			m_RenderingBackend->FrameEnd();
+			CaptureFrameIfRequested();
 		}
 
 		if (m_Specification.UseImGui) {

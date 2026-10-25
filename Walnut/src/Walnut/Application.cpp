@@ -7,6 +7,7 @@
 #include <iostream>
 #include <thread>
 #include <imgui.h>
+#include <imgui_internal.h> // DockBuilder
 
 #include "RenderingBackend.h"
 #include "Image.h"
@@ -69,6 +70,14 @@ void Application::SetupImGuiForOneIteration()
 	if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 	{
 		ImGuiID dockspace_id = ImGui::GetID("VulkanAppDockspace");
+		// The node exists once imgui.ini restored it or the default layout was built.
+		if (m_DockLayoutCallback && ImGui::DockBuilderGetNode(dockspace_id) == nullptr)
+		{
+			ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+			ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetContentRegionAvail());
+			m_DockLayoutCallback(dockspace_id);
+			ImGui::DockBuilderFinish(dockspace_id);
+		}
 		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 	}
 
@@ -106,7 +115,34 @@ void updateGui()
 
 void Application::SetMenubarCallback(const std::function<void()> &menubarCallback)
 {
-	m_MenubarCallback = menubarCallback; 
+	m_MenubarCallback = menubarCallback;
+}
+
+void Application::SetDefaultDockLayoutCallback(const std::function<void(uint32_t dockspaceId)>& dockLayoutCallback)
+{
+	m_DockLayoutCallback = dockLayoutCallback;
+}
+
+void Application::CaptureNextFrame(const FrameCaptureCallback& callback)
+{
+	m_FrameCaptureCallback = callback;
+}
+
+void Application::CaptureFrameIfRequested()
+{
+	if (!m_FrameCaptureCallback)
+		return;
+
+	// Cleared before the call so the callback can request another capture.
+	FrameCaptureCallback callback = std::move(m_FrameCaptureCallback);
+	m_FrameCaptureCallback = nullptr;
+
+	std::vector<uint8_t> pixels;
+	uint32_t width = 0, height = 0;
+	if (m_RenderingBackend->ReadFramePixels(pixels, width, height))
+		callback(pixels.data(), width, height);
+	else
+		callback(nullptr, 0, 0);
 }
 
 void Application::Close()

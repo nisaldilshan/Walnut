@@ -83,6 +83,11 @@ namespace Walnut
 		SDL_GL_SwapWindow(m_windowHandle);
 	}
 
+	void OpenGLRenderingBackend::GetFramebufferSize(int& width, int& height)
+	{
+		SDL_GetWindowSizeInPixels(m_windowHandle, &width, &height);
+	}
+
 	WalnutWindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;

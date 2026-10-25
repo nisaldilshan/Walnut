@@ -17,6 +17,7 @@ public:
 	static wgpu::Instance GetInstance();
     static wgpu::Surface GetSurface();
 	static wgpu::TextureFormat GetSwapChainFormat();
+	static wgpu::TextureUsage GetSurfaceUsages();
 	static wgpu::Device GetDevice();
 	static wgpu::Queue GetQueue();
 	static wgpu::TextureFormat GetDepthFormat();

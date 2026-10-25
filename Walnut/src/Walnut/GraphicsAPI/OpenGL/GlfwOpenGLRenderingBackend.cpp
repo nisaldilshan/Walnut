@@ -92,6 +92,11 @@ namespace Walnut
 		glfwSwapBuffers(m_windowHandle);
 	}
 
+	void OpenGLRenderingBackend::GetFramebufferSize(int& width, int& height)
+	{
+		glfwGetFramebufferSize(m_windowHandle, &width, &height);
+	}
+
 	WalnutWindowHandleType* OpenGLRenderingBackend::GetWindowHandle()
 	{
 		return m_windowHandle;
