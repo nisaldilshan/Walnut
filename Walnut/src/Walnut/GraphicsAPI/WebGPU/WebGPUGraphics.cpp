@@ -51,6 +51,21 @@ namespace GraphicsAPI
 		adapterOpts.compatibleSurface = g_surface;
 		wgpu::Adapter adapter = g_instance.requestAdapter(adapterOpts);
 		std::cout << "Got adapter: " << adapter << std::endl;
+		if (!adapter) {
+			std::cerr << "Could not get a WebGPU adapter!" << std::endl;
+			return;
+		}
+
+#ifdef __EMSCRIPTEN__
+		// The first format is the browser's preferred canvas format, any other one costs an extra copy per frame
+		wgpu::SurfaceCapabilities capabilities;
+		g_surface.getCapabilities(adapter, &capabilities);
+		if (capabilities.formatCount > 0) {
+			g_swapChainFormat = capabilities.formats[0];
+			std::cout << "SwapChain Format: " << g_swapChainFormat << std::endl;
+		}
+		capabilities.freeMembers();
+#endif
 
 		wgpu::Limits limits;
 		adapter.getLimits(&limits);

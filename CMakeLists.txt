@@ -101,10 +101,8 @@ target_compile_definitions(walnut INTERFACE RENDERER_BACKEND=${WALNUT_RENDERER_B
 #### PLATFORM SPECIFICS ###
 string(COMPARE EQUAL "${CMAKE_SYSTEM_NAME}" "Emscripten" IS_EMSCRIPTEN) # also used by WalnutApp
 if (IS_EMSCRIPTEN)
+    # The link flags come from the targets: glfw adds -sUSE_GLFW=3, walnut-graphics-<renderer> its renderer's flags.
     message("This is an Emscripten Build")
-    set_target_properties(walnut-graphics-opengl PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3")
-    set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3")
-    #set_target_properties(walnut PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
 endif()
 
 if(WALNUT_VULKAN_PACKAGE STREQUAL "moltenvk")

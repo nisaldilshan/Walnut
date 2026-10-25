@@ -20,10 +20,26 @@ else()
     target_link_libraries(App PUBLIC glfw)
 endif()
 
+if (RENDERER STREQUAL "WebGPU")
+    # Puts the WebGPU runtime library (e.g. libwebgpu_dawn.so) next to App; does nothing on Emscripten
+    target_copy_webgpu_binaries(App)
+endif()
+
 if (IS_EMSCRIPTEN)
-    #set_target_properties(App PROPERTIES LINK_FLAGS " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s USE_WEBGPU=1")
-    set_target_properties(App PROPERTIES LINK_FLAGS 
-        " -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s GL_DEBUG=1 -s DEMANGLE_SUPPORT=1 -s GL_ASSERTIONS=1 -s SAFE_HEAP=1")
+    # Emit index.html (plus index.js/index.wasm) using shell.html as the page template,
+    # so a static server pointed at the build folder serves the app at its root URL.
+    # The renderer's own link flags (WebGL2, WebGPU) come from walnut-graphics-<renderer>.
+    set(APP_SHELL_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Resources/shell.html")
+    set(APP_DEBUG_FLAGS " -s SAFE_HEAP=1")
+    if (RENDERER STREQUAL "OpenGL")
+        string(APPEND APP_DEBUG_FLAGS " -s GL_DEBUG=1 -s GL_ASSERTIONS=1")
+    endif()
+    set_target_properties(App PROPERTIES
+        OUTPUT_NAME index
+        SUFFIX ".html"
+        LINK_DEPENDS "${APP_SHELL_FILE}"
+        LINK_FLAGS
+        " -s WASM=1${APP_DEBUG_FLAGS} --shell-file \"${APP_SHELL_FILE}\"")
 endif()
 
 function(copy_runtime_dlls_at_build targetName)

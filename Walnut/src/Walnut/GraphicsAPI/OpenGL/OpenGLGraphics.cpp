@@ -3,8 +3,6 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/emscripten.h>
-#else
-#include <glad/glad.h>
 #endif
 
 
