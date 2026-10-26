@@ -22,7 +22,7 @@ namespace Walnut
 		g_SDLcontext = SDL_GL_CreateContext(m_windowHandle);
 		if (g_SDLcontext == NULL)
 		{
-			std::cout << "Failed to create SDL GL context" << std::endl;
+			std::cout << "Failed to create SDL GL context: " << SDL_GetError() << std::endl;
 			assert(false);
 			return;
 		}

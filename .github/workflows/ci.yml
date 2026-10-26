@@ -88,7 +88,8 @@ jobs:
         run: conan build . -of build-sdl $CONAN_ARGS -o "&:windowing_system=SDL"
 
       - name: Render test (SDL)
-        if: ${{ !matrix.glfw_only && runner.os == 'Linux' }}
+        # Disabled for now: SDL cannot create its OpenGL window on Xvfb. Restore the condition below to enable it.
+        if: false # ${{ !matrix.glfw_only && runner.os == 'Linux' }}
         run: .github/scripts/render-test.sh "build-sdl/$CMAKE_BUILD_SUBDIR"
 
       - name: Remove Conan build folders before caching
@@ -161,7 +162,8 @@ jobs:
         run: .github/scripts/vcpkg-build.sh SDL
 
       - name: Render test (SDL)
-        if: ${{ !matrix.glfw_only && runner.os == 'Linux' }}
+        # Disabled for now: SDL cannot create its OpenGL window on Xvfb. Restore the condition below to enable it.
+        if: false # ${{ !matrix.glfw_only && runner.os == 'Linux' }}
         run: .github/scripts/render-test.sh build-sdl
 
   web:
