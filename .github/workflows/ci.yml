@@ -125,7 +125,7 @@ jobs:
             autoconf autoconf-archive automake libtool libltdl-dev pkg-config bison xsltproc python3-jinja2 \
             xorg-dev libxinerama-dev libxcursor-dev libx11-dev libxft-dev libxext-dev \
             libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
-            libwayland-dev libxkbcommon-dev wayland-protocols libibus-1.0-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols \
             xvfb mesa-vulkan-drivers libgl1-mesa-dri
 
       - name: Set up vcpkg
