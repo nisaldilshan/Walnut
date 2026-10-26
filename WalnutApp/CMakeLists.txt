@@ -35,6 +35,9 @@ if (IS_EMSCRIPTEN)
         SUFFIX ".html"
         LINK_DEPENDS "${APP_SHELL_FILE}")
     target_link_options(App PRIVATE -sWASM=1 "SHELL:--shell-file \"${APP_SHELL_FILE}\"")
+    # The example fills an image the size of its viewport every frame, which outgrows the default 16 MB heap
+    # on large screens (a maximized window on a 4K monitor aborts with OOM).
+    target_link_options(App PRIVATE -sALLOW_MEMORY_GROWTH=1)
     # Runtime checks that slow the app down, so not in the Release build hosted on GitHub Pages
     target_link_options(App PRIVATE $<$<CONFIG:Debug>:-sSAFE_HEAP=1>)
     if (RENDERER STREQUAL "OpenGL")
