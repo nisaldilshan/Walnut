@@ -32,6 +32,7 @@ public:
 	void FrameRender(std::unique_ptr<Image>& mainImage) override;
 	void FrameRenderImGui(void* draw_data) override;
 	void FrameEnd() override;
+	bool ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height) override;
 	void FramePresent() override;
 	WalnutWindowHandleType* GetWindowHandle() override;
 	void Shutdown() override;

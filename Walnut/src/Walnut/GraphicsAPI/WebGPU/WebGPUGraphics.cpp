@@ -12,6 +12,7 @@ namespace GraphicsAPI
     wgpu::Device g_device = nullptr;
     wgpu::Surface g_surface = nullptr;
 	wgpu::TextureFormat g_swapChainFormat = wgpu::TextureFormat::Undefined;
+	wgpu::TextureUsage g_surfaceUsages = wgpu::TextureUsage::RenderAttachment;
 	wgpu::Queue g_queue = nullptr;
 
 	void WebGPU::CreateInstance(wgpu::InstanceDescriptor desc)
@@ -56,16 +57,17 @@ namespace GraphicsAPI
 			return;
 		}
 
-#ifdef __EMSCRIPTEN__
-		// The first format is the browser's preferred canvas format, any other one costs an extra copy per frame
 		wgpu::SurfaceCapabilities capabilities;
 		g_surface.getCapabilities(adapter, &capabilities);
+		g_surfaceUsages = capabilities.usages;
+#ifdef __EMSCRIPTEN__
+		// The first format is the browser's preferred canvas format, any other one costs an extra copy per frame
 		if (capabilities.formatCount > 0) {
 			g_swapChainFormat = capabilities.formats[0];
 			std::cout << "SwapChain Format: " << g_swapChainFormat << std::endl;
 		}
-		capabilities.freeMembers();
 #endif
+		capabilities.freeMembers();
 
 		wgpu::Limits limits;
 		adapter.getLimits(&limits);
@@ -162,6 +164,11 @@ namespace GraphicsAPI
     {
 		assert(g_swapChainFormat);
         return g_swapChainFormat;
+    }
+
+    wgpu::TextureUsage WebGPU::GetSurfaceUsages()
+    {
+        return g_surfaceUsages;
     }
 
     wgpu::Device WebGPU::GetDevice()

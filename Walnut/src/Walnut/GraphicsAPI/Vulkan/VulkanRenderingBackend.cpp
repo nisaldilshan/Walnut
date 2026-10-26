@@ -91,6 +91,11 @@ namespace Walnut
         GraphicsAPI::Vulkan::FrameEnd();
     }
 
+    bool VulkanRenderingBackend::ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height)
+    {
+        return GraphicsAPI::Vulkan::ReadSwapChainImage(pixels, width, height);
+    }
+
     void VulkanRenderingBackend::FramePresent()
     {
         GraphicsAPI::Vulkan::FramePresent();

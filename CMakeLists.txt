@@ -17,7 +17,7 @@ include(FetchContent)
 include(GNUInstallDirs)
 
 #### OPTIONS ###
-# RENDERER, WINDOWING_SYSTEM, WALNUT_BUILD_EXAMPLES and WALNUT_INSTALL.
+# RENDERER, WINDOWING_SYSTEM, WALNUT_BUILD_EXAMPLES, WALNUT_BUILD_TESTS and WALNUT_INSTALL.
 include(cmake/WalnutOptions.cmake)
 
 #### DEPENDENCIES ###
@@ -123,6 +123,12 @@ endif()
 #### EXAMPLE ###
 if(WALNUT_BUILD_EXAMPLES)
     add_subdirectory(WalnutApp)
+endif()
+
+#### TESTS ###
+if(WALNUT_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests/render)
 endif()
 
 #### INSTALL ###

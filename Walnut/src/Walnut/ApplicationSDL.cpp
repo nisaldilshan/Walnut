@@ -110,7 +110,7 @@ namespace Walnut {
 											sdlWindowType);
 		if (!windowHandle)
 		{
-			std::cerr << "Could not create SDL Window!\n";
+			std::cerr << "Could not create SDL Window: " << SDL_GetError() << "\n";
 			assert(false);
 			return;
 		}
@@ -259,6 +259,7 @@ namespace Walnut {
 				m_RenderingBackend->FrameRender(m_ImageToRender);
 			}
 			m_RenderingBackend->FrameEnd();
+			CaptureFrameIfRequested();
 		}
 
 		if (m_Specification.UseImGui) {

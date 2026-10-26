@@ -31,6 +31,20 @@ class Walnut(ConanFile):
         "glad*:extensions": "",
         "glad*:gl_profile": "core",
         "glad*:gl_version": 4.1,
+        # Walnut only uses SDL for windows, OpenGL/Vulkan surfaces and input events (SDL_INIT_VIDEO). Building
+        # the other subsystems drags in audio (pulseaudio, alsa, sndio) and other dependencies built from source.
+        "sdl/*:audio": False,
+        "sdl/*:camera": False,
+        "sdl/*:dbus": False, # D-Bus is only used for IBus/Fcitx input methods and screensaver inhibition
+        "sdl/*:dialog": False,
+        "sdl/*:gpu": False,
+        "sdl/*:haptic": False,
+        "sdl/*:hidapi": False,
+        "sdl/*:joystick": False,
+        "sdl/*:power": False,
+        "sdl/*:render": False,
+        "sdl/*:sensor": False,
+        "sdl/*:tray": False,
     }
 
     def config_options(self):

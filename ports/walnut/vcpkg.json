@@ -66,10 +66,20 @@
           ]
         },
         {
+          "$comment": "The default features of sdl3 on Linux include ibus, which builds dbus and systemd",
           "name": "sdl3",
+          "default-features": false,
           "features": [
             "vulkan"
           ]
+        },
+        {
+          "name": "sdl3",
+          "features": [
+            "wayland",
+            "x11"
+          ],
+          "platform": "linux"
         }
       ]
     },

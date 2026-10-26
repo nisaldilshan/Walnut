@@ -5,7 +5,9 @@
 #include <imgui_impl_opengl3.h>
 #include <Walnut/Image.h>
 
+#include <algorithm>
 #include <iostream>
+#include <vector>
 
 #ifdef __EMSCRIPTEN__
 #define WALNUT_GLSL_VERSION "#version 300 es\nprecision mediump float;\n"
@@ -151,6 +153,32 @@ namespace Walnut
 		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
 #endif
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
+	}
+
+	bool OpenGLRenderingBackend::ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height)
+	{
+		int w = 0, h = 0;
+		GetFramebufferSize(w, h);
+		if (w <= 0 || h <= 0)
+			return false;
+
+		std::vector<uint8_t> bottomUp(size_t(w) * h * 4);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glReadBuffer(GL_BACK);
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, bottomUp.data());
+		if (glGetError() != GL_NO_ERROR)
+			return false;
+
+		// OpenGL's first row is the bottom one
+		const size_t rowSize = size_t(w) * 4;
+		pixels.resize(bottomUp.size());
+		for (int y = 0; y < h; y++)
+			std::copy_n(&bottomUp[(h - 1 - y) * rowSize], rowSize, &pixels[y * rowSize]);
+
+		width = w;
+		height = h;
+		return true;
 	}
 
 } // namespace Walnut

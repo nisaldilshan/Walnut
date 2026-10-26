@@ -9,6 +9,7 @@
 #include <Walnut/Image.h>
 
 #include <imgui.h>
+#include <imgui_internal.h> // DockBuilder
 
 class ExampleLayer : public Walnut::Layer
 {
@@ -131,6 +132,17 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	Walnut::Application* app = new Walnut::Application(spec);
 	auto exampleLayer = std::make_shared<ExampleLayer>(app);
 	app->PushLayer(exampleLayer);
+	// Used while there is no imgui.ini with a saved layout: on the first run, and always in the browser.
+	// Viewport on the left, Settings on the top right, the ImGui demo below it.
+	app->SetDefaultDockLayoutCallback([](uint32_t dockspaceId)
+	{
+		ImGuiID viewportId = dockspaceId;
+		ImGuiID settingsId = ImGui::DockBuilderSplitNode(viewportId, ImGuiDir_Right, 0.3f, nullptr, &viewportId);
+		ImGuiID demoId = ImGui::DockBuilderSplitNode(settingsId, ImGuiDir_Down, 0.75f, nullptr, &settingsId);
+		ImGui::DockBuilderDockWindow("Viewport", viewportId);
+		ImGui::DockBuilderDockWindow("Settings", settingsId);
+		ImGui::DockBuilderDockWindow("Dear ImGui Demo", demoId);
+	});
 	app->SetMenubarCallback([app]()
 	{
 		assert(ImGui::GetCurrentContext()); // This will fail in windows if walnut shared lib is used

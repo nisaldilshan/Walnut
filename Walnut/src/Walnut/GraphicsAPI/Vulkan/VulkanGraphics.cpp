@@ -36,6 +36,7 @@ static ImGui_ImplVulkanH_Window g_MainWindowData;
 
 static uint32_t                 g_MinImageCount = 2;
 static bool                     g_SwapChainRebuild = false;
+static VkImageUsageFlags        g_SwapChainImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 // Unlike g_MainWindowData.FrameIndex, this is not the the swapchain image index
 // and is always guaranteed to increase (eg. 0, 1, 2, 0, 1, 2)
@@ -309,11 +310,16 @@ void Vulkan::SetupVulkanWindow(int width, int height)
 #endif
 	g_MainWindowData.PresentMode = ImGui_ImplVulkanH_SelectPresentMode(g_PhysicalDevice, g_MainWindowData.Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
 
+	// Frames can only be read back (ReadSwapChainImage) when the surface allows copying from its images.
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_PhysicalDevice, g_MainWindowData.Surface, &surfaceCapabilities);
+	g_SwapChainImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | (surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+
 	// Create SwapChain, RenderPass, Framebuffer, etc.
 	IM_ASSERT(g_MinImageCount >= 2);
-	ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, 
-										&g_MainWindowData, g_QueueFamily, g_Allocator, 
-										width, height, g_MinImageCount, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+	ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device,
+										&g_MainWindowData, g_QueueFamily, g_Allocator,
+										width, height, g_MinImageCount, g_SwapChainImageUsage);
     s_ResourceFreeQueue.resize(g_MainWindowData.ImageCount);
 	
 	// set clear color
@@ -420,6 +426,115 @@ void Vulkan::FrameEnd()
 	check_vk_result(err);
 }
 
+bool Vulkan::ReadSwapChainImage(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height)
+{
+	const VkFormat format = g_MainWindowData.SurfaceFormat.format;
+	const bool isBGRA = format == VK_FORMAT_B8G8R8A8_UNORM || format == VK_FORMAT_B8G8R8A8_SRGB;
+	const bool isRGBA = format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_R8G8B8A8_SRGB;
+	if (g_SwapChainRebuild || !(g_SwapChainImageUsage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) || !(isBGRA || isRGBA))
+		return false;
+
+	width = g_MainWindowData.Width;
+	height = g_MainWindowData.Height;
+	const VkDeviceSize size = VkDeviceSize(width) * height * 4;
+	ImGui_ImplVulkanH_Frame* fd = &g_MainWindowData.Frames[g_MainWindowData.FrameIndex];
+
+	// Host-visible buffer the swapchain image is copied into
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = size;
+	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	VkBuffer buffer;
+	VkResult err = vkCreateBuffer(g_Device, &bufferInfo, g_Allocator, &buffer);
+	check_vk_result(err);
+	VkMemoryRequirements req;
+	vkGetBufferMemoryRequirements(g_Device, buffer, &req);
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = req.size;
+	allocInfo.memoryTypeIndex = Utils::GetVulkanMemoryType(g_PhysicalDevice, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, req.memoryTypeBits);
+	VkDeviceMemory memory;
+	err = vkAllocateMemory(g_Device, &allocInfo, g_Allocator, &memory);
+	check_vk_result(err);
+	err = vkBindBufferMemory(g_Device, buffer, memory, 0);
+	check_vk_result(err);
+
+	VkCommandBufferAllocateInfo cmdAllocInfo = {};
+	cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cmdAllocInfo.commandPool = fd->CommandPool;
+	cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	cmdAllocInfo.commandBufferCount = 1;
+	VkCommandBuffer cmd;
+	err = vkAllocateCommandBuffers(g_Device, &cmdAllocInfo, &cmd);
+	check_vk_result(err);
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	err = vkBeginCommandBuffer(cmd, &beginInfo);
+	check_vk_result(err);
+
+	// The render pass left the image ready to present: make it a copy source, then hand it back to presentation.
+	VkImageMemoryBarrier toTransfer = {};
+	toTransfer.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	toTransfer.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	toTransfer.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+	toTransfer.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	toTransfer.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+	toTransfer.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	toTransfer.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	toTransfer.image = fd->Backbuffer;
+	toTransfer.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+	// ALL_COMMANDS also covers the render pass's final layout transition to PRESENT_SRC.
+	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+						 0, 0, nullptr, 0, nullptr, 1, &toTransfer);
+
+	VkBufferImageCopy region = {};
+	region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+	region.imageExtent = { width, height, 1 };
+	vkCmdCopyImageToBuffer(cmd, fd->Backbuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+
+	VkImageMemoryBarrier toPresent = toTransfer;
+	toPresent.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+	toPresent.dstAccessMask = 0;
+	toPresent.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+	toPresent.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	VkBufferMemoryBarrier toHost = {};
+	toHost.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+	toHost.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	toHost.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
+	toHost.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	toHost.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	toHost.buffer = buffer;
+	toHost.size = VK_WHOLE_SIZE;
+	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_HOST_BIT | VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+						 0, 0, nullptr, 1, &toHost, 1, &toPresent);
+
+	err = vkEndCommandBuffer(cmd);
+	check_vk_result(err);
+	// Runs after the frame's own submission (same queue) and waits until the copy is done.
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &cmd;
+	QueueSubmit(submitInfo);
+	vkFreeCommandBuffers(g_Device, fd->CommandPool, 1, &cmd);
+
+	void* mapped = nullptr;
+	err = vkMapMemory(g_Device, memory, 0, size, 0, &mapped);
+	check_vk_result(err);
+	pixels.resize(size_t(size));
+	memcpy(pixels.data(), mapped, pixels.size());
+	vkUnmapMemory(g_Device, memory);
+	vkDestroyBuffer(g_Device, buffer, g_Allocator);
+	vkFreeMemory(g_Device, memory, g_Allocator);
+
+	if (isBGRA)
+		for (size_t i = 0; i < pixels.size(); i += 4)
+			std::swap(pixels[i], pixels[i + 2]);
+	return true;
+}
+
 void Vulkan::FramePresent()
 {
 	if (g_SwapChainRebuild)
@@ -470,9 +585,9 @@ void Vulkan::QueueSubmit(VkSubmitInfo info)
 
 void Vulkan::ResizeVulkanWindow(int width, int height)
 {
-    ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, 
-										&g_MainWindowData, g_QueueFamily, g_Allocator, 
-										width, height, g_MinImageCount, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+    ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device,
+										&g_MainWindowData, g_QueueFamily, g_Allocator,
+										width, height, g_MinImageCount, g_SwapChainImageUsage);
     g_MainWindowData.FrameIndex = 0;
 }
 

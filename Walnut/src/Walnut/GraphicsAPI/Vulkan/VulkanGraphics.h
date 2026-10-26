@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <optional>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace GraphicsAPI
@@ -50,6 +51,8 @@ public:
 	static void CleanupVulkanWindow();
 	static void FrameBegin();
 	static void FrameEnd();
+	// Copies the swapchain image FrameEnd submitted into pixels (RGBA8, top row first). Call before FramePresent.
+	static bool ReadSwapChainImage(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height);
 	static void FramePresent();
 	static VkCommandPool GetCommandPool();
 	static void QueueSubmit(VkSubmitInfo info);

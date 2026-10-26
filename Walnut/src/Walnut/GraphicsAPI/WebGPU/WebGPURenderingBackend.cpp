@@ -7,6 +7,10 @@
 
 #include <imgui_impl_wgpu.h>
 
+#include <cstring>
+#include <utility>
+#include <vector>
+
 namespace Walnut 
 {
 
@@ -14,6 +18,7 @@ struct WebGPUFrameBeginEndData
 {
     wgpu::CommandEncoder encoder;
     wgpu::RenderPassEncoder renderPass;
+    wgpu::Texture texture;
     wgpu::TextureView nextTexture;
 };
 WebGPUFrameBeginEndData g_frameData{};
@@ -65,7 +70,8 @@ void WebGPURenderingBackend::SetupWindow(int width, int height)
     wgpu::SurfaceConfiguration config;
     config.device = GraphicsAPI::WebGPU::GetDevice();
     config.format = GraphicsAPI::WebGPU::GetSwapChainFormat();
-    config.usage = wgpu::TextureUsage::RenderAttachment;
+    // CopySrc lets ReadFramePixels copy frames out of the surface
+    config.usage = wgpu::TextureUsage::RenderAttachment | (GraphicsAPI::WebGPU::GetSurfaceUsages() & wgpu::TextureUsage::CopySrc);
     config.width = static_cast<uint32_t>(width);
     config.height = static_cast<uint32_t>(height);
     config.presentMode = wgpu::PresentMode::Fifo;
@@ -101,7 +107,8 @@ void WebGPURenderingBackend::FrameBegin()
         return;
     }
 
-    wgpu::Texture tex(surfaceTexture.texture); 
+    wgpu::Texture tex(surfaceTexture.texture);
+    g_frameData.texture = tex;
     g_frameData.nextTexture = tex.createView();
     if (!g_frameData.nextTexture) {
         assert(false);
@@ -149,6 +156,90 @@ void WebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
 void WebGPURenderingBackend::FrameRenderImGui(void* draw_data)
 {
     ImGui_ImplWGPU_RenderDrawData((ImDrawData*)draw_data, g_frameData.renderPass);
+}
+
+bool WebGPURenderingBackend::ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height)
+{
+#ifdef __EMSCRIPTEN__
+    return false; // waiting for the buffer to be mapped would need to hand control back to the browser
+#else
+    wgpu::Texture texture = g_frameData.texture;
+    if (!texture)
+        return false;
+    const wgpu::TextureFormat format = texture.getFormat();
+    const bool isBGRA = format == wgpu::TextureFormat::BGRA8Unorm || format == wgpu::TextureFormat::BGRA8UnormSrgb;
+    const bool isRGBA = format == wgpu::TextureFormat::RGBA8Unorm || format == wgpu::TextureFormat::RGBA8UnormSrgb;
+    if (!(texture.getUsage() & wgpu::TextureUsage::CopySrc) || !(isBGRA || isRGBA))
+        return false;
+
+    auto device = GraphicsAPI::WebGPU::GetDevice();
+    width = texture.getWidth();
+    height = texture.getHeight();
+    const uint32_t rowSize = width * 4;
+    const uint32_t bytesPerRow = (rowSize + 255) / 256 * 256; // copies need rows aligned to 256 bytes
+    const uint64_t size = uint64_t(bytesPerRow) * height;
+
+    wgpu::BufferDescriptor bufferDesc;
+    bufferDesc.label = wgpu::StringView("Frame readback buffer");
+    bufferDesc.size = size;
+    bufferDesc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead;
+    bufferDesc.mappedAtCreation = false;
+    wgpu::Buffer buffer = device.createBuffer(bufferDesc);
+
+    wgpu::TexelCopyTextureInfo source = wgpu::Default;
+    source.texture = texture;
+    wgpu::TexelCopyBufferInfo destination = wgpu::Default;
+    destination.buffer = buffer;
+    destination.layout.bytesPerRow = bytesPerRow;
+    destination.layout.rowsPerImage = height;
+
+    wgpu::CommandEncoderDescriptor encoderDesc;
+    encoderDesc.label = wgpu::StringView("Frame readback CommandEncoder");
+    wgpu::CommandEncoder encoder = device.createCommandEncoder(encoderDesc);
+    wgpu::Extent3D copySize;
+    copySize.width = width;
+    copySize.height = height;
+    copySize.depthOrArrayLayers = 1;
+    encoder.copyTextureToBuffer(source, destination, copySize);
+    wgpu::CommandBufferDescriptor cmdBufferDescriptor;
+    cmdBufferDescriptor.label = wgpu::StringView("Frame readback CommandBuffer");
+    wgpu::CommandBuffer commands = encoder.finish(cmdBufferDescriptor);
+    GraphicsAPI::WebGPU::GetQueue().submit(commands);
+    commands.release();
+    encoder.release();
+
+    // webgpu.hpp's mapAsync(lambda) helper does not compile, so this uses the C API
+    struct MapResult { bool done = false; bool mapped = false; } result;
+    WGPUBufferMapCallbackInfo callbackInfo = {};
+    callbackInfo.mode = WGPUCallbackMode_AllowProcessEvents;
+    callbackInfo.callback = [](WGPUMapAsyncStatus status, WGPUStringView, void* userdata1, void*) {
+        auto* result = static_cast<MapResult*>(userdata1);
+        result->done = true;
+        result->mapped = status == WGPUMapAsyncStatus_Success;
+    };
+    callbackInfo.userdata1 = &result;
+    wgpuBufferMapAsync(buffer, WGPUMapMode_Read, 0, size, callbackInfo);
+    while (!result.done)
+    {
+        device.tick();
+        GraphicsAPI::WebGPU::GetInstance().processEvents();
+    }
+
+    const bool mapped = result.mapped;
+    if (mapped)
+    {
+        const uint8_t* data = static_cast<const uint8_t*>(buffer.getConstMappedRange(0, size));
+        pixels.resize(size_t(rowSize) * height);
+        for (uint32_t y = 0; y < height; y++)
+            memcpy(&pixels[size_t(y) * rowSize], data + size_t(y) * bytesPerRow, rowSize);
+        buffer.unmap();
+        if (isBGRA)
+            for (size_t i = 0; i < pixels.size(); i += 4)
+                std::swap(pixels[i], pixels[i + 2]);
+    }
+    buffer.release();
+    return mapped;
+#endif
 }
 
 void WebGPURenderingBackend::FramePresent()

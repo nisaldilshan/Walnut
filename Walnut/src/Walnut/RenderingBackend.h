@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <functional>
+#include <vector>
 
 #include "ExportConfig.h"
 #include "WindowHandle.h"
@@ -38,6 +40,9 @@ namespace Walnut {
 		virtual void FrameRender(std::unique_ptr<Image>& mainImage) = 0;
 		virtual void FrameRenderImGui(void* draw_data) = 0;
 		virtual void FrameEnd() = 0;
+		// Reads back the frame rendered to the main window, between FrameEnd and FramePresent, as RGBA8 pixels
+		// with the top row first. Returns false if the backend cannot read frames back.
+		virtual bool ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height) { return false; }
 		virtual void FramePresent() = 0;
 
 		static BACKEND GetBackend() { return s_backend; }

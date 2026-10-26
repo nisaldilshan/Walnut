@@ -30,6 +30,10 @@ namespace Walnut {
 		bool EnableGraphicsValidation = false;
 	};
 
+	// Receives a frame read back from the main window: width * height RGBA8 pixels with the top row first,
+	// or a null pixels pointer if the renderer could not read the frame back.
+	using FrameCaptureCallback = std::function<void(const uint8_t* pixels, uint32_t width, uint32_t height)>;
+
 	class Walnut_API Application
 	{
 	public:
@@ -40,7 +44,12 @@ namespace Walnut {
 		void MainLoop();
 		void Run();
 		void SetMenubarCallback(const std::function<void()>& menubarCallback);
-		
+		// Called when the main dockspace has no saved layout (e.g. no imgui.ini yet), before the layers draw.
+		// dockspaceId is the dockspace's ImGuiID: split it and dock windows into it with ImGui's DockBuilder API.
+		void SetDefaultDockLayoutCallback(const std::function<void(uint32_t dockspaceId)>& dockLayoutCallback);
+		// Reads back the next frame rendered to the main window, before it is presented.
+		void CaptureNextFrame(const FrameCaptureCallback& callback);
+
 		template<typename T>
 		void PushLayer()
 		{
@@ -67,6 +76,7 @@ namespace Walnut {
 		void LayerStackOnUpdate();
 		void LayerStackOnGui();
 		void LayerStackShutdown();
+		void CaptureFrameIfRequested();
 
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;
@@ -81,6 +91,8 @@ namespace Walnut {
 		uint32_t m_LayerPopCount = 0;
 
 		std::function<void()> m_MenubarCallback;
+		std::function<void(uint32_t)> m_DockLayoutCallback;
+		FrameCaptureCallback m_FrameCaptureCallback;
 	};
 
 	// Implemented by CLIENT

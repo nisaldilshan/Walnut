@@ -38,6 +38,7 @@ vcpkg_cmake_configure(
         -DRENDERER=${WALNUT_RENDERER}
         -DWINDOWING_SYSTEM=${WALNUT_WINDOWING_SYSTEM}
         -DWALNUT_BUILD_EXAMPLES=OFF
+        -DWALNUT_BUILD_TESTS=OFF
         -DWALNUT_INSTALL=ON
 )
 vcpkg_cmake_install()

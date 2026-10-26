@@ -22,7 +22,7 @@ namespace Walnut
 		g_SDLcontext = SDL_GL_CreateContext(m_windowHandle);
 		if (g_SDLcontext == NULL)
 		{
-			std::cout << "Failed to create SDL GL context" << std::endl;
+			std::cout << "Failed to create SDL GL context: " << SDL_GetError() << std::endl;
 			assert(false);
 			return;
 		}
@@ -81,6 +81,11 @@ namespace Walnut
     void OpenGLRenderingBackend::FramePresent()
 	{
 		SDL_GL_SwapWindow(m_windowHandle);
+	}
+
+	void OpenGLRenderingBackend::GetFramebufferSize(int& width, int& height)
+	{
+		SDL_GetWindowSizeInPixels(m_windowHandle, &width, &height);
 	}
 
 	WalnutWindowHandleType* OpenGLRenderingBackend::GetWindowHandle()

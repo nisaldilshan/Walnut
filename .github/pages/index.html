@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- Landing page of the GitHub Pages site that .github/workflows/ci.yml publishes from master. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Walnut in the browser</title>
+    <style>
+      body { margin: 0 auto; max-width: 40rem; padding: 2rem 1rem; font-family: system-ui, sans-serif; line-height: 1.5; color: #222; background: #fff; }
+      a { color: inherit; }
+      li { margin: 0.5rem 0; }
+      .note { color: #666; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Walnut in the browser</h1>
+    <p>
+      The example app of <a href="https://github.com/nisaldilshan/Walnut">Walnut</a>, compiled to WebAssembly
+      with Emscripten from the latest commit on <code>master</code>.
+    </p>
+    <ul>
+      <li><a href="webgl/">WebGL 2</a>: runs in all current browsers.</li>
+      <li><a href="webgpu/">WebGPU</a>: needs a browser with WebGPU support, such as current Chrome or Edge.</li>
+    </ul>
+    <p class="note">The layout of the app's windows is not saved between visits.</p>
+  </body>
+</html>
