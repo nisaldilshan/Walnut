@@ -37,9 +37,6 @@ jobs:
           # The sdl3webgpu helper Walnut downloads does not compile against the downloaded Dawn version.
           - renderer: WebGPU
             glfw_only: true
-          # Debug builds of the default configuration.
-          - { os: windows-2022, renderer: Vulkan, build_type: Debug, glfw_only: true }
-          - { os: ubuntu-latest, renderer: Vulkan, build_type: Debug, glfw_only: true }
 
     defaults:
       run:
@@ -94,14 +91,6 @@ jobs:
         if: ${{ !matrix.glfw_only && runner.os == 'Linux' }}
         run: .github/scripts/render-test.sh "build-sdl/$CMAKE_BUILD_SUBDIR"
 
-      - name: Upload render test images
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: render-test-conan-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.build_type }}
-          path: build-*/**/render-test-*.png
-          if-no-files-found: ignore
-
       - name: Remove Conan build folders before caching
         run: conan cache clean "*"
 
@@ -114,10 +103,6 @@ jobs:
         os: [ windows-latest, ubuntu-latest ]
         renderer: [ Vulkan, OpenGL ] # WebGPU is not supported with vcpkg
         build_type: [ Release ]
-        include:
-          # Debug builds of the default configuration.
-          - { os: windows-latest, renderer: Vulkan, build_type: Debug, glfw_only: true }
-          - { os: ubuntu-latest, renderer: Vulkan, build_type: Debug, glfw_only: true }
 
     defaults:
       run:
@@ -178,14 +163,6 @@ jobs:
       - name: Render test (SDL)
         if: ${{ !matrix.glfw_only && runner.os == 'Linux' }}
         run: .github/scripts/render-test.sh build-sdl
-
-      - name: Upload render test images
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: render-test-vcpkg-${{ matrix.os }}-${{ matrix.renderer }}-${{ matrix.build_type }}
-          path: build-*/**/render-test-*.png
-          if-no-files-found: ignore
 
   web:
     name: Web ${{ matrix.api }}
