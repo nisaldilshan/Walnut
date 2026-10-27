@@ -1,3 +1,4 @@
+import json
 import os
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration, ConanException
@@ -153,6 +154,44 @@ class Walnut(ConanFile):
         cmake.configure()
         cmake.build()
 
+    def _validation_layer_manifest_dir(self):
+        return os.path.join(self.package_folder, "res", "vulkan", "explicit_layer.d")
+
+    def _package_validation_layer_manifest(self):
+        # The vulkan-validationlayers package ships a manifest with a 4-part api_version (e.g. 1.3.239.0). The
+        # Vulkan loader only parses "major.minor.patch", so it silently skips the layer. Write a loader-compatible
+        # copy with a 3-part api_version and an absolute library_path, and expose it through VK_LAYER_PATH.
+        if self.options.rendering_backend != "Vulkan":
+            return
+        layers = self.dependencies.get("vulkan-validationlayers")
+        if layers is None:
+            return
+        # The package puts its manifest in bin/ on Windows and res/vulkan/explicit_layer.d elsewhere
+        manifest_subfolder = "bin" if self.settings.os == "Windows" else os.path.join("res", "vulkan", "explicit_layer.d")
+        manifest_path = os.path.join(layers.package_folder, manifest_subfolder, "VkLayer_khronos_validation.json")
+        if not os.path.isfile(manifest_path):
+            self.output.warning(f"No validation layer manifest at {manifest_path}, skipping the manifest fix")
+            return
+        with open(manifest_path, encoding="utf-8") as manifest_file:
+            manifest = json.load(manifest_file)
+        layer = manifest["layer"]
+        layer["api_version"] = ".".join(layer["api_version"].split(".")[:3])
+        # library_path is relative to the manifest or a bare file name; find the library in the layer package
+        search_dirs = [os.path.dirname(manifest_path)]
+        search_dirs += [os.path.join(layers.package_folder, d) for d in layers.cpp_info.libdirs + layers.cpp_info.bindirs]
+        for search_dir in search_dirs:
+            candidate = os.path.normpath(os.path.join(search_dir, layer["library_path"]))
+            if os.path.isfile(candidate):
+                layer["library_path"] = candidate
+                break
+        else:
+            self.output.warning(f"Could not find {layer['library_path']} in the validation layer package, skipping the manifest fix")
+            return
+        manifest_dir = self._validation_layer_manifest_dir()
+        os.makedirs(manifest_dir, exist_ok=True)
+        with open(os.path.join(manifest_dir, os.path.basename(manifest_path)), "w", encoding="utf-8") as fixed_file:
+            json.dump(manifest, fixed_file, indent=4)
+
     def package(self):
         # Conan 2's copy() tool replaces self.copy() and does not use keep_path.
         # Instead of 20 lines, we can copy all headers from the src directory while preserving structure.
@@ -165,6 +204,8 @@ class Walnut(ConanFile):
         for ext in ["*.dylib", "*.dll", "*.so", "*.a", "*.lib", "*.pdb"]:
             # Depending on your CMake output, binaries usually land in build_folder
             copy(self, ext, src=self.build_folder, dst=dst_lib_path, keep_path=False)
+
+        self._package_validation_layer_manifest()
 
     def package_info(self):
         if self.options.rendering_backend == "OpenGL":
@@ -179,6 +220,10 @@ class Walnut(ConanFile):
 
         if self.settings.os == 'Android':
             self.cpp_info.libs += ["App", "SDL3"]
+
+        manifest_dir = self._validation_layer_manifest_dir()
+        if os.path.isdir(manifest_dir):
+            self.runenv_info.prepend_path("VK_LAYER_PATH", manifest_dir)
 
     def layout(self):
         # cmake_layout handles standard build/source folders dynamically
