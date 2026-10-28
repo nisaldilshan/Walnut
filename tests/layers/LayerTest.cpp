@@ -1,10 +1,13 @@
 // Pushes and pops layers while the application runs and checks the order of OnAttach, OnDetach and the
 // layers' destructors:
+//  - a layer pushed before Run() is attached at once
 //  - a layer popped and its replacement pushed in the same frame: the old one is detached and destroyed
 //    before the new one is attached
 //  - the same from OnUIRender, popping the top layer
-//  - a layer popped before it was ever attached
-//  - at shutdown, layers detach top first
+//  - popping a null layer does nothing
+//  - a layer pushed and popped in the same frame is dropped, it is never attached or detached
+//  - a layer pushed before PopLayer() in the same frame is not the one that is popped
+//  - at shutdown, layers detach bottom first
 //
 // Exit code: 0 when the order is the expected one, 1 otherwise.
 
@@ -52,12 +55,25 @@ public:
 			A.reset();
 			m_App.PushLayer<RecordingLayer>("C", m_Log);
 		}
+		else if (m_Frame == 3)
+		{
+			// Must not pop D
+			m_Log.push_back("frame 3");
+			m_App.PopLayer(std::shared_ptr<Walnut::Layer>());
+		}
 		else if (m_Frame == 4)
 		{
-			// E is popped before it was attached
+			// E is popped before it is attached, so it is dropped and destroyed without OnAttach or OnDetach
 			m_Log.push_back("frame 4");
 			auto e = m_App.PushLayer<RecordingLayer>("E", m_Log);
 			m_App.PopLayer(e);
+		}
+		else if (m_Frame == 5)
+		{
+			// PopLayer() removes D, the top attached layer, not F
+			m_Log.push_back("frame 5");
+			m_App.PushLayer<RecordingLayer>("F", m_Log);
+			m_App.PopLayer();
 		}
 		else if (m_Frame == 6)
 		{
@@ -94,11 +110,13 @@ int main(int argc, char** argv)
 	spec.EnableGraphicsValidation = true; // Vulkan: CTest fails the test on any validation message
 
 	EventLog log;
+	bool attachedBeforeRun = false;
 	{
 		Walnut::Application app(spec);
 		auto controller = app.PushLayer<ControllerLayer>(app, log);
 		controller->A = app.PushLayer<RecordingLayer>("A", log);
 		app.PushLayer<RecordingLayer>("B", log);
+		attachedBeforeRun = log == EventLog{ "attach A", "attach B" };
 		app.Run();
 	}
 
@@ -108,15 +126,19 @@ int main(int argc, char** argv)
 		"detach A", "destroy A", "attach C",
 		"frame 2",
 		"detach C", "destroy C", "attach D",
-		"frame 4",
-		"attach E", "detach E", "destroy E",
+		"frame 3",
+		"frame 4", "destroy E",
+		"frame 5",
+		"detach D", "destroy D", "attach F",
 		"frame 6",
-		"detach D", "destroy D", "detach B", "destroy B",
+		"detach B", "detach F", "destroy B", "destroy F",
 	};
 
-	bool pass = log == expected;
+	bool pass = attachedBeforeRun && log == expected;
 	if (!pass)
 	{
+		if (!attachedBeforeRun)
+			std::printf("layers pushed before Run() were not attached at once\n");
 		std::printf("expected:\n");
 		for (const auto& event : expected)
 			std::printf("  %s\n", event.c_str());

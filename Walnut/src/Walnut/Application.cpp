@@ -18,17 +18,37 @@ namespace Walnut {
 	
 void Application::PushLayer(const std::shared_ptr<Layer>& layer)
 {
-	m_LayerChanges.push_back({ true, layer });
+	if (!layer)
+		return;
+
+	m_LayerChanges.push_back({ LayerChange::Type::Push, layer });
+	ApplyLayerChangesIfNotRunning();
 }
 
 void Application::PopLayer()
 {
-	m_LayerChanges.push_back({ false, nullptr });
+	m_LayerChanges.push_back({ LayerChange::Type::PopTop, nullptr });
+	ApplyLayerChangesIfNotRunning();
 }
 
 void Application::PopLayer(const std::shared_ptr<Layer>& layer)
 {
-	m_LayerChanges.push_back({ false, layer });
+	if (!layer)
+		return;
+
+	// Pushed but not attached yet: dropped, so the layer never gets OnAttach
+	auto pending = std::find_if(m_LayerChanges.begin(), m_LayerChanges.end(), [&](const LayerChange& change)
+	{
+		return change.Action == LayerChange::Type::Push && change.Target == layer;
+	});
+	if (pending != m_LayerChanges.end())
+	{
+		m_LayerChanges.erase(pending);
+		return;
+	}
+
+	m_LayerChanges.push_back({ LayerChange::Type::Pop, layer });
+	ApplyLayerChangesIfNotRunning();
 }
 
 void Application::SetupImGuiForOneIteration()
@@ -167,31 +187,39 @@ std::unique_ptr<Image>& Application::MainImageRef()
     return m_ImageToRender;
 }
 
+void Application::ApplyLayerChangesIfNotRunning()
+{
+	// Before Run() there is no frame to wait for, so a layer is attached as soon as it is pushed
+	if (!m_Running)
+		ApplyLayerChanges();
+}
+
 void Application::ApplyLayerChanges()
 {
 	// Taken out first: layers that push or pop from OnAttach or OnDetach queue changes for the next frame
 	std::vector<LayerChange> changes;
 	changes.swap(m_LayerChanges);
 
+	// Pops first, so a layer is detached before its replacement is attached
 	bool gpuIdle = false;
 	for (LayerChange& change : changes)
 	{
-		if (change.Push)
-		{
-			m_LayerStack.push_back(change.Target);
-			change.Target->OnAttach();
+		if (change.Action == LayerChange::Type::Push)
 			continue;
-		}
 
 		// Not kept in the change, so the layer can be destroyed right after it is detached
 		std::shared_ptr<Layer> target = std::move(change.Target);
-		auto it = target ? std::find(m_LayerStack.begin(), m_LayerStack.end(), target)
-		                 : (m_LayerStack.empty() ? m_LayerStack.end() : std::prev(m_LayerStack.end()));
+		auto it = m_LayerStack.end();
+		if (change.Action == LayerChange::Type::Pop)
+			it = std::find(m_LayerStack.begin(), m_LayerStack.end(), target);
+		else if (!m_LayerStack.empty())
+			it = std::prev(m_LayerStack.end());
 		target.reset();
 		if (it == m_LayerStack.end())
 			continue;
 
-		// The last frames may still be rendering with the layer's resources, e.g. an image drawn through ImGui
+		// The last frames may still be rendering with the layer's resources, e.g. an image drawn through ImGui.
+		// Once per batch is enough: the uploads and frees done by OnDetach wait for the GPU themselves.
 		if (!gpuIdle)
 		{
 			m_RenderingBackend->WaitIdle();
@@ -201,6 +229,15 @@ void Application::ApplyLayerChanges()
 		m_LayerStack.erase(it);
 		layer->OnDetach();
 		// layer is released here, so it is destroyed before the next change unless the client still holds it
+	}
+
+	for (LayerChange& change : changes)
+	{
+		if (change.Action != LayerChange::Type::Push)
+			continue;
+
+		m_LayerStack.push_back(change.Target);
+		change.Target->OnAttach();
 	}
 }
 
@@ -232,14 +269,17 @@ void Application::LayerStackShutdown()
 	// Layers still queued were never attached, so they are not detached either
 	m_LayerChanges.clear();
 
-	m_RenderingBackend->WaitIdle();
-	// Top first, the reverse of the order they were attached in
-	while (!m_LayerStack.empty())
-	{
-		std::shared_ptr<Layer> layer = std::move(m_LayerStack.back());
-		m_LayerStack.pop_back();
+	if (!m_LayerStack.empty())
+		m_RenderingBackend->WaitIdle();
+
+	std::vector<std::shared_ptr<Layer>> layers = std::move(m_LayerStack);
+	m_LayerStack.clear();
+	for (auto& layer : layers)
 		layer->OnDetach();
-	}
+	// Changes queued by OnDetach have nothing left to apply to
+	m_LayerChanges.clear();
+	for (auto& layer : layers)
+		layer.reset();
 }
 
 }

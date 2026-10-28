@@ -51,10 +51,11 @@ namespace Walnut {
 		// Reads back the next frame rendered to the main window, before it is presented.
 		void CaptureNextFrame(const FrameCaptureCallback& callback);
 
-		// Layers can be pushed and popped at any time, also from a layer's OnUpdate or OnUIRender. The changes are
-		// queued and applied in order at the start of the next frame, before any layer updates: a popped layer gets
-		// OnDetach after the GPU has finished every frame that used it, and a pushed layer gets OnAttach after the
-		// layers popped before it are detached. Pop the old layer before pushing its replacement.
+		// Layers can be pushed and popped at any time, also from a layer's OnUpdate or OnUIRender. While the
+		// application runs, the changes are queued and applied at the start of the next frame, before any layer
+		// updates: first every pop, in order, then every push, in order. A popped layer gets OnDetach after the GPU
+		// has finished every frame that used it. While the application is not running, e.g. before Run(), the changes are
+		// applied at once.
 		template<typename T, typename... Args>
 		std::shared_ptr<T> PushLayer(Args&&... args)
 		{
@@ -64,10 +65,12 @@ namespace Walnut {
 			return layer;
 		}
 
+		// A null layer is ignored.
 		void PushLayer(const std::shared_ptr<Layer>& layer);
-		// Removes the top layer, counting layers pushed but not yet attached.
+		// Removes the topmost layer that is already attached. Layers pushed in the same frame are not counted.
 		void PopLayer();
-		// Removes the given layer, whether it is attached or only pushed.
+		// Removes the given layer. A layer that is pushed but not attached yet is dropped without ever being
+		// attached. A null layer is ignored.
 		void PopLayer(const std::shared_ptr<Layer>& layer);
 
 		void Close();
@@ -84,6 +87,7 @@ namespace Walnut {
 		void SetupImGuiForOneIteration();
 		void OnWindowResize(WalnutWindowHandleType *win);
 		void ApplyLayerChanges();
+		void ApplyLayerChangesIfNotRunning();
 		void LayerStackOnUpdate();
 		void LayerStackOnGui();
 		void LayerStackShutdown();
@@ -97,10 +101,11 @@ namespace Walnut {
 		std::chrono::milliseconds m_SleepAmount;
 		std::unique_ptr<Image> m_ImageToRender;
 
-		// A queued push (Push = true) or pop. A pop with a null target removes the top layer.
+		// A queued pop, or push of Target. PopTop has no target and removes the topmost attached layer.
 		struct LayerChange
 		{
-			bool Push;
+			enum class Type { Push, Pop, PopTop };
+			Type Action;
 			std::shared_ptr<Layer> Target;
 		};
 
