@@ -44,6 +44,9 @@ namespace Walnut {
 		// with the top row first. Returns false if the backend cannot read frames back.
 		virtual bool ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height) { return false; }
 		virtual void FramePresent() = 0;
+		// Blocks until the GPU has finished all submitted work, e.g. before destroying resources that frames still
+		// in flight may use. A no-op for backends that keep such resources alive themselves (OpenGL, WebGPU).
+		virtual void WaitIdle() {}
 
 		static BACKEND GetBackend() { return s_backend; }
 		static std::unique_ptr<RenderingBackend> Create();

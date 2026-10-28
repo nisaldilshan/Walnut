@@ -120,6 +120,11 @@ namespace Walnut
         m_imageRenderPipeline.reset();
     }
 
+    void VulkanRenderingBackend::WaitIdle()
+    {
+        GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();
+    }
+
     void VulkanRenderingBackend::Shutdown()
     {
         GraphicsAPI::Vulkan::GraphicsDeviceWaitIdle();

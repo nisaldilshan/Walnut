@@ -4,6 +4,7 @@
 // Adapted from Dear ImGui Vulkan example
 //
 
+#include <algorithm>
 #include <iostream>
 #include <thread>
 #include <imgui.h>
@@ -15,18 +16,19 @@
 namespace Walnut {
 
 	
-void Application::PushLayer(const std::shared_ptr<Layer>& layer) 
-{ 
-	m_NewLayers.emplace_back(layer); 
-	layer->OnAttach(); 
+void Application::PushLayer(const std::shared_ptr<Layer>& layer)
+{
+	m_LayerChanges.push_back({ true, layer });
 }
 
 void Application::PopLayer()
 {
-	if (m_LayerStack.size() > 0)
-	{
-		m_LayerPopCount++;
-	}
+	m_LayerChanges.push_back({ false, nullptr });
+}
+
+void Application::PopLayer(const std::shared_ptr<Layer>& layer)
+{
+	m_LayerChanges.push_back({ false, layer });
 }
 
 void Application::SetupImGuiForOneIteration()
@@ -165,26 +167,46 @@ std::unique_ptr<Image>& Application::MainImageRef()
     return m_ImageToRender;
 }
 
+void Application::ApplyLayerChanges()
+{
+	// Taken out first: layers that push or pop from OnAttach or OnDetach queue changes for the next frame
+	std::vector<LayerChange> changes;
+	changes.swap(m_LayerChanges);
+
+	bool gpuIdle = false;
+	for (LayerChange& change : changes)
+	{
+		if (change.Push)
+		{
+			m_LayerStack.push_back(change.Target);
+			change.Target->OnAttach();
+			continue;
+		}
+
+		// Not kept in the change, so the layer can be destroyed right after it is detached
+		std::shared_ptr<Layer> target = std::move(change.Target);
+		auto it = target ? std::find(m_LayerStack.begin(), m_LayerStack.end(), target)
+		                 : (m_LayerStack.empty() ? m_LayerStack.end() : std::prev(m_LayerStack.end()));
+		target.reset();
+		if (it == m_LayerStack.end())
+			continue;
+
+		// The last frames may still be rendering with the layer's resources, e.g. an image drawn through ImGui
+		if (!gpuIdle)
+		{
+			m_RenderingBackend->WaitIdle();
+			gpuIdle = true;
+		}
+		std::shared_ptr<Layer> layer = std::move(*it);
+		m_LayerStack.erase(it);
+		layer->OnDetach();
+		// layer is released here, so it is destroyed before the next change unless the client still holds it
+	}
+}
+
 void Application::LayerStackOnUpdate()
 {
-	if (m_LayerPopCount > 0)
-	{
-		for (uint32_t i = 0; i < m_LayerPopCount; i++)
-		{
-			if (m_LayerStack.size() > 0)
-			{
-				m_LayerStack.back()->OnDetach();
-				m_LayerStack.pop_back();
-			}
-		}
-		m_LayerPopCount = 0;
-	}
-
-	if (m_NewLayers.size() > 0)
-	{
-		std::move(m_NewLayers.begin(), m_NewLayers.end(), std::back_inserter(m_LayerStack));
-		m_NewLayers.clear();
-	}
+	ApplyLayerChanges();
 
 	for (auto& layer : m_LayerStack)
 		layer->OnUpdate(m_TimeStep);
@@ -207,10 +229,17 @@ void Application::LayerStackOnGui()
 
 void Application::LayerStackShutdown()
 {
-	for (auto& layer : m_LayerStack)
-		layer->OnDetach();
+	// Layers still queued were never attached, so they are not detached either
+	m_LayerChanges.clear();
 
-	m_LayerStack.clear();
+	m_RenderingBackend->WaitIdle();
+	// Top first, the reverse of the order they were attached in
+	while (!m_LayerStack.empty())
+	{
+		std::shared_ptr<Layer> layer = std::move(m_LayerStack.back());
+		m_LayerStack.pop_back();
+		layer->OnDetach();
+	}
 }
 
 }
