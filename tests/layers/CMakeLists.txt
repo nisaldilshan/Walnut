@@ -16,9 +16,12 @@ if(WIN32)
     )
 endif()
 
-add_test(NAME layers COMMAND walnut-layer-test)
-set_tests_properties(layers PROPERTIES
-    # The Vulkan renderer prints validation layer messages with this prefix
-    FAIL_REGULAR_EXPRESSION "\\[vulkan validation\\]"
-    TIMEOUT 120
-)
+# Run() never returns in the browser, so the test is only built there
+if(NOT IS_EMSCRIPTEN)
+    add_test(NAME layers COMMAND walnut-layer-test)
+    set_tests_properties(layers PROPERTIES
+        # The Vulkan renderer prints validation layer messages with this prefix
+        FAIL_REGULAR_EXPRESSION "\\[vulkan validation\\]"
+        TIMEOUT 120
+    )
+endif()
