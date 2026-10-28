@@ -34,6 +34,7 @@ public:
 	void FrameEnd() override;
 	bool ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height) override;
 	void FramePresent() override;
+	void WaitIdle() override;
 	WalnutWindowHandleType* GetWindowHandle() override;
 	void Shutdown() override;
 	void Cleanup() override;
