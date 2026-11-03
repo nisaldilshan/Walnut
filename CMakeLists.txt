@@ -129,6 +129,7 @@ endif()
 if(WALNUT_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests/render)
+    add_subdirectory(tests/layers)
 endif()
 
 #### INSTALL ###

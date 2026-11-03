@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
 #include <chrono>
 #include <functional>
 
@@ -50,15 +51,27 @@ namespace Walnut {
 		// Reads back the next frame rendered to the main window, before it is presented.
 		void CaptureNextFrame(const FrameCaptureCallback& callback);
 
-		template<typename T>
-		void PushLayer()
+		// Layers can be pushed and popped at any time, also from a layer's OnUpdate or OnUIRender. While the
+		// application runs, the changes are queued and applied at the start of the next frame, before any layer
+		// updates: first every pop, in order, then every push, in order. A popped layer gets OnDetach after the GPU
+		// has finished every frame that used it. While the application is not running, e.g. before Run(), the changes are
+		// applied at once.
+		template<typename T, typename... Args>
+		std::shared_ptr<T> PushLayer(Args&&... args)
 		{
 			static_assert(std::is_base_of<Layer, T>::value, "Pushed type is not subclass of Layer!");
-			m_NewLayers.emplace_back(std::make_shared<T>())->OnAttach();
+			std::shared_ptr<T> layer = std::make_shared<T>(std::forward<Args>(args)...);
+			PushLayer(layer);
+			return layer;
 		}
 
+		// A null layer is ignored.
 		void PushLayer(const std::shared_ptr<Layer>& layer);
+		// Removes the topmost layer that is already attached. Layers pushed in the same frame are not counted.
 		void PopLayer();
+		// Removes the given layer. A layer that is pushed but not attached yet is dropped without ever being
+		// attached. A null layer is ignored.
+		void PopLayer(const std::shared_ptr<Layer>& layer);
 
 		void Close();
 		float GetTime();
@@ -73,6 +86,8 @@ namespace Walnut {
 		void InitImGui();
 		void SetupImGuiForOneIteration();
 		void OnWindowResize(WalnutWindowHandleType *win);
+		void ApplyLayerChanges();
+		void ApplyLayerChangesIfNotRunning();
 		void LayerStackOnUpdate();
 		void LayerStackOnGui();
 		void LayerStackShutdown();
@@ -86,9 +101,16 @@ namespace Walnut {
 		std::chrono::milliseconds m_SleepAmount;
 		std::unique_ptr<Image> m_ImageToRender;
 
+		// A queued pop, or push of Target. PopTop has no target and removes the topmost attached layer.
+		struct LayerChange
+		{
+			enum class Type { Push, Pop, PopTop };
+			Type Action;
+			std::shared_ptr<Layer> Target;
+		};
+
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
-		std::vector<std::shared_ptr<Layer>> m_NewLayers;
-		uint32_t m_LayerPopCount = 0;
+		std::vector<LayerChange> m_LayerChanges;
 
 		std::function<void()> m_MenubarCallback;
 		std::function<void(uint32_t)> m_DockLayoutCallback;
