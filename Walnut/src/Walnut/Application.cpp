@@ -9,6 +9,7 @@
 #include <thread>
 #include <imgui.h>
 #include <imgui_internal.h> // DockBuilder
+#include <imgui_freetype.h>
 
 #include "RenderingBackend.h"
 #include "Image.h"
@@ -70,6 +71,13 @@ void Application::InitImGui()
 	//io.ConfigViewportsNoAutoMerge = true;
 	//io.ConfigViewportsNoTaskBarIcon = true;
 	io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
+
+	// Rasterize with FreeType instead of ImGui's default stb_truetype, which does no hinting: glyph stems
+	// fall between pixels and come out gray and soft on 100% (96 DPI) displays. Light hinting snaps them
+	// to the pixel grid vertically only, like the "slight" hinting most Linux desktops use, which keeps
+	// the font's shapes and spacing.
+	io.Fonts->SetFontLoader(ImGuiFreeType::GetFontLoader());
+	io.Fonts->FontLoaderFlags = ImGuiFreeTypeLoaderFlags_LightHinting;
 
 	// Load default font. The atlas renders glyphs on demand at whatever size is used, so one font covers every scale.
 	ImFontConfig fontConfig;

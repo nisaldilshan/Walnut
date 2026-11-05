@@ -7,6 +7,9 @@ set(WALNUT_RENDERER "@RENDERER@")
 set(WALNUT_WINDOWING_SYSTEM "@WINDOWING_SYSTEM@")
 
 find_dependency(imgui)
+if("@WALNUT_FREETYPE_PACKAGE@")
+    find_dependency(@WALNUT_FREETYPE_PACKAGE@)
+endif()
 
 if(WALNUT_WINDOWING_SYSTEM STREQUAL "SDL")
     find_dependency(SDL3)

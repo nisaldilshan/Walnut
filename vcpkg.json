@@ -10,7 +10,8 @@
     {
       "name": "imgui",
       "features": [
-        "docking-experimental"
+        "docking-experimental",
+        "freetype"
       ]
     },
     "stb"

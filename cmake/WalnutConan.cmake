@@ -15,6 +15,20 @@ endif()
 #### STB ###
 find_package(stb REQUIRED)
 
+#### FREETYPE ###
+find_package(freetype REQUIRED)
+set(WALNUT_FREETYPE_PACKAGE freetype)
+
+# walnut_add_imgui_freetype(<target>)
+#
+# Builds imgui's FreeType font loader (ImGuiFreeType::GetFontLoader()) into <target>. Conan's imgui package
+# only ships it as a source file.
+function(walnut_add_imgui_freetype target)
+    target_sources(${target} PRIVATE ${WALNUT_IMGUI_RES_DIR}/misc/freetype/imgui_freetype.cpp)
+    target_include_directories(${target} PRIVATE ${WALNUT_IMGUI_RES_DIR}/misc/freetype)
+    target_link_libraries(${target} PRIVATE Freetype::Freetype)
+endfunction()
+
 #### WINDOWING SYSTEM ###
 if(WINDOWING_SYSTEM STREQUAL "SDL")
     find_package(SDL3 REQUIRED)
