@@ -13,7 +13,13 @@
 #include "RenderingBackend.h"
 #include "Image.h"
 
+// Emedded font
+#include "ImGui/Roboto-Regular.embed"
+
 namespace Walnut {
+
+// Font size at 100% desktop scaling. The UI scale is applied on top through style.FontScaleDpi.
+static constexpr float k_BaseFontSize = 16.0f;
 
 	
 void Application::PushLayer(const std::shared_ptr<Layer>& layer)
@@ -49,6 +55,63 @@ void Application::PopLayer(const std::shared_ptr<Layer>& layer)
 
 	m_LayerChanges.push_back({ LayerChange::Type::Pop, layer });
 	ApplyLayerChangesIfNotRunning();
+}
+
+void Application::InitImGui()
+{
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+	//io.ConfigViewportsNoAutoMerge = true;
+	//io.ConfigViewportsNoTaskBarIcon = true;
+	io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
+
+	// Load default font. The atlas renders glyphs on demand at whatever size is used, so one font covers every scale.
+	ImFontConfig fontConfig;
+	fontConfig.FontDataOwnedByAtlas = false;
+	io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), k_BaseFontSize, &fontConfig);
+
+	ApplyUIScale(QueryUIScale());
+}
+
+void Application::ApplyUIScale(float scale)
+{
+	if (scale <= 0.0f)
+		scale = 1.0f;
+	m_UIScale = scale;
+	std::cout << "UI scale: " << scale << std::endl;
+
+	// Rebuild the style from scratch so repeated scale changes do not compound.
+	ImGuiStyle& style = ImGui::GetStyle();
+	style = ImGuiStyle();
+	ImGui::StyleColorsDark(&style);
+	//ImGui::StyleColorsClassic(&style);
+
+	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
+
+	style.FontSizeBase = k_BaseFontSize;
+	style.ScaleAllSizes(scale); // padding, spacing, rounding, scrollbars, ...
+	style.FontScaleDpi = scale;
+}
+
+void Application::OnUIScaleChanged()
+{
+	if (!m_Specification.UseImGui || !ImGui::GetCurrentContext())
+		return;
+
+	const float scale = QueryUIScale();
+	if (scale != m_UIScale)
+		ApplyUIScale(scale);
 }
 
 void Application::SetupImGuiForOneIteration()

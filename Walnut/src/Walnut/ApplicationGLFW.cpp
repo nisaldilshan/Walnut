@@ -17,9 +17,6 @@
 #include <emscripten/emscripten.h>
 #endif
 
-// Emedded font
-#include "ImGui/Roboto-Regular.embed"
-
 Walnut_API bool g_ApplicationRunning = true;
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -95,7 +92,6 @@ namespace Walnut {
 #ifdef __EMSCRIPTEN__
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-			glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // render at device pixel resolution on HiDPI screens
 #else
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -115,14 +111,15 @@ namespace Walnut {
 		{
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-#ifdef __EMSCRIPTEN__
-			glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // render at device pixel resolution on HiDPI screens
-#endif
 		}
 		else
 		{
 			assert(false);
 		}
+
+		// Treat the requested width and height as logical size: on Windows and X11 the window is scaled by the monitor's
+		// content scale, and in browsers the canvas is rendered at device pixel resolution.
+		glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
 		auto* windowHandle = glfwCreateWindow(m_Specification.Width, m_Specification.Height, m_Specification.Name.c_str(), NULL, NULL);
 		if (!windowHandle)
@@ -140,6 +137,11 @@ namespace Walnut {
 			assert(app);
 			std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
 			app->OnWindowResize(win);
+		});
+		glfwSetWindowContentScaleCallback(windowHandle, [](GLFWwindow* win, float, float) {
+			auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
+			assert(app);
+			app->OnUIScaleChanged(); // e.g. the window moved to a monitor with a different scale
 		});
 
 		OnWindowResize(windowHandle);
@@ -178,37 +180,21 @@ namespace Walnut {
 		g_ApplicationRunning = false;
 	}
 
-	void Application::InitImGui()
+	float Application::QueryUIScale() const
 	{
-		// Setup Dear ImGui context
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-		//io.ConfigViewportsNoAutoMerge = true;
-		//io.ConfigViewportsNoTaskBarIcon = true;
-		io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
+		// The scale the desktop asks UI to be drawn at, in window coordinates. Where window coordinates are already
+		// logical points (macOS, Wayland, browsers) the framebuffer is larger than the window and ImGui applies that
+		// ratio through io.DisplayFramebufferScale, so it is divided out here to avoid scaling twice.
+		WalnutWindowHandleType* window = m_RenderingBackend->GetWindowHandle();
+		float xscale = 1.0f, yscale = 1.0f;
+		glfwGetWindowContentScale(window, &xscale, &yscale);
 
-		// Setup Dear ImGui style
-		ImGui::StyleColorsDark();
-		//ImGui::StyleColorsClassic();
+		int windowWidth = 0, framebufferWidth = 0;
+		glfwGetWindowSize(window, &windowWidth, nullptr);
+		glfwGetFramebufferSize(window, &framebufferWidth, nullptr);
+		const float framebufferScale = (windowWidth > 0 && framebufferWidth > 0) ? float(framebufferWidth) / float(windowWidth) : 1.0f;
 
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
-
-		// Load default font
-		ImFontConfig fontConfig;
-		fontConfig.FontDataOwnedByAtlas = false;
-		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
-		io.FontDefault = robotoFont;
+		return xscale / framebufferScale;
 	}
 
 	void Application::MainLoop()

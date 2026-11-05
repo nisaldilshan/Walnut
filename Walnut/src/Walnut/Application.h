@@ -84,6 +84,12 @@ namespace Walnut {
 		void Init();
 		void Shutdown();
 		void InitImGui();
+		// Rebuilds the ImGui style and font scale for the given UI scale (1.0 = 100% desktop scaling).
+		void ApplyUIScale(float scale);
+		// Re-reads the window's UI scale and applies it if it changed.
+		void OnUIScaleChanged();
+		// The main window's UI scale from the desktop settings. Implemented per windowing library.
+		float QueryUIScale() const;
 		void SetupImGuiForOneIteration();
 		void OnWindowResize(WalnutWindowHandleType *win);
 		void ApplyLayerChanges();
@@ -100,6 +106,7 @@ namespace Walnut {
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
 		std::chrono::milliseconds m_SleepAmount;
 		std::unique_ptr<Image> m_ImageToRender;
+		float m_UIScale = 1.0f;
 
 		// A queued pop, or push of Target. PopTop has no target and removes the topmost attached layer.
 		struct LayerChange
