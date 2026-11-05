@@ -15,7 +15,7 @@
 #include "Image.h"
 
 // Emedded font
-#include "ImGui/Roboto-Regular.embed"
+#include "ImGui/Inter-Regular.embed"
 
 namespace Walnut {
 
@@ -82,7 +82,7 @@ void Application::InitImGui()
 	// Load default font. The atlas renders glyphs on demand at whatever size is used, so one font covers every scale.
 	ImFontConfig fontConfig;
 	fontConfig.FontDataOwnedByAtlas = false;
-	io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), k_BaseFontSize, &fontConfig);
+	io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void*)g_InterRegular, sizeof(g_InterRegular), k_BaseFontSize, &fontConfig);
 
 	ApplyUIScale(QueryUIScale());
 }
