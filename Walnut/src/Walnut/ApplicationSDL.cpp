@@ -14,9 +14,6 @@
 #include "RenderingBackend.h"
 #include "Image.h"
 
-// Emedded font
-#include "ImGui/Roboto-Regular.embed"
-
 Walnut_API bool g_ApplicationRunning = true;
 
 static Walnut::Application* s_Instance = nullptr;
@@ -149,54 +146,16 @@ namespace Walnut {
 		g_ApplicationRunning = false;
 	}
 
-	void Application::InitImGui()
+	float Application::QueryUIScale() const
 	{
-		// Setup Dear ImGui context
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-		//io.ConfigViewportsNoAutoMerge = true;
-		//io.ConfigViewportsNoTaskBarIcon = true;
-		io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
-
-		// Setup Dear ImGui style
-		ImGui::StyleColorsDark();
-		//ImGui::StyleColorsClassic();
-
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
-
-		float scaleFactor = SDL_GetWindowDisplayScale(m_RenderingBackend->GetWindowHandle());
-		std::cout << "#### SDL UI Scale: " << scaleFactor << std::endl;
-
-		int windowWidth, windowHeight;
-		SDL_GetWindowSize(m_RenderingBackend->GetWindowHandle(), &windowWidth, &windowHeight);
-		int widthInPixels, heightInPixels;
-		SDL_GetWindowSizeInPixels(m_RenderingBackend->GetWindowHandle(), &widthInPixels, &heightInPixels);
-		if (widthInPixels == 2 * windowWidth && heightInPixels == 2 * windowHeight) {
-			// maybe a retina display
-			scaleFactor /= 2.0f;
-			std::cout << "#### SDL UI Scale (adjusted) : " << scaleFactor << std::endl;
-		}
-
-		// Setup SDL UI scaling for imgui
-		style.ScaleAllSizes(scaleFactor);
-
-		// Load default font
-		ImFontConfig fontConfig;
-		fontConfig.FontDataOwnedByAtlas = false;
-		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF(
-								(void*)g_RobotoRegular, sizeof(g_RobotoRegular), 16.0f * scaleFactor, &fontConfig);
-		io.FontDefault = robotoFont;
+		// The display scale is pixel density * content scale. Where window coordinates are logical points (macOS,
+		// Wayland) ImGui applies the pixel density through io.DisplayFramebufferScale, so only the content scale is left.
+		WalnutWindowHandleType* window = m_RenderingBackend->GetWindowHandle();
+		const float displayScale = SDL_GetWindowDisplayScale(window);
+		const float pixelDensity = SDL_GetWindowPixelDensity(window);
+		if (displayScale <= 0.0f || pixelDensity <= 0.0f)
+			return 1.0f;
+		return displayScale / pixelDensity;
 	}
 
 	void Application::MainLoop()
@@ -220,6 +179,10 @@ namespace Walnut {
 
 			if (event.type == SDL_EVENT_WINDOW_RESIZED) {
 				OnWindowResize(m_RenderingBackend->GetWindowHandle());
+			}
+
+			if (event.type == SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED) {
+				OnUIScaleChanged(); // e.g. the window moved to a monitor with a different scale
 			}
         }
 

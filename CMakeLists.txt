@@ -27,6 +27,8 @@ include(cmake/WalnutOptions.cmake)
 #   WALNUT_VULKAN_PACKAGE           package providing the Vulkan loader: Vulkan, VulkanLoader or moltenvk
 #   WALNUT_VULKAN_TARGET            Vulkan loader target
 #   walnut_add_imgui_backend()      creates the imgui backend library for a renderer
+#   walnut_add_imgui_freetype()     makes imgui's FreeType font loader available to a target
+#   WALNUT_FREETYPE_PACKAGE         package a static walnut needs for FreeType, empty if none
 if(VCPKG_TOOLCHAIN)
     include(cmake/WalnutVcpkg.cmake)
 else()
@@ -89,6 +91,7 @@ target_include_directories(walnut PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(walnut PRIVATE $<BUILD_INTERFACE:stb::stb> PUBLIC imgui::imgui)
+walnut_add_imgui_freetype(walnut)
 
 if (RENDERER STREQUAL "Vulkan")
     target_link_libraries(walnut PRIVATE walnut-graphics-vulkan)

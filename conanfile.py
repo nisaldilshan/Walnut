@@ -32,6 +32,12 @@ class Walnut(ConanFile):
         "glad*:extensions": "",
         "glad*:gl_profile": "core",
         "glad*:gl_version": 4.1,
+        # FreeType only rasterizes the embedded TrueType font, so the compressed and bitmap font formats
+        # these libraries are for are not needed.
+        "freetype/*:with_png": False,
+        "freetype/*:with_zlib": False,
+        "freetype/*:with_bzip2": False,
+        "freetype/*:with_brotli": False,
         # Walnut only uses SDL for windows, OpenGL/Vulkan surfaces and input events (SDL_INIT_VIDEO). Building
         # the other subsystems drags in audio (pulseaudio, alsa, sndio) and other dependencies built from source.
         "sdl/*:audio": False,
@@ -67,6 +73,7 @@ class Walnut(ConanFile):
     def requirements(self):
         self.requires("imgui/1.92.5-docking")
         self.requires("stb/cci.20230920")
+        self.requires("freetype/2.13.3")
         print("Using rendering backend " + str(self.options.rendering_backend));
         if self.settings.os == 'Macos':
             if self.options.rendering_backend == "OpenGL":

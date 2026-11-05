@@ -11,6 +11,12 @@ endif()
 # vcpkg's imgui already has the backends built in, selected through the features in vcpkg.json.
 find_package(imgui REQUIRED)
 
+# walnut_add_imgui_freetype(<target>)
+#
+# imgui's FreeType font loader is already part of imgui::imgui, through the freetype feature in vcpkg.json.
+function(walnut_add_imgui_freetype target)
+endfunction()
+
 #### STB ###
 # vcpkg provides FindStb.cmake, which only sets Stb_INCLUDE_DIR.
 find_package(Stb REQUIRED)

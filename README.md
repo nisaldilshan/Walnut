@@ -156,7 +156,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 - [GLFW](https://github.com/glfw/glfw) or [SDL3](https://github.com/libsdl-org/SDL)
 - [Vulkan loader](https://github.com/KhronosGroup/Vulkan-Loader), [glad](https://github.com/Dav1dde/glad) for OpenGL, or [Dawn](https://dawn.googlesource.com/dawn) via [WebGPU-distribution](https://github.com/eliemichel/WebGPU-distribution) for WebGPU
 - [stb_image](https://github.com/nothings/stb)
-- Walnut embeds the [Roboto](https://fonts.google.com/specimen/Roboto) font ([Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0))
+- Walnut embeds the [Inter](https://github.com/rsms/inter) font ([SIL Open Font License 1.1](Walnut/src/Walnut/ImGui/Inter-LICENSE.txt))
 
 ## License
 
