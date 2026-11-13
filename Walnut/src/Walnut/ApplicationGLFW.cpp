@@ -66,13 +66,15 @@ namespace Walnut {
     {
 		int w, h;
 		glfwGetFramebufferSize(win, &w, &h);
-		if (w == 0 || h == 0) {
+		m_FramebufferWidth = w > 0 ? static_cast<uint32_t>(w) : 0;
+		m_FramebufferHeight = h > 0 ? static_cast<uint32_t>(h) : 0;
+		if (w <= 0 || h <= 0) {
 			return; // minimised: a zero-extent swapchain or image is invalid, keep the old ones until restored
 		}
 		m_RenderingBackend->SetupWindow(w, h);
 
-		if (m_Specification.UseImGui) {
-			return; // when using ImGui, we don't need to resize our main image, as ImGui will render to it directly
+		if (m_Specification.UseImGui || m_UseExternalMainImage) {
+			return; // when using ImGui or an external main image handle, Walnut does not manage m_ImageToRender
 		}
 		m_ImageToRender = std::make_unique<Image>(w, h, ImageFormat::RGBA);
     }
@@ -155,7 +157,7 @@ namespace Walnut {
 		else
 		{
 			// when not using ImGui, we need to create our main image pipeline here,
-			m_RenderingBackend->CreateMainImagePipeline(m_ImageToRender);
+			m_RenderingBackend->CreateMainImagePipeline();
 		}
 	}
 
@@ -217,6 +219,8 @@ namespace Walnut {
 		{
 			int width, height;
 			glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
+			m_FramebufferWidth = width > 0 ? static_cast<uint32_t>(width) : 0;
+			m_FramebufferHeight = height > 0 ? static_cast<uint32_t>(height) : 0;
 			if (width > 0 && height > 0)
 				m_RenderingBackend->ResizeWindow(width, height);
 		}
@@ -240,6 +244,8 @@ namespace Walnut {
 			if (m_Specification.UseImGui) {
 				ImDrawData* main_draw_data = ImGui::GetDrawData();
 				m_RenderingBackend->FrameRenderImGui(main_draw_data);
+			} else if (m_UseExternalMainImage) {
+				m_RenderingBackend->FrameRender(m_ExternalMainImageHandle);
 			} else {
 				m_RenderingBackend->FrameRender(m_ImageToRender);
 			}

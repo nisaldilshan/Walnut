@@ -258,6 +258,24 @@ std::unique_ptr<Image>& Application::MainImageRef()
     return m_ImageToRender;
 }
 
+void Application::SetMainImageHandle(uint64_t handle)
+{
+	m_ExternalMainImageHandle = handle;
+	m_UseExternalMainImage = (handle != 0);
+	if (m_UseExternalMainImage)
+		m_ImageToRender.reset();
+}
+
+uint32_t Application::GetFramebufferWidth() const
+{
+	return m_FramebufferWidth;
+}
+
+uint32_t Application::GetFramebufferHeight() const
+{
+	return m_FramebufferHeight;
+}
+
 void Application::ApplyLayerChangesIfNotRunning()
 {
 	// Before Run() there is no frame to wait for, so a layer is attached as soon as it is pushed

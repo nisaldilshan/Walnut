@@ -90,7 +90,7 @@ namespace Walnut
 	{}
 
     GLuint g_emptyVAO;
-	void OpenGLRenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image>& mainImage)
+	void OpenGLRenderingBackend::CreateMainImagePipeline()
     {
 		glGenVertexArrays(1, &g_emptyVAO);
 
@@ -130,10 +130,17 @@ namespace Walnut
 
     void OpenGLRenderingBackend::FrameRender(std::unique_ptr<Image> &mainImage)
     {
+		FrameRender(mainImage ? mainImage->GetHandle() : 0);
+	}
+
+    void OpenGLRenderingBackend::FrameRender(uint64_t imageHandle)
+    {
+		if (imageHandle == 0)
+			return;
+
 		// Bind your texture to texture unit 0
 		glActiveTexture(GL_TEXTURE0);
-		const auto textureiD = mainImage->GetHandle();
-		glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)textureiD);
+		glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)imageHandle);
 
 		// Bind your shader and textures via uniforms
 		glUseProgram(m_imageRenderShaderProgram);
