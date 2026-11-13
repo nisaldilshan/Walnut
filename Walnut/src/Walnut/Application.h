@@ -79,6 +79,11 @@ namespace Walnut {
 
 		void SetSleepAmount(std::chrono::milliseconds sleepAmount);
 		std::unique_ptr<Image>& MainImageRef();
+		// Sets an external GPU texture handle (e.g. a VkDescriptorSet cast to uint64_t) for UseImGui = false.
+		// Passing a non-zero handle releases the internal m_ImageToRender and avoids reallocating it on resize.
+		void SetMainImageHandle(uint64_t handle);
+		uint32_t GetFramebufferWidth() const;
+		uint32_t GetFramebufferHeight() const;
 
 	private:
 		void Init();
@@ -106,6 +111,10 @@ namespace Walnut {
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
 		std::chrono::milliseconds m_SleepAmount;
 		std::unique_ptr<Image> m_ImageToRender;
+		uint64_t m_ExternalMainImageHandle = 0;
+		bool m_UseExternalMainImage = false;
+		uint32_t m_FramebufferWidth = 0;
+		uint32_t m_FramebufferHeight = 0;
 		float m_UIScale = 1.0f;
 
 		// A queued pop, or push of Target. PopTop has no target and removes the topmost attached layer.

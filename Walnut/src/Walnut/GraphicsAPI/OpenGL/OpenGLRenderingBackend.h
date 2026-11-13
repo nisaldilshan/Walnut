@@ -20,11 +20,12 @@ public:
 	void ResizeWindow(int width, int height) override;
 	void CreateImGuiPipeline() override;
 	void DestroyImGuiPipeline() override;
-	void CreateMainImagePipeline(std::unique_ptr<Image>& mainImage) override;
+	void CreateMainImagePipeline() override;
 	void DestroyMainImagePipeline() override;
 	void StartImGuiFrame() override;
 	void FrameBegin() override;
 	void FrameRender(std::unique_ptr<Image>& mainImage) override;
+	void FrameRender(uint64_t imageHandle) override;
 	void FrameRenderImGui(void* draw_data) override;
 	void FrameEnd() override;
 	bool ReadFramePixels(std::vector<uint8_t>& pixels, uint32_t& width, uint32_t& height) override;

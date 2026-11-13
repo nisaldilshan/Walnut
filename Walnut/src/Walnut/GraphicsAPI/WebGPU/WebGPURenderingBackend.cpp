@@ -87,15 +87,31 @@ void WebGPURenderingBackend::ResizeWindow(int width, int height)
 {
 }
 
-void WebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
+void WebGPURenderingBackend::CreateMainImagePipeline()
 {
-    auto& platformImage = mainImage->PlatformImageRef();
-    std::vector<wgpu::BindGroupLayout> layouts{platformImage->GetBindGroupLayout()};                                       
+    std::vector<wgpu::BindGroupLayoutEntry> entries(2);
+    entries[0].binding = 0;
+    entries[0].visibility = wgpu::ShaderStage::Fragment;
+    entries[0].texture.sampleType = wgpu::TextureSampleType::Float;
+    entries[0].texture.viewDimension = wgpu::TextureViewDimension::_2D;
+    entries[0].texture.multisampled = false;
+    entries[1].binding = 1;
+    entries[1].visibility = wgpu::ShaderStage::Fragment;
+    entries[1].sampler.type = wgpu::SamplerBindingType::Filtering;
+
+    wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc;
+    bindGroupLayoutDesc.entryCount = entries.size();
+    bindGroupLayoutDesc.entries = entries.data();
+    wgpu::BindGroupLayout bindGroupLayout = GraphicsAPI::WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
+    assert(bindGroupLayout);
+
+    std::vector<wgpu::BindGroupLayout> layouts{bindGroupLayout};
     m_imageRenderPipeline = std::make_unique<GraphicsAPI::WebGPUImageRenderPipeline>(layouts);
 }
 
 void WebGPURenderingBackend::DestroyMainImagePipeline()
 {
+    m_imageRenderPipeline.reset();
 }
 
 void WebGPURenderingBackend::FrameBegin()
@@ -148,8 +164,22 @@ void WebGPURenderingBackend::FrameEnd()
 
 void WebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
 {
+    if (!mainImage)
+        return;
+
     g_frameData.renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
     g_frameData.renderPass.setBindGroup(0, mainImage->PlatformImageRef()->GetBindGroup(), 0, nullptr);
+    g_frameData.renderPass.draw(3, 1, 0, 0);
+}
+
+void WebGPURenderingBackend::FrameRender(uint64_t imageHandle)
+{
+    if (imageHandle == 0)
+        return;
+
+    wgpu::BindGroup bindGroup(reinterpret_cast<WGPUBindGroup>(imageHandle));
+    g_frameData.renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
+    g_frameData.renderPass.setBindGroup(0, bindGroup, 0, nullptr);
     g_frameData.renderPass.draw(3, 1, 0, 0);
 }
 
