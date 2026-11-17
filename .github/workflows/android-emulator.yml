@@ -1,7 +1,7 @@
 # Runs the example app on an Android emulator, started by hand from the Actions tab ("Run workflow") on any branch.
 # CI builds the APK for 64-bit ARM; the runners' emulator is x86-64, so this builds the APK for x86-64 from the same
-# sources, installs it, and checks that it is still running a minute later. The screenshots and the logcat are
-# uploaded as artifacts.
+# sources, installs it, and checks that it is still running a minute later, and still the same process after going to
+# the home screen and back. The screenshots and the logcat are uploaded as artifacts.
 name: Android emulator
 
 on:
