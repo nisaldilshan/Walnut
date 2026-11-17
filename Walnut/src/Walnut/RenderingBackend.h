@@ -47,6 +47,10 @@ namespace Walnut {
 		// Blocks until the GPU has finished all submitted work, e.g. before destroying resources that frames still
 		// in flight may use. A no-op for backends that keep such resources alive themselves (OpenGL, WebGPU).
 		virtual void WaitIdle() {}
+		// Called when the app returns to the foreground on mobile platforms, where the window's surface may have been
+		// replaced while it was in the background. A no-op where the windowing library restores the surface itself
+		// (OpenGL, whose EGL surface SDL recreates).
+		virtual void OnEnterForeground() {}
 
 		static BACKEND GetBackend() { return s_backend; }
 		static std::unique_ptr<RenderingBackend> Create();
