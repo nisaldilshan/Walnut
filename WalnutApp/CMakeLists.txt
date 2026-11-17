@@ -137,6 +137,9 @@ if(ANDROID)
     # Only the apk component: the install rules of WALNUT_INSTALL (headers, CMake package) are not for the APK
     set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_BINARY_DIR};${PROJECT_NAME};apk;/")
     set(CPACK_APK_JAVA_SOURCE_DIRECTORIES "${sdl_java_dir}")
+    # Java 8, which SDL's Gradle project builds for as the Android Gradle plugin's default. For Java 9 and newer,
+    # javac compiles string concatenation to StringConcatFactory calls that the platform's Java library lacks.
+    set(CPACK_APK_JAVA_VERSION 8)
     # The API level the libraries are built for, from the toolchain (os.api_level in the Conan profile)
     set(CPACK_APK_MIN_SDK_VERSION ${CMAKE_SYSTEM_VERSION})
     # SDL's Java sources are written for API level 35
