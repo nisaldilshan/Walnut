@@ -4,6 +4,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CXX_EXTENSIONS OFF)
 
+# Write compile_commands.json for clangd and other tools. Only Ninja and Makefile generators
+# support it; other generators ignore it.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Defaults for the RENDERER and WINDOWING_SYSTEM options.
 set(WALNUT_DEFAULT_RENDERER Vulkan)
 set(WALNUT_DEFAULT_WINDOWING_SYSTEM GLFW)

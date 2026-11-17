@@ -1,0 +1,49 @@
+// Project tasks for Zed: https://zed.dev/docs/tasks
+// CMake, Ninja and MSVC are not on PATH outside a Visual Studio developer prompt, so each
+// CMake task runs through .zed/vsdev.ps1, which enters that environment first.
+//
+// The Conan profile selects the "Ninja Multi-Config" generator, so configuring also writes
+// build/compile_commands.json for clangd.
+[
+  {
+    "label": "CMake: build",
+    "command": "powershell",
+    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$ZED_WORKTREE_ROOT/.zed/vsdev.ps1",
+      "cmake --build --preset conan-debug"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "save": "all"
+  },
+  {
+    "label": "CMake: configure",
+    "command": "powershell",
+    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$ZED_WORKTREE_ROOT/.zed/vsdev.ps1",
+      "cmake --preset conan-default"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "save": "all"
+  },
+  {
+    "label": "CMake: clean",
+    "command": "powershell",
+    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$ZED_WORKTREE_ROOT/.zed/vsdev.ps1",
+      "cmake --build --preset conan-debug --target clean"],
+    "cwd": "$ZED_WORKTREE_ROOT"
+  },
+  {
+    // Run after editing conanfile.py or deleting build/, then run "CMake: configure".
+    // Add -o "&:rendering_backend=..." / -o "&:windowing_system=..." to change the configuration.
+    "label": "Conan: install dependencies",
+    "command": "conan",
+    "args": ["install", ".", "--build=missing", "-s", "build_type=Debug"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "save": "all"
+  },
+  {
+    // Companion to the "(Web) Open in Chrome" debug configuration.
+    "label": "Serve WalnutApp (Web)",
+    "command": "python3",
+    "args": ["-m", "http.server", "8000", "--directory", "$ZED_WORKTREE_ROOT/build/Debug/WalnutApp"],
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always"
+  }
+]
