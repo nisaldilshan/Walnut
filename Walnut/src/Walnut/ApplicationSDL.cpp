@@ -184,7 +184,22 @@ namespace Walnut {
 			if (event.type == SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED) {
 				OnUIScaleChanged(); // e.g. the window moved to a monitor with a different scale
 			}
+
+			// Mobile platforms. On Android the window's surface is destroyed while the app is in the background, and
+			// SDL blocks in SDL_PollEvent until the app is back, with a new surface. When the OS terminates the app
+			// (on Android, its activity is destroyed), SDL discards the background events and sends this one.
+			if (event.type == SDL_EVENT_WILL_ENTER_BACKGROUND || event.type == SDL_EVENT_TERMINATING) {
+				m_RenderingPaused = true;
+			}
+			if (event.type == SDL_EVENT_DID_ENTER_FOREGROUND) {
+				m_RenderingPaused = false;
+				m_RenderingBackend->OnEnterForeground();
+			}
         }
+
+		// No frame while there may be no surface to render to
+		if (m_RenderingPaused)
+			return;
 
 		LayerStackOnUpdate();
 

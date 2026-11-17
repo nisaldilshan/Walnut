@@ -102,6 +102,9 @@ namespace Walnut {
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;
 		bool m_Running = false;
+		// No frames are rendered between SDL_EVENT_WILL_ENTER_BACKGROUND and SDL_EVENT_DID_ENTER_FOREGROUND, or after
+		// SDL_EVENT_TERMINATING (mobile platforms)
+		bool m_RenderingPaused = false;
 		float m_TimeStep = 0.0f;
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
 		std::chrono::milliseconds m_SleepAmount;

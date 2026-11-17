@@ -10,6 +10,18 @@
 
 namespace Walnut
 {
+    bool CreateVulkanWindowSurface(WalnutWindowHandleType* windowHandle, VkSurfaceKHR* surface)
+    {
+        // Fails on Android while the app is in the background, as the activity has no native window then
+        if (!SDL_Vulkan_CreateSurface(windowHandle, GraphicsAPI::Vulkan::GetInstance(),
+                                      GraphicsAPI::Vulkan::GetAllocator(), surface))
+        {
+            std::cerr << "SDL: Failed to create Vulkan surface: " << SDL_GetError() << "\n";
+            return false;
+        }
+        return true;
+    }
+
     void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool enableValidation)
     {
         uint32_t sdl_extensions_count = 0;
@@ -39,13 +51,8 @@ namespace Walnut
         // Setup Vulkan
         GraphicsAPI::Vulkan::CreateDevice(extensions, GraphicsAPI::VulkanConfig{ enableValidation });
         // Create Window Surface
-        const bool result = SDL_Vulkan_CreateSurface(windowHandle, 
-                                            GraphicsAPI::Vulkan::GetInstance(), 
-                                            NULL,
-                                            GraphicsAPI::Vulkan::GetSurface());
-        if (result != true)
+        if (!CreateVulkanWindowSurface(windowHandle, GraphicsAPI::Vulkan::GetSurface()))
         {
-            std::cerr << "SDL: Failed to create Vulkan surface!\n";
             return;
         }
     }

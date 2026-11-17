@@ -37,6 +37,12 @@ static ImGui_ImplVulkanH_Window g_MainWindowData;
 static uint32_t                 g_MinImageCount = 2;
 static bool                     g_SwapChainRebuild = false;
 static VkImageUsageFlags        g_SwapChainImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+// The surface can no longer be presented to (on Android, its native window was destroyed): the window needs a new
+// surface, from RecreateVulkanWindow, before frames are rendered again.
+static bool                     s_SurfaceLost = false;
+// Whether FrameBegin acquired a swapchain image and started recording, so that the rest of the frame can run.
+// False when the frame is skipped, e.g. while the swapchain is out of date or the surface is lost.
+static bool                     s_FrameActive = false;
 
 // Unlike g_MainWindowData.FrameIndex, this is not the the swapchain image index
 // and is always guaranteed to increase (eg. 0, 1, 2, 0, 1, 2)
@@ -352,14 +358,25 @@ void Vulkan::FrameBegin()
 {
 	VkResult err;
 
+	s_FrameActive = false;
+	if (s_SurfaceLost || g_SwapChainRebuild || g_MainWindowData.Swapchain == VK_NULL_HANDLE)
+		return;
+
 	VkSemaphore image_acquired_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
 	err = vkAcquireNextImageKHR(g_Device, g_MainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &g_MainWindowData.FrameIndex);
+	if (err == VK_ERROR_SURFACE_LOST_KHR)
+	{
+		s_SurfaceLost = true;
+		return;
+	}
 	if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 	{
+		// The frame is skipped: with SUBOPTIMAL an image was acquired, but the swapchain is rebuilt before it is used
 		g_SwapChainRebuild = true;
 		return;
 	}
 	check_vk_result(err);
+	s_FrameActive = true;
 
 	s_CurrentFrameIndex = (s_CurrentFrameIndex + 1) % g_MainWindowData.ImageCount;
 
@@ -402,6 +419,8 @@ void Vulkan::FrameBegin()
 
 void Vulkan::FrameEnd()
 {
+	if (!s_FrameActive)
+		return;
 	VkResult err;
 	VkSemaphore image_acquired_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
 	VkSemaphore render_complete_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
@@ -431,7 +450,7 @@ bool Vulkan::ReadSwapChainImage(std::vector<uint8_t>& pixels, uint32_t& width, u
 	const VkFormat format = g_MainWindowData.SurfaceFormat.format;
 	const bool isBGRA = format == VK_FORMAT_B8G8R8A8_UNORM || format == VK_FORMAT_B8G8R8A8_SRGB;
 	const bool isRGBA = format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_R8G8B8A8_SRGB;
-	if (g_SwapChainRebuild || !(g_SwapChainImageUsage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) || !(isBGRA || isRGBA))
+	if (!s_FrameActive || g_SwapChainRebuild || !(g_SwapChainImageUsage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) || !(isBGRA || isRGBA))
 		return false;
 
 	width = g_MainWindowData.Width;
@@ -537,8 +556,9 @@ bool Vulkan::ReadSwapChainImage(std::vector<uint8_t>& pixels, uint32_t& width, u
 
 void Vulkan::FramePresent()
 {
-	if (g_SwapChainRebuild)
+	if (!s_FrameActive)
 		return;
+	s_FrameActive = false;
 	VkSemaphore render_complete_semaphore = g_MainWindowData.FrameSemaphores[g_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
 	VkPresentInfoKHR info = {};
 	info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -548,6 +568,12 @@ void Vulkan::FramePresent()
 	info.pSwapchains = &g_MainWindowData.Swapchain;
 	info.pImageIndices = &g_MainWindowData.FrameIndex;
 	VkResult err = vkQueuePresentKHR(g_Queue, &info);
+	if (err == VK_ERROR_SURFACE_LOST_KHR)
+	{
+		// E.g. on Android, when the activity's surface is destroyed while the frame is rendered
+		s_SurfaceLost = true;
+		return;
+	}
 	if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 	{
 		g_SwapChainRebuild = true;
@@ -591,9 +617,56 @@ void Vulkan::ResizeVulkanWindow(int width, int height)
     g_MainWindowData.FrameIndex = 0;
 }
 
+bool Vulkan::RecreateVulkanWindow(const std::function<bool(VkSurfaceKHR*)>& createSurface, int width, int height)
+{
+	s_FrameActive = false;
+	if (g_MainWindowData.Swapchain != VK_NULL_HANDLE || g_MainWindowData.Surface != VK_NULL_HANDLE)
+	{
+		GraphicsDeviceWaitIdle();
+		// Resources queued for freeing are no longer in use once the device is idle, and the queue is resized below
+		for (auto& queue : s_ResourceFreeQueue)
+		{
+			for (auto& func : queue)
+				func();
+			queue.clear();
+		}
+		// Also destroys the old surface, which the swapchain must not outlive
+		ImGui_ImplVulkanH_DestroyWindow(g_Instance, g_Device, &g_MainWindowData, g_Allocator);
+		g_surface = VK_NULL_HANDLE;
+	}
+
+	// Stays lost (and is tried again) until the window system has a window to create the surface for
+	s_SurfaceLost = true;
+	if (!createSurface(&g_surface) || g_surface == VK_NULL_HANDLE)
+	{
+		g_surface = VK_NULL_HANDLE;
+		return false;
+	}
+	s_SurfaceLost = false;
+	g_SwapChainRebuild = false;
+	// The render pass is created again with the same format, so the pipelines made for the old one stay compatible
+	SetupVulkanWindow(width, height);
+	return true;
+}
+
+bool Vulkan::IsSurfaceLost()
+{
+	return s_SurfaceLost;
+}
+
+void Vulkan::SetSurfaceLost()
+{
+	s_SurfaceLost = true;
+}
+
+bool Vulkan::IsFrameActive()
+{
+	return s_FrameActive;
+}
+
 bool Vulkan::NeedSwapChainRebuild()
 {
-    return g_SwapChainRebuild;
+    return g_SwapChainRebuild || s_SurfaceLost;
 }
 
 void Vulkan::SetSwapChainRebuildStatus(bool status)
