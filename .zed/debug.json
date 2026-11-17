@@ -1,0 +1,41 @@
+// Zed debug configurations, mirroring .vscode/launch.json.
+// See https://zed.dev/docs/debugger for the full schema.
+[
+  {
+    // Linux: requires GDB 14.1+ (built with Python support) for its DAP interface.
+    "label": "(gdb) Launch",
+    "adapter": "GDB",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/build/Debug/WalnutApp/App",
+    "args": [],
+    "cwd": "$ZED_WORKTREE_ROOT/build/Debug/WalnutApp",
+    "env": {
+      "LD_LIBRARY_PATH": "$ZED_WORKTREE_ROOT/build/Debug"
+    },
+    "stopAtBeginningOfMainSubprogram": false
+  },
+  {
+    // Start the "Serve WalnutApp (Web)" task from .zed/tasks.json first;
+    // Zed has no equivalent of VS Code's serverReadyAction.
+    "label": "(Web) Open in Chrome",
+    "adapter": "JavaScript",
+    "type": "chrome",
+    "request": "launch",
+    "url": "http://localhost:8000",
+    "webRoot": "$ZED_WORKTREE_ROOT/build/Debug/WalnutApp"
+  },
+  {
+    // Windows (Visual Studio multi-config build). Zed has no cppvsdbg adapter,
+    // so this uses CodeLLDB, which reads MSVC PDBs.
+    "label": "(lldb) Launch",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/build/WalnutApp/Debug/App.exe",
+    "args": [],
+    "cwd": "$ZED_WORKTREE_ROOT/build/WalnutApp/Debug",
+    "env": {
+      "VK_LAYER_PATH": "C:/.conan/318e52/1/bin"
+    },
+    "stopOnEntry": false
+  }
+]

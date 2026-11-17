@@ -1,0 +1,14 @@
+// Project settings for Zed: https://zed.dev/docs/configuring-zed
+{
+  "lsp": {
+    "clangd": {
+      "binary": {
+        "arguments": [
+          // Written by CMake when configuring with Ninja (CMAKE_EXPORT_COMPILE_COMMANDS in CMakeLists.txt)
+          "--compile-commands-dir=build",
+          "--background-index"
+        ]
+      }
+    }
+  }
+}
