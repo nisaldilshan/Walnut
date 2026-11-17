@@ -21,9 +21,11 @@ Each build uses one renderer and one windowing system, with dependencies from ei
 
 In the browser, Walnut runs with GLFW and either WebGL 2 (the OpenGL renderer) or WebGPU, built with Conan and Emscripten. CI builds both and publishes them to GitHub Pages on every push to `master`. See [Building for the browser](#building-for-the-browser).
 
+For Android, Walnut builds with SDL3 and either OpenGL ES 3 (the OpenGL renderer) or Vulkan, with Conan and the Android NDK. See [Building for Android](#building-for-android).
+
 Some things to know:
 
-- The build files have code paths for macOS, Android and iOS, but they are untested. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide it, so install it yourself (for example with `brew install molten-vk`).
+- The build files have code paths for macOS and iOS, but they are untested. CI builds the Android libraries, but they have not been run on a device. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide it, so install it yourself (for example with `brew install molten-vk`).
 - With vcpkg on Linux, some ports expect build tools and X11/Wayland headers from the system. The "Install system packages" step in `.github/workflows/ci.yml` lists the apt packages Ubuntu needs. With Conan, pass `-c tools.system.package_manager:mode=install` and the recipes install them for you.
 - Walnut's WebGPU backend downloads its own Dawn build, and imgui's WebGPU backend has to be compiled from Conan's imgui sources. vcpkg's imgui only works with vcpkg's own, newer Dawn, so CMake stops with an error for WebGPU with vcpkg.
 - For WebGPU with SDL3 and Conan, the downloaded `sdl3webgpu` helper does not compile against the downloaded Dawn version.
@@ -71,6 +73,18 @@ python -m http.server 8000 --directory build/Release/WalnutApp
 The example app ends up in `build/Release/WalnutApp/` as `index.html`, `index.js` and `index.wasm`, which any static web server can serve. WebGPU needs a browser that supports it, such as current Chrome or Edge.
 
 To see a demo, go to https://nisaldilshan.github.io/Walnut/.
+
+## Building for Android
+
+Use Conan with the Android profile in `testing/conan-profiles/android`, which also downloads the Android NDK. Pick `OpenGL` for OpenGL ES 3 or `Vulkan`. The windowing system is always SDL:
+
+```
+conan build . --build=missing -pr:h testing/conan-profiles/android -pr:b default -s build_type=Release -o "&:rendering_backend=OpenGL"
+```
+
+This builds `libwalnut.so` and the example app as `WalnutApp/libApp.so` in `build/Release/`, for 64-bit ARM devices and Android 8.0 (API level 26) or newer. Add `-s arch=x86_64` to build for an emulator on an x86-64 machine.
+
+The renderers use the OpenGL ES and Vulkan libraries that are part of Android, so they need no loader package. Packaging the example app as an APK is not set up yet.
 
 ## The example app
 

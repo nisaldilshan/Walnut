@@ -227,7 +227,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        renderer: [ OpenGL ]
+        renderer: [ OpenGL, Vulkan ]
 
     steps:
       - uses: actions/checkout@v4

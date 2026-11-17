@@ -53,14 +53,19 @@ if(RENDERER STREQUAL "OpenGL")
     endif()
 
 elseif(RENDERER STREQUAL "Vulkan")
-    if(APPLE)
+    if(ANDROID)
+        # The Vulkan loader is part of Android. CMake's FindVulkan finds its headers and library in the NDK.
+        set(WALNUT_VULKAN_PACKAGE Vulkan)
+        set(WALNUT_VULKAN_TARGET Vulkan::Vulkan)
+    elseif(APPLE)
         set(WALNUT_VULKAN_PACKAGE moltenvk)
+        set(WALNUT_VULKAN_TARGET Vulkan::Loader)
     else()
         set(WALNUT_VULKAN_PACKAGE VulkanLoader)
+        set(WALNUT_VULKAN_TARGET Vulkan::Loader)
         # Only used to print VK_LAYER_PATH during the build.
         find_package(vulkan-validationlayers REQUIRED)
     endif()
-    set(WALNUT_VULKAN_TARGET Vulkan::Loader)
     find_package(${WALNUT_VULKAN_PACKAGE} REQUIRED)
 
 elseif(RENDERER STREQUAL "WebGPU")

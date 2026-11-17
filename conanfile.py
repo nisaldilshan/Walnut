@@ -111,10 +111,9 @@ class Walnut(ConanFile):
                 pass
                 #self.requires("WebGPU/latest")
         elif self.settings.os == 'Android':
-            # OpenGL ES is a system library that the NDK has the headers for, so OpenGL needs no package
-            if self.options.rendering_backend == "Vulkan":
-                self.requires("vulkan-loader/1.3.239.0")
-                #self.requires("vulkan-validationlayers/1.3.239.0")
+            # OpenGL ES and the Vulkan loader are system libraries that the NDK has the headers for,
+            # so the renderers need no package
+            pass
         elif self.settings.os == 'iOS':
             if self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-headers/1.3.239.0")
