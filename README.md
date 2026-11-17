@@ -94,6 +94,8 @@ source build/Release/generators/conanbuild.sh
 adb install build/Release/WalnutApp.apk
 ```
 
+To run the app on an emulator without one of your own, start the "Android emulator" workflow from the repository's Actions tab ("Run workflow", on any branch). It builds the APK for x86-64, runs it on an emulator on a GitHub runner, and uploads screenshots and the logcat.
+
 The renderers use the OpenGL ES and Vulkan libraries that are part of Android, so they need no loader package.
 
 ## The example app
