@@ -1,11 +1,15 @@
-# Runs commands inside the Visual Studio developer environment (MSVC, plus the CMake and
+# Runs a command inside the Visual Studio developer environment (MSVC, plus the CMake and
 # Ninja that ship with Visual Studio), from the repository root. Used by .zed/tasks.json.
-# Each argument is one command; they run in order and stop at the first failure.
 #
-#   powershell -NoProfile -ExecutionPolicy Bypass -File .zed/vsdev.ps1 "<command>" ["<command>" ...]
-param([Parameter(Mandatory = $true, ValueFromRemainingArguments = $true)][string[]]$Commands)
+#   powershell -NoProfile -ExecutionPolicy Bypass -File .zed/vsdev.ps1 cmake --build --preset conan-debug
+#
+# All arguments are joined into one command line, because Zed splits task arguments on spaces.
+# No param() block on purpose: arguments such as -DFOO=ON must reach $args, not PowerShell's binder.
 
 $ErrorActionPreference = 'Stop'
+$command = $args -join ' '
+if (-not $command) { throw 'Usage: vsdev.ps1 <command> [arguments...]' }
+
 $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
 $env:PATH = "$installer;$env:PATH"  # VsDevCmd looks up vswhere.exe on PATH
 $vs = & "$installer\vswhere.exe" -latest -prerelease -products * `
@@ -16,9 +20,12 @@ Import-Module "$vs\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
-$ErrorActionPreference = 'Continue'
-foreach ($command in $Commands) {
-    Write-Host "> $command"
+Write-Host "> $command"
+$global:LASTEXITCODE = 0
+try {
     Invoke-Expression $command
-    if ($LASTEXITCODE) { exit $LASTEXITCODE }
+} catch {
+    Write-Host $_ -ForegroundColor Red
+    exit 1
 }
+exit $LASTEXITCODE
