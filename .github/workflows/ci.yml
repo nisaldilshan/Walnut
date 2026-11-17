@@ -1,5 +1,6 @@
 # Builds Walnut for every supported renderer + windowing system combination, with dependencies from
-# Conan and from vcpkg, on Windows and Linux, and for the browser (WebGL and WebGPU through Emscripten).
+# Conan and from vcpkg, on Windows and Linux, for the browser (WebGL and WebGPU through Emscripten) and
+# for Android (with SDL, the only windowing system that supports it), where the example app is packaged as an APK.
 # Each native job covers one renderer: it builds with GLFW first and then with SDL, so the two builds
 # share the job's setup and the dependencies they have in common. On Linux, every build also runs the
 # render test (tests/render) on Mesa's software renderers.
@@ -215,6 +216,80 @@ jobs:
         with:
           name: web-${{ matrix.api }}
           path: site/
+          if-no-files-found: error
+
+      - name: Remove Conan build folders before caching
+        run: conan cache clean "*"
+
+  android:
+    name: Android ${{ matrix.renderer }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        renderer: [ OpenGL, Vulkan ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          pip install "conan>=2.0,<3"
+          conan profile detect --force
+
+      - name: Restore Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          # The renderers use the same packages, so they share a cache.
+          key: conan-android-${{ hashFiles('conanfile.py', 'testing/conan-profiles/android', 'recipes/android-sdk/conanfile.py') }}
+          restore-keys: conan-android-
+
+      - name: Export the Android SDK recipe
+        # The recipe is part of this repository. Exported after the cache is restored, since the cache holds Conan's
+        # database of recipes.
+        run: conan export recipes/android-sdk
+
+      - name: Build
+        # The android-ndk package from the profile provides the toolchain. The build also packages the example app
+        # as an APK, with the Android SDK that recipes/android-sdk downloads from Google once its license is accepted.
+        run: >
+          conan build . --build=missing
+          -pr:h testing/conan-profiles/android -pr:b default
+          -s build_type=Release
+          -o "&:rendering_backend=${{ matrix.renderer }}"
+          -c:b user.android-sdk:accept_license=True
+
+      - name: Check the libraries
+        # Both have to be shared libraries for 64-bit ARM.
+        run: |
+          file build/Release/libwalnut.so build/Release/WalnutApp/libmain.so | tee libraries.txt
+          test "$(grep -c 'ELF 64-bit LSB shared object, ARM aarch64' libraries.txt)" = 2
+
+      - name: Check the APK
+        # The build environment puts the SDK's build tools on the PATH. The APK has to hold the app and the libraries
+        # it loads, be aligned for 16 KB pages and be signed.
+        run: |
+          source build/Release/generators/conanbuild.sh
+          apk=build/Release/WalnutApp.apk
+          unzip -l "$apk" | tee apk-contents.txt
+          for entry in AndroidManifest.xml classes.dex lib/arm64-v8a/libmain.so lib/arm64-v8a/libwalnut.so \
+                       lib/arm64-v8a/libSDL3.so lib/arm64-v8a/libc++_shared.so; do
+            grep -q " $entry\$" apk-contents.txt || { echo "::error::$apk has no $entry"; exit 1; }
+          done
+          aapt2 dump badging "$apk"
+          zipalign -c -P 16 4 "$apk"
+          apksigner verify --print-certs "$apk"
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ matrix.renderer }}
+          path: build/Release/WalnutApp.apk
           if-no-files-found: error
 
       - name: Remove Conan build folders before caching

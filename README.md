@@ -21,9 +21,11 @@ Each build uses one renderer and one windowing system, with dependencies from ei
 
 In the browser, Walnut runs with GLFW and either WebGL 2 (the OpenGL renderer) or WebGPU, built with Conan and Emscripten. CI builds both and publishes them to GitHub Pages on every push to `master`. See [Building for the browser](#building-for-the-browser).
 
+For Android, Walnut builds with SDL3 and either OpenGL ES 3 (the OpenGL renderer) or Vulkan, with Conan and the Android NDK, and the example app is packaged as an APK without Gradle or Android Studio. See [Building for Android](#building-for-android).
+
 Some things to know:
 
-- The build files have code paths for macOS, Android and iOS, but they are untested. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide it, so install it yourself (for example with `brew install molten-vk`).
+- The build files have code paths for macOS and iOS, but they are untested. CI builds the Android APK, but it has not been run on a device. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide it, so install it yourself (for example with `brew install molten-vk`).
 - With vcpkg on Linux, some ports expect build tools and X11/Wayland headers from the system. The "Install system packages" step in `.github/workflows/ci.yml` lists the apt packages Ubuntu needs. With Conan, pass `-c tools.system.package_manager:mode=install` and the recipes install them for you.
 - Walnut's WebGPU backend downloads its own Dawn build, and imgui's WebGPU backend has to be compiled from Conan's imgui sources. vcpkg's imgui only works with vcpkg's own, newer Dawn, so CMake stops with an error for WebGPU with vcpkg.
 - For WebGPU with SDL3 and Conan, the downloaded `sdl3webgpu` helper does not compile against the downloaded Dawn version.
@@ -71,6 +73,30 @@ python -m http.server 8000 --directory build/Release/WalnutApp
 The example app ends up in `build/Release/WalnutApp/` as `index.html`, `index.js` and `index.wasm`, which any static web server can serve. WebGPU needs a browser that supports it, such as current Chrome or Edge.
 
 To see a demo, go to https://nisaldilshan.github.io/Walnut/.
+
+## Building for Android
+
+Use Conan with the Android profile in `testing/conan-profiles/android`, which also downloads the Android NDK. Pick `OpenGL` for OpenGL ES 3 or `Vulkan`. The windowing system is always SDL.
+
+The build also packages the example app as an APK, with the parts of the Android SDK it needs (build tools, platform 35 and platform tools). Google's license does not allow redistributing the SDK, so it is not on ConanCenter: the recipe in `recipes/android-sdk` downloads it from Google, and only after you accept the [Android SDK License Agreement](https://developer.android.com/studio/terms) with `-c:b user.android-sdk:accept_license=True`. Export the recipe once, then build:
+
+```
+conan export recipes/android-sdk
+conan build . --build=missing -pr:h testing/conan-profiles/android -pr:b default -s build_type=Release -o "&:rendering_backend=OpenGL" -c:b user.android-sdk:accept_license=True
+```
+
+This builds `libwalnut.so` and the example app as `WalnutApp/libmain.so` in `build/Release/`, for 64-bit ARM devices and Android 8.0 (API level 26) or newer, and packages them as `build/Release/WalnutApp.apk`. Add `-s arch=x86_64` to build for an emulator on an x86-64 machine.
+
+CMake 4.5's CPack APK generator makes the APK, so there is no Gradle project: the build generates `AndroidManifest.xml` from `WalnutApp/Android/AndroidManifest.xml.in` and compiles SDL's Java activity from SDL's source release. Conan provides CMake 4.5, the JDK (`openjdk` from ConanCenter) and the SDK. The APK is signed with the debug key in `~/.android/debug.keystore`, which is created if it does not exist. To install it on a device with USB debugging turned on, use `adb` from the SDK package:
+
+```
+source build/Release/generators/conanbuild.sh
+adb install build/Release/WalnutApp.apk
+```
+
+To run the app on an emulator without one of your own, start the "Android emulator" workflow from the repository's Actions tab ("Run workflow", on any branch). It builds the APK for x86-64, runs it on an emulator on a GitHub runner for a minute, sends it to the home screen and back, and uploads screenshots and the logcat.
+
+The renderers use the OpenGL ES and Vulkan libraries that are part of Android, so they need no loader package.
 
 ## The example app
 

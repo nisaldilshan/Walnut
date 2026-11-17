@@ -1,23 +1,20 @@
+# What provides the OpenGL functions: glad on the desktop, OpenGL ES 3 from the platform in the browser and on Android.
 if(EMSCRIPTEN)
-    set(WALNUT_GL_LOADER) # WebGL needs no loader
+    set(WALNUT_GL_LIBRARY) # WebGL comes with the link options below
+elseif(ANDROID)
+    set(WALNUT_GL_LIBRARY GLESv3) # system library, the NDK has its headers and the library to link to
 else()
-    set(WALNUT_GL_LOADER glad::glad)
+    set(WALNUT_GL_LIBRARY glad::glad)
 endif()
 
-walnut_add_imgui_backend(walnut-imgui-opengl opengl3 ${WALNUT_GL_LOADER})
+walnut_add_imgui_backend(walnut-imgui-opengl opengl3 ${WALNUT_GL_LIBRARY})
 if(ANDROID)
     target_compile_definitions(walnut-imgui-opengl PUBLIC IMGUI_IMPL_OPENGL_ES3)
 endif()
 
 ###################################################################################################################################
 
-if(ANDROID)
-    find_path(GLES3_INCLUDE_DIR GLES3/gl3.h HINTS ${ANDROID_NDK})
-    find_library(GLES3_LIBRARY libGLESv3.so HINTS ${GLES3_INCLUDE_DIR}/../lib)
-    message(STATUS "GLES3_INCLUDE_DIR= " ${GLES3_INCLUDE_DIR})
-    message(STATUS "GLES3_LIBRARY= " ${GLES3_LIBRARY})
-elseif(EMSCRIPTEN)
-else()
+if(NOT EMSCRIPTEN AND NOT ANDROID)
     find_package (OpenGL REQUIRED)
     message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
     if(UNIX AND NOT APPLE)
@@ -34,7 +31,7 @@ add_library (walnut-graphics-opengl STATIC
                 )
 
 target_include_directories(walnut-graphics-opengl PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Walnut/src>)
-target_link_libraries(walnut-graphics-opengl PUBLIC ${WALNUT_GL_LOADER} imgui::imgui walnut-imgui-opengl)
+target_link_libraries(walnut-graphics-opengl PUBLIC ${WALNUT_GL_LIBRARY} imgui::imgui walnut-imgui-opengl)
 
 if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut-graphics-opengl PRIVATE SdlOpenGLRenderingBackend.cpp)
@@ -45,12 +42,9 @@ target_sources(walnut-graphics-opengl PRIVATE GlfwOpenGLRenderingBackend.cpp)
 endif()
 
 
-if(ANDROID)
-    target_link_libraries(walnut-graphics-opengl PUBLIC ${GLES3_LIBRARY})
-elseif(IOS)
-elseif(EMSCRIPTEN)
+if(EMSCRIPTEN)
     target_link_options(walnut-graphics-opengl PUBLIC -sUSE_WEBGL2=1 -sFULL_ES3=1)
-else()
+elseif(NOT ANDROID AND NOT IOS)
     # Imported targets rather than library paths, so the installed package does not hard-code them.
     target_link_libraries(walnut-graphics-opengl PUBLIC OpenGL::GL)
     if(UNIX AND NOT APPLE)

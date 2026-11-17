@@ -1,0 +1,87 @@
+# Runs the example app on an Android emulator, started by hand from the Actions tab ("Run workflow") on any branch.
+# CI builds the APK for 64-bit ARM; the runners' emulator is x86-64, so this builds the APK for x86-64 from the same
+# sources, installs it, and checks that it is still running a minute later, and still the same process after going to
+# the home screen and back. The screenshots and the logcat are uploaded as artifacts.
+name: Android emulator
+
+on:
+  workflow_dispatch:
+    inputs:
+      renderer:
+        description: Renderer
+        type: choice
+        options: [ both, OpenGL, Vulkan ]
+        default: both
+      api-level:
+        description: Android API level of the emulator's system image (26 or newer)
+        type: string
+        default: "34"
+
+permissions:
+  contents: read
+
+jobs:
+  emulator:
+    name: Emulator ${{ matrix.renderer }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        renderer: ${{ fromJSON(inputs.renderer == 'both' && '["OpenGL","Vulkan"]' || format('["{0}"]', inputs.renderer)) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          pip install "conan>=2.0,<3"
+          conan profile detect --force
+
+      - name: Restore Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          # Not CI's cache: the packages are for x86-64
+          key: conan-android-x86_64-${{ hashFiles('conanfile.py', 'testing/conan-profiles/android', 'recipes/android-sdk/conanfile.py') }}
+          restore-keys: conan-android-x86_64-
+
+      - name: Export the Android SDK recipe
+        # After the cache is restored, since the cache holds Conan's database of recipes
+        run: conan export recipes/android-sdk
+
+      - name: Build the APK for x86-64
+        run: >
+          conan build . --build=missing
+          -pr:h testing/conan-profiles/android -pr:b default
+          -s build_type=Release -s arch=x86_64
+          -o "&:rendering_backend=${{ matrix.renderer }}"
+          -c:b user.android-sdk:accept_license=True
+
+      - name: Enable KVM
+        # Hardware acceleration for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the app on the emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ inputs.api-level }}
+          arch: x86_64
+          target: google_apis
+          # SwiftShader renders OpenGL ES and Vulkan on the CPU, as the runners have no GPU
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash .github/scripts/emulator-test.sh build/Release/WalnutApp.apk emulator-${{ matrix.renderer }}
+
+      - name: Upload the screenshots and logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-${{ matrix.renderer }}
+          path: emulator-${{ matrix.renderer }}/
