@@ -59,8 +59,7 @@ inline void CheckGLError()
 void OpenGL::SetupOpenGL(void* loaderFunc)
 {
     
-#ifdef __EMSCRIPTEN__
-#else
+#ifndef WALNUT_OPENGL_ES
     int status = gladLoadGLLoader((GLADloadproc)loaderFunc);
     gladLoadGL();
     if (!status)

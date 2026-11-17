@@ -57,6 +57,8 @@ class Walnut(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             self.options.rm_safe("fPIC")
+        if self.settings.os in ("Android", "iOS"):
+            self.options.windowing_system = "SDL" # GLFW does not support the mobile platforms
 
     def configure(self):
         pass
@@ -69,6 +71,8 @@ class Walnut(ConanFile):
             
         if self.options.windowing_system not in ["GLFW", "SDL"]:
             raise ConanInvalidConfiguration(f"Unsupported windowing system: {self.options.windowing_system}")
+        if self.settings.os in ("Android", "iOS") and self.options.windowing_system != "SDL":
+            raise ConanInvalidConfiguration(f"{self.settings.os} needs the SDL windowing system")
 
     def requirements(self):
         self.requires("imgui/1.92.5-docking")
@@ -107,14 +111,11 @@ class Walnut(ConanFile):
                 pass
                 #self.requires("WebGPU/latest")
         elif self.settings.os == 'Android':
-            self.options.windowing_system = "SDL"
-            if self.options.rendering_backend == "OpenGL":
-                self.requires("glad/0.1.33")
-            elif self.options.rendering_backend == "Vulkan":
+            # OpenGL ES is a system library that the NDK has the headers for, so OpenGL needs no package
+            if self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-loader/1.3.239.0")
                 #self.requires("vulkan-validationlayers/1.3.239.0")
         elif self.settings.os == 'iOS':
-            self.options.windowing_system = "SDL"
             if self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-headers/1.3.239.0")
                 self.requires("moltenvk/1.2.0")
@@ -224,9 +225,6 @@ class Walnut(ConanFile):
         else:
             self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu", "walnut-imgui-webgpu", "glfw3webgpu"]
             self.cpp_info.defines = ["RENDERER_BACKEND=3"]
-
-        if self.settings.os == 'Android':
-            self.cpp_info.libs += ["App", "SDL3"]
 
         manifest_dir = self._validation_layer_manifest_dir()
         if os.path.isdir(manifest_dir):

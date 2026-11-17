@@ -49,7 +49,7 @@ namespace Walnut
 	void OpenGLRenderingBackend::CreateImGuiPipeline()
 	{
 		ImGui_ImplSDL3_InitForOpenGL(m_windowHandle, g_SDLcontext);
-#if defined(__ANDROID__)
+#ifdef WALNUT_OPENGL_ES
 		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
 		assert(result);
 #else

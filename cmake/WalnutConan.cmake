@@ -48,7 +48,7 @@ endif()
 
 #### RENDERER ###
 if(RENDERER STREQUAL "OpenGL")
-    if(NOT EMSCRIPTEN) # WebGL needs no loader
+    if(NOT EMSCRIPTEN AND NOT ANDROID) # OpenGL ES in the browser and on Android needs no loader
         find_package(glad REQUIRED)
     endif()
 
