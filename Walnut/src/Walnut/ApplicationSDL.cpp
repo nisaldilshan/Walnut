@@ -87,7 +87,13 @@ namespace Walnut {
 #endif
 			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+#if !defined(__ANDROID__)
+			// Not on Android: SDL cannot create the window's EGL surface when the device lacks EGL_KHR_gl_colorspace
+			// (the emulator does), and where it has it, OpenGL ES 3.0 converts to sRGB on an sRGB surface with no
+			// glDisable(GL_FRAMEBUFFER_SRGB) to turn that off for ImGui, as the OpenGL renderer does elsewhere (only
+			// the optional EXT_sRGB_write_control has it).
 			SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+#endif
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
