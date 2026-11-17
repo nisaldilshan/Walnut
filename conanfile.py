@@ -1,3 +1,4 @@
+import glob
 import json
 import os
 from conan import ConanFile
@@ -130,6 +131,14 @@ class Walnut(ConanFile):
         else:
             raise ConanInvalidConfiguration("Unsupported windowing system")
 
+    def build_requirements(self):
+        if self.settings.os == 'Android':
+            # The example app is packaged as an APK by CPack's APK generator, new in CMake 4.5, which runs the
+            # SDK build tools and the JDK. android-sdk is a recipe of this repository: conan export recipes/android-sdk
+            self.tool_requires("cmake/[>=4.5 <5]")
+            self.tool_requires("openjdk/21.0.2")
+            self.tool_requires("android-sdk/35.0.0")
+
     def source(self):
         git = Git(self)
         target_ref = "master" if self.version == "latest" else f"v{self.version}"
@@ -152,6 +161,15 @@ class Walnut(ConanFile):
         tc.variables["WINDOWING_SYSTEM"] = self.options.windowing_system
         if self.settings.os == 'iOS':
             tc.generator = "Xcode"
+        if self.settings.os == 'Android':
+            # For packaging the APK, see WalnutApp/CMakeLists.txt
+            tc.cache_variables["WALNUT_ANDROID_SDK_ROOT"] = self.dependencies.build["android-sdk"].package_folder.replace("\\", "/")
+            tc.cache_variables["WALNUT_JAVA_HOME"] = self.dependencies.build["openjdk"].package_folder.replace("\\", "/")
+            # SDL is a shared library on Android, which the APK has to carry next to the app
+            sdl_libraries = []
+            for lib_dir in self.dependencies["sdl"].cpp_info.aggregated_components().libdirs:
+                sdl_libraries += sorted(glob.glob(os.path.join(lib_dir, "*.so")))
+            tc.cache_variables["WALNUT_APK_SHARED_LIBRARIES"] = ";".join(lib.replace("\\", "/") for lib in sdl_libraries)
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
@@ -160,6 +178,9 @@ class Walnut(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+        if self.settings.os == 'Android':
+            # Packages the example app as WalnutApp.apk in the build folder
+            cmake.build(target="package")
 
     def _validation_layer_manifest_dir(self):
         return os.path.join(self.package_folder, "res", "vulkan", "explicit_layer.d")
@@ -210,7 +231,8 @@ class Walnut(ConanFile):
         dst_lib_path = os.path.join(self.package_folder, "lib")
         for ext in ["*.dylib", "*.dll", "*.so", "*.a", "*.lib", "*.pdb"]:
             # Depending on your CMake output, binaries usually land in build_folder
-            copy(self, ext, src=self.build_folder, dst=dst_lib_path, keep_path=False)
+            # Not the copies CPack stages for the APK on Android
+            copy(self, ext, src=self.build_folder, dst=dst_lib_path, keep_path=False, excludes="_CPack_Packages/*")
 
         self._package_validation_layer_manifest()
 

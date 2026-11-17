@@ -1,5 +1,7 @@
-# Builds for Android. The android-ndk package provides the toolchain, so there is no NDK to install:
-#   conan build . --build=missing -pr:h testing/conan-profiles/android -pr:b default -o "&:rendering_backend=OpenGL"
+# Builds for Android. The android-ndk package provides the toolchain, so there is no NDK to install. The build also
+# packages the example app as an APK with the Android SDK, whose license the last option accepts (see the README):
+#   conan export recipes/android-sdk
+#   conan build . --build=missing -pr:h testing/conan-profiles/android -pr:b default -o "&:rendering_backend=OpenGL" -c:b user.android-sdk:accept_license=True
 # The settings are for a 64-bit ARM device. Add -s arch=x86_64 for an emulator on an x86-64 machine.
 include(default)
 [settings]
