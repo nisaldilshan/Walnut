@@ -298,7 +298,7 @@ jobs:
 
   ios:
     name: iOS simulator ${{ matrix.renderer }}
-    runs-on: macos-15
+    runs-on: macos-26 # Apple silicon, Xcode 26
     strategy:
       fail-fast: false
       matrix:
