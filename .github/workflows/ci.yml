@@ -1,6 +1,7 @@
 # Builds Walnut for every supported renderer + windowing system combination, with dependencies from
 # Conan and from vcpkg, on Windows and Linux, for the browser (WebGL and WebGPU through Emscripten) and
-# for Android (with SDL, the only windowing system that supports it), where the example app is packaged as an APK.
+# for Android (with SDL, the only windowing system that supports it), where the example app is packaged as an APK,
+# and for the iOS simulator (also with SDL), where the example app runs in the simulator.
 # Each native job covers one renderer: it builds with GLFW first and then with SDL, so the two builds
 # share the job's setup and the dependencies they have in common. On Linux, every build also runs the
 # render test (tests/render) on Mesa's software renderers.
@@ -291,6 +292,82 @@ jobs:
           name: android-${{ matrix.renderer }}
           path: build/Release/WalnutApp.apk
           if-no-files-found: error
+
+      - name: Remove Conan build folders before caching
+        run: conan cache clean "*"
+
+  ios:
+    name: iOS simulator ${{ matrix.renderer }}
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        # OpenGL ES 3 only for now. Vulkan needs MoltenVK for iOS.
+        renderer: [ OpenGL ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          pip install "conan>=2.0,<3"
+          conan profile detect --force
+          xcodebuild -version
+
+      - name: Restore Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          key: conan-ios-${{ hashFiles('conanfile.py', 'testing/conan-profiles/ios') }}
+          restore-keys: conan-ios-
+
+      - name: Build
+        # Xcode provides the compiler and the iOS SDK, so the profile needs no tool package.
+        run: >
+          conan build . --build=missing
+          -pr:h testing/conan-profiles/ios -pr:b default
+          -s build_type=Release
+          -o "&:rendering_backend=${{ matrix.renderer }}"
+
+      - name: Check the app bundle
+        # An app for the arm64 simulator, with a valid Info.plist and an ad-hoc signature
+        run: |
+          app=build/Release/WalnutApp/App.app
+          ls -l "$app"
+          file "$app/App" | tee executable.txt
+          grep -q 'Mach-O 64-bit executable arm64' executable.txt
+          vtool -show-build "$app/App" | tee build-version.txt
+          grep -q 'platform IOSSIMULATOR' build-version.txt
+          plutil -lint "$app/Info.plist"
+          plutil -p "$app/Info.plist"
+          codesign --verify --verbose "$app"
+
+      - name: Upload the app
+        # Zipped, since an artifact does not keep the bundle's file permissions
+        run: ditto -c -k --keepParent build/Release/WalnutApp/App.app WalnutApp-ios-simulator.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.renderer }}
+          path: WalnutApp-ios-simulator.zip
+          if-no-files-found: error
+
+      - name: Run the app on the simulator
+        # Starts the app, checks that it is still running a minute later, and still the same process after going to
+        # the background and back.
+        run: bash .github/scripts/simulator-test.sh build/Release/WalnutApp/App.app simulator-${{ matrix.renderer }}
+
+      - name: Upload the screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-${{ matrix.renderer }}
+          path: simulator-${{ matrix.renderer }}/
+          if-no-files-found: ignore
 
       - name: Remove Conan build folders before caching
         run: conan cache clean "*"
