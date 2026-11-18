@@ -57,6 +57,17 @@ public:
 	static VkCommandPool GetCommandPool();
 	static void QueueSubmit(VkSubmitInfo info);
 	static void ResizeVulkanWindow(int width, int height);
+	// Destroys the window's swapchain and surface, then sets the window up again with the surface that createSurface
+	// makes. Returns false, leaving the window without a surface and IsSurfaceLost() true, when createSurface fails,
+	// e.g. on Android while the app is in the background and has no native window.
+	static bool RecreateVulkanWindow(const std::function<bool(VkSurfaceKHR*)>& createSurface, int width, int height);
+	// The surface can no longer be presented to, e.g. on Android after its native window was destroyed. Frames are
+	// skipped until RecreateVulkanWindow succeeds.
+	static bool IsSurfaceLost();
+	static void SetSurfaceLost();
+	// Whether the current frame acquired a swapchain image, so that it can be recorded and presented
+	static bool IsFrameActive();
+	// True when the swapchain has to be rebuilt or the surface recreated
 	static bool NeedSwapChainRebuild();
 	static void SetSwapChainRebuildStatus(bool status);
 	static void GraphicsDeviceWaitIdle();
