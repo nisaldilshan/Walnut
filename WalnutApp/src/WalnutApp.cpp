@@ -1,5 +1,9 @@
 #include <Walnut/Application.h>
-#if defined(__ANDROID__) || defined(__iOS__)
+#if defined(__ANDROID__)
+// SDL's Java activity calls SDL_main, defined at the end of this file
+#elif defined(__iOS__)
+// Defines main(), which starts UIKit and calls SDL_main, defined at the end of this file
+#include <SDL3/SDL_main.h>
 #else
 #include <Walnut/EntryPoint.h>
 #endif

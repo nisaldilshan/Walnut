@@ -159,8 +159,6 @@ class Walnut(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["RENDERER"] = self.options.rendering_backend
         tc.variables["WINDOWING_SYSTEM"] = self.options.windowing_system
-        if self.settings.os == 'iOS':
-            tc.generator = "Xcode"
         if self.settings.os == 'Android':
             # For packaging the APK, see WalnutApp/CMakeLists.txt
             tc.cache_variables["WALNUT_ANDROID_SDK_ROOT"] = self.dependencies.build["android-sdk"].package_folder.replace("\\", "/")

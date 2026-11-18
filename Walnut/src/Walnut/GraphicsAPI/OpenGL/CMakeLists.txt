@@ -1,20 +1,27 @@
-# What provides the OpenGL functions: glad on the desktop, OpenGL ES 3 from the platform in the browser and on Android.
+# What provides the OpenGL functions: glad on the desktop, OpenGL ES 3 from the platform in the browser, on Android
+# and on iOS.
 if(EMSCRIPTEN)
     set(WALNUT_GL_LIBRARY) # WebGL comes with the link options below
 elseif(ANDROID)
     set(WALNUT_GL_LIBRARY GLESv3) # system library, the NDK has its headers and the library to link to
+elseif(IOS)
+    set(WALNUT_GL_LIBRARY "-framework OpenGLES")
 else()
     set(WALNUT_GL_LIBRARY glad::glad)
 endif()
 
 walnut_add_imgui_backend(walnut-imgui-opengl opengl3 ${WALNUT_GL_LIBRARY})
-if(ANDROID)
+if(ANDROID OR IOS)
     target_compile_definitions(walnut-imgui-opengl PUBLIC IMGUI_IMPL_OPENGL_ES3)
+endif()
+if(IOS)
+    # Apple deprecated OpenGL ES in iOS 12, but it still works
+    target_compile_definitions(walnut-imgui-opengl PUBLIC GLES_SILENCE_DEPRECATION)
 endif()
 
 ###################################################################################################################################
 
-if(NOT EMSCRIPTEN AND NOT ANDROID)
+if(NOT EMSCRIPTEN AND NOT ANDROID AND NOT IOS)
     find_package (OpenGL REQUIRED)
     message(STATUS "OPENGL_LIBRARIES= " ${OPENGL_LIBRARIES})
     if(UNIX AND NOT APPLE)
@@ -53,7 +60,7 @@ elseif(NOT ANDROID AND NOT IOS)
 endif()
 
 
-if (APPLE)
+if (APPLE AND NOT IOS) # AppKit and Cocoa are macOS only
     target_link_libraries(walnut-graphics-opengl PUBLIC
         "-framework Metal"
         "-framework MetalKit"

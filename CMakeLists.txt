@@ -59,7 +59,7 @@ endif()
 add_subdirectory(Walnut/src/Walnut/GraphicsAPI/${RENDERER})
 
 #### ENGINE ###
-if(WIN32)
+if(WIN32 OR IOS) # an iOS app bundle can only carry shared libraries as frameworks
     add_library (walnut STATIC)
 elseif(DEFINED BUILD_SHARED_LIBS)
     add_library (walnut) # follows BUILD_SHARED_LIBS, e.g. as set by the vcpkg triplet

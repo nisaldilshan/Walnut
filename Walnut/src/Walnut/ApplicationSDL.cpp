@@ -76,7 +76,7 @@ namespace Walnut {
 #if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#elif defined(__ANDROID__)
+#elif defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_IOS)
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
@@ -87,11 +87,11 @@ namespace Walnut {
 #endif
 			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-#if !defined(__ANDROID__)
-			// Not on Android: SDL cannot create the window's EGL surface when the device lacks EGL_KHR_gl_colorspace
-			// (the emulator does), and where it has it, OpenGL ES 3.0 converts to sRGB on an sRGB surface with no
-			// glDisable(GL_FRAMEBUFFER_SRGB) to turn that off for ImGui, as the OpenGL renderer does elsewhere (only
-			// the optional EXT_sRGB_write_control has it).
+#if !defined(SDL_PLATFORM_ANDROID) && !defined(SDL_PLATFORM_IOS)
+			// Not with OpenGL ES 3.0, which converts to sRGB on an sRGB surface with no glDisable(GL_FRAMEBUFFER_SRGB)
+			// to turn that off for ImGui, as the OpenGL renderer does elsewhere (only the optional
+			// EXT_sRGB_write_control has it). On Android, SDL also cannot create the window's EGL surface when the
+			// device lacks EGL_KHR_gl_colorspace (the emulator does).
 			SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
 #endif
 		}

@@ -6,11 +6,43 @@ else()
 add_executable(App src/WalnutApp.cpp )
 endif()
 
-if(CMAKE_SYSTEM_NAME MATCHES "iOS")
-target_sources(App PRIVATE 
-                src/SDL_uikit_main.c
-)
-set_target_properties(App PROPERTIES BUNDLE TRUE)
+#### iOS APP BUNDLE ###
+# On iOS the app is the bundle App.app in the build folder: the executable and an Info.plist generated from
+# iOS/Info.plist.in. main() comes from SDL_main.h, which src/WalnutApp.cpp includes on iOS.
+if(IOS)
+    set(WALNUT_IOS_BUNDLE_ID "io.github.nisaldilshan.walnut" CACHE STRING "Bundle identifier of the example app on iOS")
+    set(WALNUT_IOS_EXECUTABLE App)
+    # The deployment target, from os.version in the Conan profile
+    set(WALNUT_IOS_MINIMUM_OS_VERSION "${CMAKE_OSX_DEPLOYMENT_TARGET}")
+    if(NOT WALNUT_IOS_MINIMUM_OS_VERSION)
+        set(WALNUT_IOS_MINIMUM_OS_VERSION 15.0)
+    endif()
+    # The SDK, from os.sdk in the Conan profile
+    if(CMAKE_OSX_SYSROOT MATCHES "[Ss]imulator")
+        set(WALNUT_IOS_PLATFORM iPhoneSimulator)
+    else()
+        set(WALNUT_IOS_PLATFORM iPhoneOS)
+    endif()
+    # What the app needs from the device, for the renderer it is built with
+    if(RENDERER STREQUAL "OpenGL")
+        set(WALNUT_IOS_RENDERER_CAPABILITY opengles-3)
+    else()
+        set(WALNUT_IOS_RENDERER_CAPABILITY metal) # MoltenVK and Dawn run on Metal
+    endif()
+    configure_file(iOS/Info.plist.in "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" @ONLY)
+    set_target_properties(App PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${WALNUT_IOS_BUNDLE_ID}"
+        XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+    if(NOT CMAKE_GENERATOR STREQUAL "Xcode")
+        # The simulator runs apps with an ad-hoc signature. A device needs a signature from an Apple development
+        # certificate and a provisioning profile, which this does not set up. Xcode signs the bundle itself.
+        add_custom_command(TARGET App POST_BUILD
+            COMMAND codesign --force --sign - --timestamp=none "$<TARGET_BUNDLE_DIR:App>"
+            COMMENT "Signing App.app ad hoc"
+            VERBATIM)
+    endif()
 endif()
 
 # walnut brings in its include paths and imgui.

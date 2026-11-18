@@ -23,9 +23,11 @@ In the browser, Walnut runs with GLFW and either WebGL 2 (the OpenGL renderer) o
 
 For Android, Walnut builds with SDL3 and either OpenGL ES 3 (the OpenGL renderer) or Vulkan, with Conan and the Android NDK, and the example app is packaged as an APK without Gradle or Android Studio. See [Building for Android](#building-for-android).
 
+For iOS, Walnut builds with SDL3 and OpenGL ES 3 (the OpenGL renderer), with Conan and Xcode, and the example app is an app bundle for the iOS simulator. See [Building for iOS](#building-for-ios).
+
 Some things to know:
 
-- The build files have code paths for macOS and iOS, but they are untested. CI builds the Android APK, but it has not been run on a device. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide it, so install it yourself (for example with `brew install molten-vk`).
+- The build files have code paths for macOS, but they are untested. Vulkan on iOS is not set up yet. CI builds the Android APK, but it has not been run on a device. On macOS, Vulkan runs through MoltenVK. vcpkg does not provide it, so install it yourself (for example with `brew install molten-vk`).
 - With vcpkg on Linux, some ports expect build tools and X11/Wayland headers from the system. The "Install system packages" step in `.github/workflows/ci.yml` lists the apt packages Ubuntu needs. With Conan, pass `-c tools.system.package_manager:mode=install` and the recipes install them for you.
 - Walnut's WebGPU backend downloads its own Dawn build, and imgui's WebGPU backend has to be compiled from Conan's imgui sources. vcpkg's imgui only works with vcpkg's own, newer Dawn, so CMake stops with an error for WebGPU with vcpkg.
 - For WebGPU with SDL3 and Conan, the downloaded `sdl3webgpu` helper does not compile against the downloaded Dawn version.
@@ -97,6 +99,25 @@ adb install build/Release/WalnutApp.apk
 To run the app on an emulator without one of your own, start the "Android emulator" workflow from the repository's Actions tab ("Run workflow", on any branch). It builds the APK for x86-64, runs it on an emulator on a GitHub runner for a minute, sends it to the home screen and back, and uploads screenshots and the logcat.
 
 The renderers use the OpenGL ES and Vulkan libraries that are part of Android, so they need no loader package.
+
+## Building for iOS
+
+Building for iOS needs a Mac with Xcode, which provides the compiler, the iOS SDK and the simulator. Use Conan with the iOS profile in `testing/conan-profiles/ios`. Only the OpenGL renderer (OpenGL ES 3) works on iOS so far, and the windowing system is always SDL.
+
+```bash
+conan build . --build=missing -pr:h testing/conan-profiles/ios -pr:b default -o "&:rendering_backend=OpenGL"
+```
+
+This builds the example app as the bundle `build/Release/WalnutApp/App.app`, for the simulator on an Apple silicon Mac and iOS 15 or newer. Add `-s arch=x86_64` for the simulator on an Intel Mac. The bundle's `Info.plist` is generated from `WalnutApp/iOS/Info.plist.in`, and the bundle has an ad-hoc signature, which is enough for the simulator. To run it on a booted simulator:
+
+```bash
+xcrun simctl install booted build/Release/WalnutApp/App.app
+xcrun simctl launch --console-pty booted io.github.nisaldilshan.walnut
+```
+
+CI builds the app and runs it on a simulator for a minute, sends it to the background and back, and uploads screenshots and the app's output.
+
+Building for a device (`-s os.sdk=iphoneos`) has not been tried yet. The app has to be signed with an Apple development certificate and a provisioning profile before a device runs it, and the build does not do that. Apple deprecated OpenGL ES in iOS 12; it still works, but Metal (through MoltenVK for the Vulkan renderer) is the long-term path.
 
 ## The example app
 

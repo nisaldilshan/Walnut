@@ -163,8 +163,13 @@ namespace Walnut
 			return false;
 
 		std::vector<uint8_t> bottomUp(size_t(w) * h * 4);
+#ifdef WALNUT_OPENGL_UIKIT
+		// The window's framebuffer object, which SDL keeps bound
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+#else
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glReadBuffer(GL_BACK);
+#endif
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 		glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, bottomUp.data());
 		if (glGetError() != GL_NO_ERROR)

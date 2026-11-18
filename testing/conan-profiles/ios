@@ -1,0 +1,12 @@
+# Builds for the iOS simulator on a Mac with Xcode, which provides the compiler and the iOS SDK:
+#   conan build . --build=missing -pr:h testing/conan-profiles/ios -pr:b default -o "&:rendering_backend=OpenGL"
+# The settings are for the simulator on an Apple silicon Mac. Add -s arch=x86_64 for the simulator on an Intel Mac,
+# or -s os.sdk=iphoneos for a device (the app then has to be signed for the device, which the build does not do).
+include(default)
+[settings]
+os=iOS
+# The oldest iOS version the app runs on (MinimumOSVersion in its Info.plist)
+os.version=15.0
+os.sdk=iphonesimulator
+arch=armv8
+compiler.cppstd=17
