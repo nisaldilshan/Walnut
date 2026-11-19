@@ -42,6 +42,10 @@
 		<string>arm64</string>
 		<string>@WALNUT_IOS_RENDERER_CAPABILITY@</string>
 	</array>
+	<!-- A mouse or trackpad sends pointer events, so SDL reports mouse motion, hovering and the buttons, rather than
+	     touches only -->
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<!-- No iPad multitasking, which would need a launch storyboard -->
 	<key>UIRequiresFullScreen</key>
 	<true/>
