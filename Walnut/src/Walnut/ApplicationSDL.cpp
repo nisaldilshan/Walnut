@@ -164,6 +164,18 @@ namespace Walnut {
 		return displayScale / pixelDensity;
 	}
 
+	Application::SafeAreaInsets Application::QuerySafeAreaInsets() const
+	{
+		// The whole window on desktops. On iOS the window extends under the status bar, the notch and the home
+		// indicator, and on Android under the system bars when the app is drawn edge to edge.
+		WalnutWindowHandleType* window = m_RenderingBackend->GetWindowHandle();
+		SDL_Rect safe;
+		int w = 0, h = 0;
+		if (!SDL_GetWindowSafeArea(window, &safe) || !SDL_GetWindowSize(window, &w, &h) || safe.w <= 0 || safe.h <= 0)
+			return {};
+		return { float(safe.x), float(safe.y), float(w - (safe.x + safe.w)), float(h - (safe.y + safe.h)) };
+	}
+
 	void Application::MainLoop()
 	{
 		// Poll and handle events (inputs, window resize, etc.)

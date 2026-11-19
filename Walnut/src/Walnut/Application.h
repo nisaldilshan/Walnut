@@ -90,6 +90,10 @@ namespace Walnut {
 		void OnUIScaleChanged();
 		// The main window's UI scale from the desktop settings. Implemented per windowing library.
 		float QueryUIScale() const;
+		// Margins of the main window, in window coordinates, that system UI (status bar, notch, home indicator) may
+		// cover on mobile platforms. Implemented per windowing library.
+		struct SafeAreaInsets { float Left = 0.0f, Top = 0.0f, Right = 0.0f, Bottom = 0.0f; };
+		SafeAreaInsets QuerySafeAreaInsets() const;
 		void SetupImGuiForOneIteration();
 		void OnWindowResize(WalnutWindowHandleType *win);
 		void ApplyLayerChanges();

@@ -132,9 +132,13 @@ void Application::SetupImGuiForOneIteration()
 	if (m_MenubarCallback)
 		window_flags |= ImGuiWindowFlags_MenuBar;
 
+	// The dockspace fills the main window, except where system UI may cover it (mobile platforms). ImGui's
+	// coordinates are window coordinates, like the insets.
 	const ImGuiViewport *viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(viewport->WorkPos);
-	ImGui::SetNextWindowSize(viewport->WorkSize);
+	const SafeAreaInsets insets = QuerySafeAreaInsets();
+	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + insets.Left, viewport->WorkPos.y + insets.Top));
+	ImGui::SetNextWindowSize(ImVec2(std::max(viewport->WorkSize.x - insets.Left - insets.Right, 0.0f),
+	                                std::max(viewport->WorkSize.y - insets.Top - insets.Bottom, 0.0f)));
 	ImGui::SetNextWindowViewport(viewport->ID);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);

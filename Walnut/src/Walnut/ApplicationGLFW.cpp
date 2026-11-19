@@ -197,6 +197,11 @@ namespace Walnut {
 		return xscale / framebufferScale;
 	}
 
+	Application::SafeAreaInsets Application::QuerySafeAreaInsets() const
+	{
+		return {}; // GLFW only runs on desktops and in browsers, where nothing covers the window
+	}
+
 	void Application::MainLoop()
 	{
 		// Poll and handle events (inputs, window resize, etc.)
