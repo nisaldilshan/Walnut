@@ -12,6 +12,21 @@ WebGPUImageRenderPipeline::WebGPUImageRenderPipeline(std::vector<wgpu::BindGroup
 
 WebGPUImageRenderPipeline::~WebGPUImageRenderPipeline()
 {
+    if (m_pipeline)
+    {
+        m_pipeline.release();
+        m_pipeline = nullptr;
+    }
+    if (m_pipelineLayout)
+    {
+        m_pipelineLayout.release();
+        m_pipelineLayout = nullptr;
+    }
+    if (m_shaderModule)
+    {
+        m_shaderModule.release();
+        m_shaderModule = nullptr;
+    }
 }
 
 void WebGPUImageRenderPipeline::CreatePipelineLayout(const std::vector<wgpu::BindGroupLayout> &descriptorSetLayouts)

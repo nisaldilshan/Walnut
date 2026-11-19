@@ -18,7 +18,8 @@ if(WIN32)
 endif()
 
 add_test(NAME render COMMAND walnut-render-test)
-set_tests_properties(render PROPERTIES
+add_test(NAME render-external-main-image COMMAND walnut-render-test --external-main-image)
+set_tests_properties(render render-external-main-image PROPERTIES
     SKIP_RETURN_CODE 77
     # The Vulkan renderer prints validation layer messages with this prefix
     FAIL_REGULAR_EXPRESSION "\\[vulkan validation\\]"

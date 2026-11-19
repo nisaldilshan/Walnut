@@ -12,7 +12,6 @@
 #include <imgui_freetype.h>
 
 #include "RenderingBackend.h"
-#include "Image.h"
 
 // Emedded font
 #include "ImGui/Inter-Regular.embed"
@@ -253,17 +252,9 @@ void Application::SetSleepAmount(std::chrono::milliseconds sleepAmount)
 	m_SleepAmount = sleepAmount;
 }
 
-std::unique_ptr<Image>& Application::MainImageRef()
-{
-    return m_ImageToRender;
-}
-
 void Application::SetMainImageHandle(uint64_t handle)
 {
-	m_ExternalMainImageHandle = handle;
-	m_UseExternalMainImage = (handle != 0);
-	if (m_UseExternalMainImage)
-		m_ImageToRender.reset();
+	m_MainImageHandle = handle;
 }
 
 uint32_t Application::GetFramebufferWidth() const

@@ -3,13 +3,13 @@
 #include "VulkanGraphics.h"
 
 #include "VulkanImageRenderPipeline.h"
-#include <Walnut/Image.h>
-#include "VulkanImage.h"
 
 #include <imgui_impl_vulkan.h>
 
-#include <iostream>
 #include <cassert>
+#include <cstdint>
+#include <iostream>
+#include <type_traits>
 
 namespace Walnut
 { 
@@ -40,11 +40,6 @@ namespace Walnut
         GraphicsAPI::Vulkan::FrameBegin();
     }
 
-    void VulkanRenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
-    {
-        FrameRender(mainImage ? mainImage->GetHandle() : 0);
-    }
-
     void VulkanRenderingBackend::FrameRender(uint64_t imageHandle)
     {
         if (imageHandle == 0)
@@ -70,7 +65,14 @@ namespace Walnut
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
         
         // Bind the descriptor set containing your VkImageView and a VkSampler
-        auto descriptorSet = reinterpret_cast<VkDescriptorSet>(imageHandle);
+        auto toVkHandle = [](uint64_t handle, auto tag) -> decltype(tag) {
+            using Handle = decltype(tag);
+            if constexpr (std::is_pointer_v<Handle>)
+                return reinterpret_cast<Handle>(static_cast<std::uintptr_t>(handle));
+            else
+                return static_cast<Handle>(handle);
+        };
+        VkDescriptorSet descriptorSet = toVkHandle(imageHandle, VkDescriptorSet{VK_NULL_HANDLE});
         vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS, 

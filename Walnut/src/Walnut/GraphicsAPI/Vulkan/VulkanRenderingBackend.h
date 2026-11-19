@@ -31,7 +31,6 @@ public:
 	void DestroyMainImagePipeline() override;
 	void StartImGuiFrame() override;
 	void FrameBegin() override;
-	void FrameRender(std::unique_ptr<Image>& mainImage) override;
 	void FrameRender(uint64_t imageHandle) override;
 	void FrameRenderImGui(void* draw_data) override;
 	void FrameEnd() override;
