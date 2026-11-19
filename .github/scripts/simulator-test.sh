@@ -13,16 +13,19 @@ bundle_id=io.github.nisaldilshan.walnut
 mkdir -p "$out"
 out=$(cd "$out" && pwd) # the simulator writes the app's output there, so the path has to be absolute
 
-# An iPhone with the newest iOS runtime that is installed
-runtime=$(xcrun simctl list runtimes iOS --json | jq -r '[.runtimes[] | select(.isAvailable)] | last | .identifier')
-device_type=$(xcrun simctl list devicetypes --json \
-    | jq -r '[.devicetypes[] | select(.productFamily == "iPhone")] | last | .identifier')
+# The newest iOS runtime that is installed, and the newest iPhone it supports. Not every device type Xcode knows
+# runs on every runtime: simctl create fails with "Incompatible device" then.
+runtime_json=$(xcrun simctl list runtimes iOS --json | jq '[.runtimes[] | select(.isAvailable)] | last')
+runtime=$(jq -r '.identifier' <<<"$runtime_json")
+device_type=$(jq -r '[.supportedDeviceTypes[]? | select(.productFamily == "iPhone")] | last | .identifier' \
+    <<<"$runtime_json")
 if [ -z "$runtime" ] || [ "$runtime" = null ] || [ -z "$device_type" ] || [ "$device_type" = null ]; then
     echo "::error::No iOS simulator runtime or iPhone device type"
     xcrun simctl list runtimes
     exit 1
 fi
-udid=$(xcrun simctl create walnut-test "$device_type" "$runtime") || { echo "::error::simctl create failed"; exit 1; }
+udid=$(xcrun simctl create walnut-test "$device_type" "$runtime") \
+    || { echo "::error::simctl create failed for $device_type on $runtime"; exit 1; }
 echo "Simulator $udid: $device_type, $runtime" | tee "$out/simulator.txt"
 trap 'xcrun simctl shutdown "$udid" >/dev/null 2>&1; xcrun simctl delete "$udid" >/dev/null 2>&1' EXIT
 
