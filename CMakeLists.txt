@@ -79,6 +79,11 @@ if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp
                                 Walnut/src/Walnut/Input/SDLInput.cpp)
     target_link_libraries(walnut PRIVATE SDL3::SDL3)
+    if(IOS)
+        # SDL's UIKit code uses GameController for hardware keyboards and mice, but the sdl/3.4.0 recipe only adds
+        # the framework with the joystick subsystem, which Walnut turns off
+        target_link_libraries(walnut PRIVATE "-framework GameController")
+    endif()
     target_compile_definitions(walnut INTERFACE USE_SDL)
 else()
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationGLFW.cpp
