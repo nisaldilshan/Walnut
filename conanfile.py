@@ -62,7 +62,10 @@ class Walnut(ConanFile):
             self.options.windowing_system = "SDL" # GLFW does not support the mobile platforms
 
     def configure(self):
-        pass
+        if self.settings.os == "iOS":
+            # iOS has no desktop OpenGL, only OpenGL ES (the opengles option). The sdl/3.4.0 recipe does not require
+            # opengl/system on iOS, but still lists it in package_info() when this option is on, and Conan stops.
+            self.options["sdl/*"].opengl = False
 
     def validate(self):
         # Validation checks move here
