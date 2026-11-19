@@ -3,9 +3,9 @@
 #include "OpenGLGraphics.h"
 
 #include <imgui_impl_opengl3.h>
-#include <Walnut/Image.h>
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -89,10 +89,9 @@ namespace Walnut
 	OpenGLRenderingBackend::~OpenGLRenderingBackend()
 	{}
 
-    GLuint g_emptyVAO;
-	void OpenGLRenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image>& mainImage)
+	void OpenGLRenderingBackend::CreateMainImagePipeline()
     {
-		glGenVertexArrays(1, &g_emptyVAO);
+		glGenVertexArrays(1, &m_emptyVAO);
 
 		constexpr std::string_view vertexSrc = WALNUT_GLSL_VERSION R"(
 			out vec2 v_TexCoord;
@@ -126,22 +125,38 @@ namespace Walnut
 
     void OpenGLRenderingBackend::DestroyMainImagePipeline()
     {
+		if (m_imageRenderShaderProgram != 0)
+		{
+			glDeleteProgram(m_imageRenderShaderProgram);
+			m_imageRenderShaderProgram = 0;
+		}
+		if (m_emptyVAO != 0)
+		{
+			glDeleteVertexArrays(1, &m_emptyVAO);
+			m_emptyVAO = 0;
+		}
     }
 
-    void OpenGLRenderingBackend::FrameRender(std::unique_ptr<Image> &mainImage)
+    void OpenGLRenderingBackend::FrameRender(uint64_t imageHandle)
     {
+		if (imageHandle == 0)
+			return;
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_SCISSOR_TEST);
+
 		// Bind your texture to texture unit 0
 		glActiveTexture(GL_TEXTURE0);
-		const auto textureiD = mainImage->GetHandle();
-		glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)textureiD);
+		glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(imageHandle));
 
 		// Bind your shader and textures via uniforms
 		glUseProgram(m_imageRenderShaderProgram);
 		glUniform1i(glGetUniformLocation(m_imageRenderShaderProgram, "u_Texture"), 0);
 		glUniform1f(glGetUniformLocation(m_imageRenderShaderProgram, "u_TilingFactor"), 1.0f); 
 
-
-		glBindVertexArray(g_emptyVAO); // Bind the empty VAO
+		glBindVertexArray(m_emptyVAO); // Bind the empty VAO
 		// Draw exactly 3 vertices. The Vertex Shader handles the rest!
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0); // Unbind the VAO

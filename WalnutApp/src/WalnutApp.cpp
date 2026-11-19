@@ -14,8 +14,8 @@
 class ExampleLayer : public Walnut::Layer
 {
 public:
-	ExampleLayer(Walnut::Application* app) 
-		: appPtr(app)
+	ExampleLayer(Walnut::Application* app, bool useImGui)
+		: appPtr(app), m_useImGui(useImGui)
 	{
 	}
 
@@ -23,20 +23,23 @@ public:
 	{}
 
 	virtual void OnDetach() override
-	{}
+	{
+		if (!m_useImGui)
+			appPtr->SetMainImageHandle(0);
+		m_image.reset();
+		delete[] m_imageData;
+		m_imageData = nullptr;
+	}
 
 	virtual void OnUpdate(float ts) override
 	{
-		const auto& mainImage = appPtr->MainImageRef();
-		if (mainImage) {
+		if (!m_useImGui) {
 			MainImageRender();
 		}
 	}
 
 	virtual void OnUIRender() override // This will be called only if UseImGui is set to true
 	{
-		const auto& mainImage = appPtr->MainImageRef();
-		assert(!mainImage);
 		ImGuiRender();
 	}
 
@@ -44,15 +47,17 @@ public:
     {
         Walnut::Timer timer;
 
-		static uint32_t windowWidth = 0;
-		static uint32_t windowHeight = 0;
+		const uint32_t windowWidth = appPtr->GetFramebufferWidth();
+		const uint32_t windowHeight = appPtr->GetFramebufferHeight();
+		if (windowWidth == 0 || windowHeight == 0)
+			return;
 
-		auto& mainImage = appPtr->MainImageRef();
-        if (windowWidth != mainImage->GetWidth() ||
-            windowHeight != mainImage->GetHeight())
+        if (!m_image ||
+            windowWidth != m_image->GetWidth() ||
+            windowHeight != m_image->GetHeight())
         {
-			windowWidth = mainImage->GetWidth();
-			windowHeight = mainImage->GetHeight();
+			m_image.reset();
+			m_image = std::make_shared<Walnut::Image>(windowWidth, windowHeight, Walnut::ImageFormat::RGBA);
             delete[] m_imageData;
             m_imageData = new uint32_t[windowWidth * windowHeight];
         }
@@ -62,7 +67,8 @@ public:
             m_imageData[i] = Walnut::Random::UInt();
             m_imageData[i] |= 0xff000000; // remove randomnes from alpha channel
         }
-		mainImage->SetData(m_imageData);
+		m_image->SetData(m_imageData);
+		appPtr->SetMainImageHandle(m_image->GetHandle());
 
         m_lastRenderTime = timer.ElapsedMillis();
     }
@@ -119,6 +125,7 @@ private:
     uint32_t* m_imageData = nullptr;
     float m_lastRenderTime = 0.0f;
 	Walnut::Application* appPtr = nullptr;
+	bool m_useImGui = true;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
@@ -130,7 +137,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	spec.UseImGui = true;
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	auto exampleLayer = std::make_shared<ExampleLayer>(app);
+	auto exampleLayer = std::make_shared<ExampleLayer>(app, spec.UseImGui);
 	app->PushLayer(exampleLayer);
 	// Used while there is no imgui.ini with a saved layout: on the first run, and always in the browser.
 	// Viewport on the left, Settings on the top right, the ImGui demo below it.

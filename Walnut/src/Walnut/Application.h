@@ -18,7 +18,6 @@ Walnut_API extern bool g_ApplicationRunning;
 namespace Walnut {
 
 	class RenderingBackend;
-	class Image;
 
 	struct ApplicationSpecification
 	{
@@ -78,7 +77,15 @@ namespace Walnut {
 		WalnutWindowHandleType* GetWindowHandle() const;
 
 		void SetSleepAmount(std::chrono::milliseconds sleepAmount);
-		std::unique_ptr<Image>& MainImageRef();
+		// Sets the GPU texture handle presented when UseImGui is false, using the same per-backend handle
+		// convention as Walnut::Image::GetHandle() / ImTextureID:
+		//   - Vulkan: VkDescriptorSet (binding 0 COMBINED_IMAGE_SAMPLER, fragment stage, SHADER_READ_ONLY_OPTIMAL)
+		//   - WebGPU: WGPUTextureView (2D float texture; Walnut binds it with its own sampler & bind group)
+		//   - OpenGL: GLuint texture ID (GL_TEXTURE_2D)
+		// Passing 0 clears the handle (renders a clear-only pass).
+		void SetMainImageHandle(uint64_t handle);
+		uint32_t GetFramebufferWidth() const;
+		uint32_t GetFramebufferHeight() const;
 
 	private:
 		void Init();
@@ -105,7 +112,9 @@ namespace Walnut {
 		float m_TimeStep = 0.0f;
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
 		std::chrono::milliseconds m_SleepAmount;
-		std::unique_ptr<Image> m_ImageToRender;
+		uint64_t m_MainImageHandle = 0;
+		uint32_t m_FramebufferWidth = 0;
+		uint32_t m_FramebufferHeight = 0;
 		float m_UIScale = 1.0f;
 
 		// A queued pop, or push of Target. PopTop has no target and removes the topmost attached layer.

@@ -12,7 +12,6 @@
 #include <SDL3/SDL.h>
 
 #include "RenderingBackend.h"
-#include "Image.h"
 
 Walnut_API bool g_ApplicationRunning = true;
 
@@ -46,16 +45,14 @@ namespace Walnut {
 	void Application::OnWindowResize(WalnutWindowHandleType *win)
     {
 		int w, h;
-		SDL_GetWindowSize(win, &w, &h);
-		if (w == 0 || h == 0) {
+		SDL_GetWindowSizeInPixels(win, &w, &h);
+		m_FramebufferWidth = w > 0 ? static_cast<uint32_t>(w) : 0;
+		m_FramebufferHeight = h > 0 ? static_cast<uint32_t>(h) : 0;
+		if (w <= 0 || h <= 0) {
 			return; // minimised: a zero-extent swapchain or image is invalid, keep the old ones until restored
 		}
 		m_RenderingBackend->SetupWindow(w, h);
 		std::cout << "Resized window to: x=" << w << ", y=" << h << std::endl;
-		if (m_Specification.UseImGui) {
-			return; // when using ImGui, we don't need to resize our main image, as ImGui will render to it directly
-		}
-		m_ImageToRender = std::make_unique<Image>(w, h, ImageFormat::RGBA);
     }
 
 	void Application::Init()
@@ -124,14 +121,13 @@ namespace Walnut {
 		else
 		{
 			// when not using ImGui, we need to create our main image pipeline here,
-			m_RenderingBackend->CreateMainImagePipeline(m_ImageToRender);
+			m_RenderingBackend->CreateMainImagePipeline();
 		}
 	}
 
 	void Application::Shutdown()
 	{
 		LayerStackShutdown();
-		m_ImageToRender.reset();
 		m_RenderingBackend->Shutdown();
 
 		if (m_Specification.UseImGui) {
@@ -177,7 +173,7 @@ namespace Walnut {
                 m_Running = false;
             }
 
-			if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+			if (event.type == SDL_EVENT_WINDOW_RESIZED || event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
 				OnWindowResize(m_RenderingBackend->GetWindowHandle());
 			}
 
@@ -192,8 +188,9 @@ namespace Walnut {
 		if (m_RenderingBackend->NeedToResizeWindow())
 		{
 			int width, height;
-			//glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
-            SDL_GetWindowSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
+			SDL_GetWindowSizeInPixels(m_RenderingBackend->GetWindowHandle(), &width, &height);
+			m_FramebufferWidth = width > 0 ? static_cast<uint32_t>(width) : 0;
+			m_FramebufferHeight = height > 0 ? static_cast<uint32_t>(height) : 0;
 			if (width > 0 && height > 0)
 				m_RenderingBackend->ResizeWindow(width, height);
 		}
@@ -210,7 +207,8 @@ namespace Walnut {
 			main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
 		} else {
 			const Uint32 flags = SDL_GetWindowFlags(m_RenderingBackend->GetWindowHandle());
-			main_is_minimized = (flags & SDL_WINDOW_MINIMIZED) != 0;
+			main_is_minimized = (flags & SDL_WINDOW_MINIMIZED) != 0
+				|| m_FramebufferWidth == 0 || m_FramebufferHeight == 0;
 		}
 
 		if (!main_is_minimized) {
@@ -219,7 +217,7 @@ namespace Walnut {
 				ImDrawData* main_draw_data = ImGui::GetDrawData();
 				m_RenderingBackend->FrameRenderImGui(main_draw_data);
 			} else {
-				m_RenderingBackend->FrameRender(m_ImageToRender);
+				m_RenderingBackend->FrameRender(m_MainImageHandle);
 			}
 			m_RenderingBackend->FrameEnd();
 			CaptureFrameIfRequested();

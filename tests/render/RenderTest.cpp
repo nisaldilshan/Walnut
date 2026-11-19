@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -231,23 +232,181 @@ private:
 	int m_ExitCode = kExitPass;
 };
 
+class ExternalMainImageTestLayer : public Walnut::Layer
+{
+public:
+	explicit ExternalMainImageTestLayer(Walnut::Application& app) : m_App(app) {}
+
+	int ExitCode() const { return m_ExitCode; }
+
+	void OnAttach() override
+	{
+		if (m_App.GetFramebufferWidth() == 0 || m_App.GetFramebufferHeight() == 0)
+		{
+			std::fprintf(stderr, "FAIL: expected non-zero framebuffer dimensions after Init()\n");
+			Finish(kExitFail);
+			return;
+		}
+		m_Image = std::make_shared<Walnut::Image>(kImageSize, kImageSize, Walnut::ImageFormat::RGBA);
+		m_Image->SetData(MakeImageData(FirstExpected()).data());
+		m_App.SetMainImageHandle(m_Image->GetHandle());
+	}
+
+	void OnDetach() override
+	{
+		m_App.SetMainImageHandle(0);
+		m_Image.reset();
+	}
+
+	void OnUpdate(float) override
+	{
+		if (m_ExitCode != kExitPass)
+			return;
+
+		if (m_Frame == kFirstCaptureFrame)
+			RequestCapture("external-first", FirstExpected());
+		else if (m_Frame == kSecondImageFrame - 1)
+			m_App.SetMainImageHandle(0); // exercise clear-only pass without leaving external mode
+		else if (m_Frame == kSecondImageFrame)
+		{
+			m_Image->SetData(MakeImageData(SecondExpected()).data());
+			m_App.SetMainImageHandle(m_Image->GetHandle());
+		}
+		else if (m_Frame == kSecondCaptureFrame)
+			RequestCapture("external-second", SecondExpected());
+		else if (m_Captures == 2)
+			Finish(m_ExitCode);
+		else if (m_Frame >= kTimeoutFrame)
+		{
+			std::fprintf(stderr, "FAIL: only %d of 2 external frames were captured within %d frames\n", m_Captures, kTimeoutFrame);
+			Finish(kExitFail);
+		}
+		m_Frame++;
+	}
+
+private:
+	static Quadrants FirstExpected()
+	{
+		if (Walnut::RenderingBackend::GetBackend() == Walnut::RenderingBackend::BACKEND::Vulkan)
+			return kFirstImage;
+		return { kRed, kRed, kRed, kRed };
+	}
+
+	static Quadrants SecondExpected()
+	{
+		if (Walnut::RenderingBackend::GetBackend() == Walnut::RenderingBackend::BACKEND::Vulkan)
+			return kSecondImage;
+		return { kCyan, kCyan, kCyan, kCyan };
+	}
+
+	void RequestCapture(const std::string& phase, const Quadrants& expected)
+	{
+		m_App.CaptureNextFrame([this, phase, expected](const uint8_t* pixels, uint32_t width, uint32_t height)
+		{
+			m_Captures++;
+			if (!pixels)
+			{
+				std::fprintf(stderr, "SKIP: the %s renderer cannot read frames back\n", RendererName());
+				Finish(kExitSkip);
+				return;
+			}
+
+			const std::string file = std::string("render-test-") + RendererName() + "-" + WindowingName() + "-" + phase + ".png";
+			stbi_write_png(file.c_str(), int(width), int(height), 4, pixels, int(width) * 4);
+			std::printf("%s: captured %ux%u frame, saved as %s\n", phase.c_str(), width, height, file.c_str());
+
+			bool ok = true;
+			const float halfW = float(width) / 2.0f, halfH = float(height) / 2.0f;
+			const char* quadrantNames[] = { "top left", "top right", "bottom left", "bottom right" };
+			for (int q = 0; q < 4; q++)
+			{
+				const float x0 = (q % 2) * halfW, y0 = (q / 2) * halfH;
+				ok &= CheckArea(pixels, width, height, phase + " " + quadrantNames[q], { x0, y0, x0 + halfW, y0 + halfH }, expected[q]);
+			}
+			if (!ok)
+				Finish(kExitFail);
+		});
+	}
+
+	static bool CheckArea(const uint8_t* pixels, uint32_t width, uint32_t height, const std::string& name, PixelRect area, Color expected)
+	{
+		bool ok = true;
+		for (int j = 1; j <= 3; j++)
+		{
+			for (int i = 1; i <= 3; i++)
+			{
+				const float fx = 0.25f + 0.125f * i, fy = 0.25f + 0.125f * j;
+				const int x = int(area.x0 + fx * (area.x1 - area.x0));
+				const int y = int(area.y0 + fy * (area.y1 - area.y0));
+				if (x < 0 || y < 0 || uint32_t(x) >= width || uint32_t(y) >= height)
+				{
+					std::fprintf(stderr, "FAIL: %s: pixel (%d, %d) is outside the %ux%u frame\n", name.c_str(), x, y, width, height);
+					return false;
+				}
+				const uint8_t* p = pixels + (size_t(y) * width + x) * 4;
+				if (std::abs(p[0] - expected.r) > kTolerance || std::abs(p[1] - expected.g) > kTolerance || std::abs(p[2] - expected.b) > kTolerance)
+				{
+					std::fprintf(stderr, "FAIL: %s: pixel (%d, %d) is (%d, %d, %d), expected (%d, %d, %d)\n", name.c_str(), x, y,
+								 p[0], p[1], p[2], expected.r, expected.g, expected.b);
+					ok = false;
+				}
+			}
+		}
+		if (ok)
+			std::printf("ok: %s\n", name.c_str());
+		return ok;
+	}
+
+	void Finish(int exitCode)
+	{
+		m_ExitCode = exitCode;
+		m_App.Close();
+	}
+
+	Walnut::Application& m_App;
+	std::shared_ptr<Walnut::Image> m_Image;
+	int m_Frame = 0;
+	int m_Captures = 0;
+	int m_ExitCode = kExitPass;
+};
+
 } // namespace
 
 int main(int argc, char** argv)
 {
+	bool externalMainImage = false;
+	for (int i = 1; i < argc; i++)
+	{
+		if (std::string_view(argv[i]) == "--external-main-image")
+			externalMainImage = true;
+	}
+
 	Walnut::ApplicationSpecification spec;
 	spec.Name = "Walnut Render Test";
 	spec.Width = 800;
 	spec.Height = 600;
+	spec.UseImGui = !externalMainImage;
 	spec.EnableGraphicsValidation = true; // Vulkan: CTest fails the test on any validation message
 
 	auto app = std::make_unique<Walnut::Application>(spec);
-	auto layer = std::make_shared<RenderTestLayer>(*app);
-	app->PushLayer(layer);
-	app->Run();
-	app.reset();
+	int exitCode = kExitPass;
+	if (externalMainImage)
+	{
+		auto layer = std::make_shared<ExternalMainImageTestLayer>(*app);
+		app->PushLayer(layer);
+		app->Run();
+		app.reset();
+		exitCode = layer->ExitCode();
+	}
+	else
+	{
+		auto layer = std::make_shared<RenderTestLayer>(*app);
+		app->PushLayer(layer);
+		app->Run();
+		app.reset();
+		exitCode = layer->ExitCode();
+	}
 
-	const int exitCode = layer->ExitCode();
 	std::printf("%s\n", exitCode == kExitPass ? "PASS" : exitCode == kExitSkip ? "SKIPPED" : "FAILED");
 	return exitCode;
 }

@@ -10,8 +10,6 @@
 
 namespace Walnut {
 
-	class Image;
-
 	class Walnut_API RenderingBackend
 	{
 	public:
@@ -33,11 +31,11 @@ namespace Walnut {
 		virtual void ResizeWindow(int width, int height) = 0;
 		virtual void CreateImGuiPipeline() = 0;
 		virtual void DestroyImGuiPipeline() = 0;
-		virtual void CreateMainImagePipeline(std::unique_ptr<Image>& mainImage) = 0;
+		virtual void CreateMainImagePipeline() = 0;
 		virtual void DestroyMainImagePipeline() = 0;
 		virtual void StartImGuiFrame() = 0;
 		virtual void FrameBegin() = 0;
-		virtual void FrameRender(std::unique_ptr<Image>& mainImage) = 0;
+		virtual void FrameRender(uint64_t imageHandle) = 0;
 		virtual void FrameRenderImGui(void* draw_data) = 0;
 		virtual void FrameEnd() = 0;
 		// Reads back the frame rendered to the main window, between FrameEnd and FramePresent, as RGBA8 pixels

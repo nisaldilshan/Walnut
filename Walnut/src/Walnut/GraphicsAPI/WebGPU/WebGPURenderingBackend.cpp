@@ -2,11 +2,12 @@
 
 #include "WebGPUGraphics.h"
 #include "WebGPUImageRenderPipeline.h"
-#include <Walnut/Image.h>
-#include "WebGPUImage.h"
 
 #include <imgui_impl_wgpu.h>
 
+#include <array>
+#include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <utility>
 #include <vector>
@@ -22,6 +23,34 @@ struct WebGPUFrameBeginEndData
     wgpu::TextureView nextTexture;
 };
 WebGPUFrameBeginEndData g_frameData{};
+
+struct WebGPURenderingBackend::MainImageResources
+{
+    wgpu::BindGroupLayout bindGroupLayout = nullptr;
+    wgpu::Sampler sampler = nullptr;
+    WGPUTextureView cachedTextureView = nullptr;
+    wgpu::BindGroup cachedBindGroup = nullptr;
+
+    ~MainImageResources()
+    {
+        if (cachedBindGroup)
+        {
+            cachedBindGroup.release();
+            cachedBindGroup = nullptr;
+        }
+        cachedTextureView = nullptr;
+        if (sampler)
+        {
+            sampler.release();
+            sampler = nullptr;
+        }
+        if (bindGroupLayout)
+        {
+            bindGroupLayout.release();
+            bindGroupLayout = nullptr;
+        }
+    }
+};
 
 WebGPURenderingBackend::WebGPURenderingBackend()
 {}
@@ -87,15 +116,48 @@ void WebGPURenderingBackend::ResizeWindow(int width, int height)
 {
 }
 
-void WebGPURenderingBackend::CreateMainImagePipeline(std::unique_ptr<Image> &mainImage)
+void WebGPURenderingBackend::CreateMainImagePipeline()
 {
-    auto& platformImage = mainImage->PlatformImageRef();
-    std::vector<wgpu::BindGroupLayout> layouts{platformImage->GetBindGroupLayout()};                                       
+    m_mainImageResources = std::make_unique<MainImageResources>();
+
+    std::vector<wgpu::BindGroupLayoutEntry> entries(2, wgpu::Default);
+    entries[0].binding = 0;
+    entries[0].visibility = wgpu::ShaderStage::Fragment;
+    entries[0].texture.sampleType = wgpu::TextureSampleType::Float;
+    entries[0].texture.viewDimension = wgpu::TextureViewDimension::_2D;
+    entries[0].texture.multisampled = false;
+    entries[1].binding = 1;
+    entries[1].visibility = wgpu::ShaderStage::Fragment;
+    entries[1].sampler.type = wgpu::SamplerBindingType::Filtering;
+
+    wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc = wgpu::Default;
+    bindGroupLayoutDesc.entryCount = entries.size();
+    bindGroupLayoutDesc.entries = entries.data();
+    m_mainImageResources->bindGroupLayout = GraphicsAPI::WebGPU::GetDevice().createBindGroupLayout(bindGroupLayoutDesc);
+    assert(m_mainImageResources->bindGroupLayout);
+
+    wgpu::SamplerDescriptor samplerDesc = wgpu::Default;
+    samplerDesc.addressModeU = wgpu::AddressMode::ClampToEdge;
+    samplerDesc.addressModeV = wgpu::AddressMode::ClampToEdge;
+    samplerDesc.addressModeW = wgpu::AddressMode::ClampToEdge;
+    samplerDesc.magFilter = wgpu::FilterMode::Linear;
+    samplerDesc.minFilter = wgpu::FilterMode::Linear;
+    samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+    samplerDesc.lodMinClamp = 0.0f;
+    samplerDesc.lodMaxClamp = 8.0f;
+    samplerDesc.compare = wgpu::CompareFunction::Undefined;
+    samplerDesc.maxAnisotropy = 1;
+    m_mainImageResources->sampler = GraphicsAPI::WebGPU::GetDevice().createSampler(samplerDesc);
+    assert(m_mainImageResources->sampler);
+
+    std::vector<wgpu::BindGroupLayout> layouts{m_mainImageResources->bindGroupLayout};
     m_imageRenderPipeline = std::make_unique<GraphicsAPI::WebGPUImageRenderPipeline>(layouts);
 }
 
 void WebGPURenderingBackend::DestroyMainImagePipeline()
 {
+    m_imageRenderPipeline.reset();
+    m_mainImageResources.reset();
 }
 
 void WebGPURenderingBackend::FrameBegin()
@@ -146,10 +208,38 @@ void WebGPURenderingBackend::FrameEnd()
     GraphicsAPI::WebGPU::GetQueue().submit(commands);
 }
 
-void WebGPURenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
+void WebGPURenderingBackend::FrameRender(uint64_t imageHandle)
 {
+    if (imageHandle == 0)
+        return;
+
+    assert(m_imageRenderPipeline != nullptr && m_mainImageResources != nullptr);
+    auto textureView = reinterpret_cast<WGPUTextureView>(static_cast<std::uintptr_t>(imageHandle));
+    if (textureView != m_mainImageResources->cachedTextureView)
+    {
+        if (m_mainImageResources->cachedBindGroup)
+        {
+            m_mainImageResources->cachedBindGroup.release();
+            m_mainImageResources->cachedBindGroup = nullptr;
+        }
+        m_mainImageResources->cachedTextureView = textureView;
+
+        std::array<wgpu::BindGroupEntry, 2> bindings = { wgpu::Default, wgpu::Default };
+        bindings[0].binding = 0;
+        bindings[0].textureView = textureView;
+        bindings[1].binding = 1;
+        bindings[1].sampler = m_mainImageResources->sampler;
+
+        wgpu::BindGroupDescriptor bindGroupDesc = wgpu::Default;
+        bindGroupDesc.layout = m_mainImageResources->bindGroupLayout;
+        bindGroupDesc.entryCount = bindings.size();
+        bindGroupDesc.entries = bindings.data();
+        m_mainImageResources->cachedBindGroup = GraphicsAPI::WebGPU::GetDevice().createBindGroup(bindGroupDesc);
+        assert(m_mainImageResources->cachedBindGroup);
+    }
+
     g_frameData.renderPass.setPipeline(m_imageRenderPipeline->GetPipeline());
-    g_frameData.renderPass.setBindGroup(0, mainImage->PlatformImageRef()->GetBindGroup(), 0, nullptr);
+    g_frameData.renderPass.setBindGroup(0, m_mainImageResources->cachedBindGroup, 0, nullptr);
     g_frameData.renderPass.draw(3, 1, 0, 0);
 }
 

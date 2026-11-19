@@ -10,7 +10,6 @@
 #include <GLFW/glfw3.h>
 
 #include "RenderingBackend.h"
-#include "Image.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -66,15 +65,12 @@ namespace Walnut {
     {
 		int w, h;
 		glfwGetFramebufferSize(win, &w, &h);
-		if (w == 0 || h == 0) {
+		m_FramebufferWidth = w > 0 ? static_cast<uint32_t>(w) : 0;
+		m_FramebufferHeight = h > 0 ? static_cast<uint32_t>(h) : 0;
+		if (w <= 0 || h <= 0) {
 			return; // minimised: a zero-extent swapchain or image is invalid, keep the old ones until restored
 		}
 		m_RenderingBackend->SetupWindow(w, h);
-
-		if (m_Specification.UseImGui) {
-			return; // when using ImGui, we don't need to resize our main image, as ImGui will render to it directly
-		}
-		m_ImageToRender = std::make_unique<Image>(w, h, ImageFormat::RGBA);
     }
 
 	void Application::Init()
@@ -132,10 +128,10 @@ namespace Walnut {
 		m_RenderingBackend->Init(windowHandle, m_Specification.EnableGraphicsValidation);
 
 		glfwSetWindowUserPointer(windowHandle, this);
-		glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {
+		glfwSetFramebufferSizeCallback(windowHandle, [](GLFWwindow* win, int width, int height) {
 			auto app = static_cast<Application*>(glfwGetWindowUserPointer(win));
 			assert(app);
-			std::cout << "Resized window to: x=" << width << ", y=" << height << std::endl;
+			std::cout << "Resized framebuffer to: x=" << width << ", y=" << height << std::endl;
 			app->OnWindowResize(win);
 		});
 		glfwSetWindowContentScaleCallback(windowHandle, [](GLFWwindow* win, float, float) {
@@ -155,14 +151,13 @@ namespace Walnut {
 		else
 		{
 			// when not using ImGui, we need to create our main image pipeline here,
-			m_RenderingBackend->CreateMainImagePipeline(m_ImageToRender);
+			m_RenderingBackend->CreateMainImagePipeline();
 		}
 	}
 
 	void Application::Shutdown()
 	{
 		LayerStackShutdown();
-		m_ImageToRender.reset();
 		m_RenderingBackend->Shutdown();
 
 		if (m_Specification.UseImGui) {
@@ -217,6 +212,8 @@ namespace Walnut {
 		{
 			int width, height;
 			glfwGetFramebufferSize(m_RenderingBackend->GetWindowHandle(), &width, &height);
+			m_FramebufferWidth = width > 0 ? static_cast<uint32_t>(width) : 0;
+			m_FramebufferHeight = height > 0 ? static_cast<uint32_t>(height) : 0;
 			if (width > 0 && height > 0)
 				m_RenderingBackend->ResizeWindow(width, height);
 		}
@@ -232,7 +229,8 @@ namespace Walnut {
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
 			main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
 		} else {
-			main_is_minimized = glfwGetWindowAttrib(m_RenderingBackend->GetWindowHandle(), GLFW_ICONIFIED);
+			main_is_minimized = glfwGetWindowAttrib(m_RenderingBackend->GetWindowHandle(), GLFW_ICONIFIED)
+				|| m_FramebufferWidth == 0 || m_FramebufferHeight == 0;
 		}
 
 		if (!main_is_minimized) {
@@ -241,7 +239,7 @@ namespace Walnut {
 				ImDrawData* main_draw_data = ImGui::GetDrawData();
 				m_RenderingBackend->FrameRenderImGui(main_draw_data);
 			} else {
-				m_RenderingBackend->FrameRender(m_ImageToRender);
+				m_RenderingBackend->FrameRender(m_MainImageHandle);
 			}
 
 			m_RenderingBackend->FrameEnd();
