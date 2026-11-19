@@ -4,7 +4,6 @@
 
 #include "OpenGLGraphics.h"
 
-#define IMGUI_IMPL_OPENGL_ES3
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl3.h>
 
@@ -49,7 +48,7 @@ namespace Walnut
 	void OpenGLRenderingBackend::CreateImGuiPipeline()
 	{
 		ImGui_ImplSDL3_InitForOpenGL(m_windowHandle, g_SDLcontext);
-#if defined(__ANDROID__)
+#ifdef WALNUT_OPENGL_ES
 		auto result = ImGui_ImplOpenGL3_Init("#version 300 es");
 		assert(result);
 #else

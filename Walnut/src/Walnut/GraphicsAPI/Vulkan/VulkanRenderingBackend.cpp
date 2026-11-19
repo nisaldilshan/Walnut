@@ -13,6 +13,10 @@
 
 namespace Walnut
 { 
+    // Creates the window's Vulkan surface with the windowing library. Defined in SdlVulkanRenderingBackend.cpp and
+    // GlfwVulkanRenderingBackend.cpp.
+    bool CreateVulkanWindowSurface(WalnutWindowHandleType* windowHandle, VkSurfaceKHR* surface);
+
     VulkanRenderingBackend::VulkanRenderingBackend()
     {}
 
@@ -21,6 +25,8 @@ namespace Walnut
 
     void VulkanRenderingBackend::SetupWindow(int width, int height)
     {
+        if (GraphicsAPI::Vulkan::IsSurfaceLost())
+            return; // ResizeWindow sets the window up with a new surface
         GraphicsAPI::Vulkan::SetupVulkanWindow(width, height);
     }
 
@@ -31,6 +37,14 @@ namespace Walnut
 
     void VulkanRenderingBackend::ResizeWindow(int width, int height)
     {
+        if (GraphicsAPI::Vulkan::IsSurfaceLost())
+        {
+            // Tried again on the next frame if the window has no surface to create yet
+            GraphicsAPI::Vulkan::RecreateVulkanWindow(
+                [this](VkSurfaceKHR* surface) { return CreateVulkanWindowSurface(m_windowHandle, surface); },
+                width, height);
+            return;
+        }
         GraphicsAPI::Vulkan::ResizeVulkanWindow(width, height);
         GraphicsAPI::Vulkan::SetSwapChainRebuildStatus(false);
     }
@@ -42,6 +56,8 @@ namespace Walnut
 
     void VulkanRenderingBackend::FrameRender(std::unique_ptr<Image>& mainImage)
     {
+        if (!GraphicsAPI::Vulkan::IsFrameActive())
+            return; // skipped frame: nothing is recording
         if (!mainImage) {
             assert(false);
             return;
@@ -81,6 +97,8 @@ namespace Walnut
 
     void VulkanRenderingBackend::FrameRenderImGui(void *draw_data)
     {
+        if (!GraphicsAPI::Vulkan::IsFrameActive())
+            return; // skipped frame: nothing is recording
         // Record dear imgui primitives into command buffer
         ImGui_ImplVulkan_RenderDrawData((ImDrawData*)draw_data, 
                                     GraphicsAPI::Vulkan::GetCurrentCommmandBuffer());
@@ -99,6 +117,15 @@ namespace Walnut
     void VulkanRenderingBackend::FramePresent()
     {
         GraphicsAPI::Vulkan::FramePresent();
+    }
+
+    void VulkanRenderingBackend::OnEnterForeground()
+    {
+#if defined(__ANDROID__)
+        // Android destroys the activity's native window while the app is in the background, and the surface made
+        // for it cannot be presented to again: the next frame creates a new one (ResizeWindow).
+        GraphicsAPI::Vulkan::SetSurfaceLost();
+#endif
     }
 
     WalnutWindowHandleType *VulkanRenderingBackend::GetWindowHandle()

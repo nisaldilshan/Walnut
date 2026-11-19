@@ -90,6 +90,10 @@ namespace Walnut {
 		void OnUIScaleChanged();
 		// The main window's UI scale from the desktop settings. Implemented per windowing library.
 		float QueryUIScale() const;
+		// Margins of the main window, in window coordinates, that system UI (status bar, notch, home indicator) may
+		// cover on mobile platforms. Implemented per windowing library.
+		struct SafeAreaInsets { float Left = 0.0f, Top = 0.0f, Right = 0.0f, Bottom = 0.0f; };
+		SafeAreaInsets QuerySafeAreaInsets() const;
 		void SetupImGuiForOneIteration();
 		void OnWindowResize(WalnutWindowHandleType *win);
 		void ApplyLayerChanges();
@@ -102,6 +106,9 @@ namespace Walnut {
 		ApplicationSpecification m_Specification;
 		std::unique_ptr<RenderingBackend> m_RenderingBackend;
 		bool m_Running = false;
+		// No frames are rendered between SDL_EVENT_WILL_ENTER_BACKGROUND and SDL_EVENT_DID_ENTER_FOREGROUND, or after
+		// SDL_EVENT_TERMINATING (mobile platforms)
+		bool m_RenderingPaused = false;
 		float m_TimeStep = 0.0f;
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTimePoint;
 		std::chrono::milliseconds m_SleepAmount;

@@ -1,3 +1,4 @@
+import glob
 import json
 import os
 from conan import ConanFile
@@ -57,9 +58,14 @@ class Walnut(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             self.options.rm_safe("fPIC")
+        if self.settings.os in ("Android", "iOS"):
+            self.options.windowing_system = "SDL" # GLFW does not support the mobile platforms
 
     def configure(self):
-        pass
+        if self.settings.os == "iOS":
+            # iOS has no desktop OpenGL, only OpenGL ES (the opengles option). The sdl/3.4.0 recipe does not require
+            # opengl/system on iOS, but still lists it in package_info() when this option is on, and Conan stops.
+            self.options["sdl/*"].opengl = False
 
     def validate(self):
         # Validation checks move here
@@ -69,6 +75,8 @@ class Walnut(ConanFile):
             
         if self.options.windowing_system not in ["GLFW", "SDL"]:
             raise ConanInvalidConfiguration(f"Unsupported windowing system: {self.options.windowing_system}")
+        if self.settings.os in ("Android", "iOS") and self.options.windowing_system != "SDL":
+            raise ConanInvalidConfiguration(f"{self.settings.os} needs the SDL windowing system")
 
     def requirements(self):
         self.requires("imgui/1.92.5-docking")
@@ -107,14 +115,10 @@ class Walnut(ConanFile):
                 pass
                 #self.requires("WebGPU/latest")
         elif self.settings.os == 'Android':
-            self.options.windowing_system = "SDL"
-            if self.options.rendering_backend == "OpenGL":
-                self.requires("glad/0.1.33")
-            elif self.options.rendering_backend == "Vulkan":
-                self.requires("vulkan-loader/1.3.239.0")
-                #self.requires("vulkan-validationlayers/1.3.239.0")
+            # OpenGL ES and the Vulkan loader are system libraries that the NDK has the headers for,
+            # so the renderers need no package
+            pass
         elif self.settings.os == 'iOS':
-            self.options.windowing_system = "SDL"
             if self.options.rendering_backend == "Vulkan":
                 self.requires("vulkan-headers/1.3.239.0")
                 self.requires("moltenvk/1.2.0")
@@ -129,6 +133,14 @@ class Walnut(ConanFile):
             self.requires("sdl/3.4.0")
         else:
             raise ConanInvalidConfiguration("Unsupported windowing system")
+
+    def build_requirements(self):
+        if self.settings.os == 'Android':
+            # The example app is packaged as an APK by CPack's APK generator, new in CMake 4.5, which runs the
+            # SDK build tools and the JDK. android-sdk is a recipe of this repository: conan export recipes/android-sdk
+            self.tool_requires("cmake/[>=4.5 <5]")
+            self.tool_requires("openjdk/21.0.2")
+            self.tool_requires("android-sdk/35.0.0")
 
     def source(self):
         git = Git(self)
@@ -150,8 +162,15 @@ class Walnut(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["RENDERER"] = self.options.rendering_backend
         tc.variables["WINDOWING_SYSTEM"] = self.options.windowing_system
-        if self.settings.os == 'iOS':
-            tc.generator = "Xcode"
+        if self.settings.os == 'Android':
+            # For packaging the APK, see WalnutApp/CMakeLists.txt
+            tc.cache_variables["WALNUT_ANDROID_SDK_ROOT"] = self.dependencies.build["android-sdk"].package_folder.replace("\\", "/")
+            tc.cache_variables["WALNUT_JAVA_HOME"] = self.dependencies.build["openjdk"].package_folder.replace("\\", "/")
+            # SDL is a shared library on Android, which the APK has to carry next to the app
+            sdl_libraries = []
+            for lib_dir in self.dependencies["sdl"].cpp_info.aggregated_components().libdirs:
+                sdl_libraries += sorted(glob.glob(os.path.join(lib_dir, "*.so")))
+            tc.cache_variables["WALNUT_APK_SHARED_LIBRARIES"] = ";".join(lib.replace("\\", "/") for lib in sdl_libraries)
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
@@ -160,6 +179,9 @@ class Walnut(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+        if self.settings.os == 'Android':
+            # Packages the example app as WalnutApp.apk in the build folder
+            cmake.build(target="package")
 
     def _validation_layer_manifest_dir(self):
         return os.path.join(self.package_folder, "res", "vulkan", "explicit_layer.d")
@@ -210,7 +232,8 @@ class Walnut(ConanFile):
         dst_lib_path = os.path.join(self.package_folder, "lib")
         for ext in ["*.dylib", "*.dll", "*.so", "*.a", "*.lib", "*.pdb"]:
             # Depending on your CMake output, binaries usually land in build_folder
-            copy(self, ext, src=self.build_folder, dst=dst_lib_path, keep_path=False)
+            # Not the copies CPack stages for the APK on Android
+            copy(self, ext, src=self.build_folder, dst=dst_lib_path, keep_path=False, excludes="_CPack_Packages/*")
 
         self._package_validation_layer_manifest()
 
@@ -224,9 +247,6 @@ class Walnut(ConanFile):
         else:
             self.cpp_info.libs = ["walnut", "walnut-graphics-webgpu", "walnut-imgui-webgpu", "glfw3webgpu"]
             self.cpp_info.defines = ["RENDERER_BACKEND=3"]
-
-        if self.settings.os == 'Android':
-            self.cpp_info.libs += ["App", "SDL3"]
 
         manifest_dir = self._validation_layer_manifest_dir()
         if os.path.isdir(manifest_dir):

@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 
-#ifdef __EMSCRIPTEN__
+#ifdef WALNUT_OPENGL_ES
 #define WALNUT_GLSL_VERSION "#version 300 es\nprecision mediump float;\n"
 #else
 #define WALNUT_GLSL_VERSION "#version 330 core\n"
@@ -149,7 +149,7 @@ namespace Walnut
 
 	void OpenGLRenderingBackend::FrameRenderImGui(void* draw_data)
 	{
-#ifndef __EMSCRIPTEN__ // WebGL has no GL_FRAMEBUFFER_SRGB
+#ifndef WALNUT_OPENGL_ES // OpenGL ES has no GL_FRAMEBUFFER_SRGB
 		glDisable(GL_FRAMEBUFFER_SRGB); // <--- DISABLE THIS for ImGui
 #endif
 		ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)draw_data);
@@ -163,8 +163,13 @@ namespace Walnut
 			return false;
 
 		std::vector<uint8_t> bottomUp(size_t(w) * h * 4);
+#ifdef WALNUT_OPENGL_UIKIT
+		// The window's framebuffer object, which SDL keeps bound
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+#else
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glReadBuffer(GL_BACK);
+#endif
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 		glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, bottomUp.data());
 		if (glGetError() != GL_NO_ERROR)

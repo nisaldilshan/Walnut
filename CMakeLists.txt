@@ -59,7 +59,7 @@ endif()
 add_subdirectory(Walnut/src/Walnut/GraphicsAPI/${RENDERER})
 
 #### ENGINE ###
-if(WIN32)
+if(WIN32 OR IOS) # an iOS app bundle can only carry shared libraries as frameworks
     add_library (walnut STATIC)
 elseif(DEFINED BUILD_SHARED_LIBS)
     add_library (walnut) # follows BUILD_SHARED_LIBS, e.g. as set by the vcpkg triplet
@@ -79,6 +79,11 @@ if (WINDOWING_SYSTEM STREQUAL "SDL")
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationSDL.cpp
                                 Walnut/src/Walnut/Input/SDLInput.cpp)
     target_link_libraries(walnut PRIVATE SDL3::SDL3)
+    if(IOS)
+        # SDL's UIKit code uses GameController for hardware keyboards and mice, but the sdl/3.4.0 recipe only adds
+        # the framework with the joystick subsystem, which Walnut turns off
+        target_link_libraries(walnut PRIVATE "-framework GameController")
+    endif()
     target_compile_definitions(walnut INTERFACE USE_SDL)
 else()
     target_sources(walnut PRIVATE Walnut/src/Walnut/ApplicationGLFW.cpp

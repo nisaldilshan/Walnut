@@ -76,7 +76,7 @@ namespace Walnut {
 #if defined(__EMSCRIPTEN__)
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#elif defined(__ANDROID__)
+#elif defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_IOS)
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
@@ -87,7 +87,13 @@ namespace Walnut {
 #endif
 			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+#if !defined(SDL_PLATFORM_ANDROID) && !defined(SDL_PLATFORM_IOS)
+			// Not with OpenGL ES 3.0, which converts to sRGB on an sRGB surface with no glDisable(GL_FRAMEBUFFER_SRGB)
+			// to turn that off for ImGui, as the OpenGL renderer does elsewhere (only the optional
+			// EXT_sRGB_write_control has it). On Android, SDL also cannot create the window's EGL surface when the
+			// device lacks EGL_KHR_gl_colorspace (the emulator does).
 			SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+#endif
 		}
 		else if (RenderingBackend::GetBackend() == RenderingBackend::BACKEND::Vulkan)
 		{
@@ -158,6 +164,18 @@ namespace Walnut {
 		return displayScale / pixelDensity;
 	}
 
+	Application::SafeAreaInsets Application::QuerySafeAreaInsets() const
+	{
+		// The whole window on desktops. On iOS the window extends under the status bar, the notch and the home
+		// indicator, and on Android under the system bars when the app is drawn edge to edge.
+		WalnutWindowHandleType* window = m_RenderingBackend->GetWindowHandle();
+		SDL_Rect safe;
+		int w = 0, h = 0;
+		if (!SDL_GetWindowSafeArea(window, &safe) || !SDL_GetWindowSize(window, &w, &h) || safe.w <= 0 || safe.h <= 0)
+			return {};
+		return { float(safe.x), float(safe.y), float(w - (safe.x + safe.w)), float(h - (safe.y + safe.h)) };
+	}
+
 	void Application::MainLoop()
 	{
 		// Poll and handle events (inputs, window resize, etc.)
@@ -184,7 +202,22 @@ namespace Walnut {
 			if (event.type == SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED) {
 				OnUIScaleChanged(); // e.g. the window moved to a monitor with a different scale
 			}
+
+			// Mobile platforms. On Android the window's surface is destroyed while the app is in the background, and
+			// SDL blocks in SDL_PollEvent until the app is back, with a new surface. When the OS terminates the app
+			// (on Android, its activity is destroyed), SDL discards the background events and sends this one.
+			if (event.type == SDL_EVENT_WILL_ENTER_BACKGROUND || event.type == SDL_EVENT_TERMINATING) {
+				m_RenderingPaused = true;
+			}
+			if (event.type == SDL_EVENT_DID_ENTER_FOREGROUND) {
+				m_RenderingPaused = false;
+				m_RenderingBackend->OnEnterForeground();
+			}
         }
+
+		// No frame while there may be no surface to render to
+		if (m_RenderingPaused)
+			return;
 
 		LayerStackOnUpdate();
 

@@ -12,6 +12,18 @@
 
 namespace Walnut
 {
+    bool CreateVulkanWindowSurface(WalnutWindowHandleType* windowHandle, VkSurfaceKHR* surface)
+    {
+        const VkResult err = glfwCreateWindowSurface(GraphicsAPI::Vulkan::GetInstance(), windowHandle,
+                                                     GraphicsAPI::Vulkan::GetAllocator(), surface);
+        if (err != VK_SUCCESS)
+        {
+            std::cerr << "GLFW: Failed to create Vulkan surface: VkResult = " << err << "\n";
+            return false;
+        }
+        return true;
+    }
+
     void VulkanRenderingBackend::Init(WalnutWindowHandleType* windowHandle, bool enableValidation)
     {
         if (!glfwVulkanSupported())
@@ -40,11 +52,8 @@ namespace Walnut
         // Setup Vulkan
         GraphicsAPI::Vulkan::CreateDevice(extensions, GraphicsAPI::VulkanConfig{ enableValidation });
         // Create Window Surface
-        VkResult err = glfwCreateWindowSurface(GraphicsAPI::Vulkan::GetInstance(), 
-                                                windowHandle, 
-                                                GraphicsAPI::Vulkan::GetAllocator(), 
-                                                GraphicsAPI::Vulkan::GetSurface());
-        GraphicsAPI::Vulkan::check_vk_result(err);
+        if (!CreateVulkanWindowSurface(windowHandle, GraphicsAPI::Vulkan::GetSurface()))
+            abort();
     }
 
     void VulkanRenderingBackend::CreateImGuiPipeline()
